@@ -28,7 +28,7 @@ function App() {
       <input value={value} onChange={(e) => setValue(e.target.value)} />
       <p>Current value: {value}</p>
       <button onClick={() => {
-        connection.current?.send("newMessage", 'Ahmad', value).then(() => {
+        connection.current?.send("newMessage", 2234234, value).then(() => {
           console.log("Message sent: ", value);
           setValue('');
         }).catch(err => console.error("Error while sending message: ", err));
