@@ -2,7 +2,9 @@ declare type GameState = {
   gameId: string;
   players: Player[];
   activePlayers: Player[];
-  board: Board;
+  board: {
+    spaces: BoardSpace[];
+  };
   currentPlayerIndex: number;
   totalDiceRoll: number;
   currentPhase: number;
@@ -17,12 +19,7 @@ type Player = {
   jailTurnsRemaining: number;
   getOutOfJailFreeCards: number;
   consecutiveDoubles: number;
-  propertiesOwned: any[]; // You might want to define a 'Property' type if properties have a specific structure
   isBankrupt: boolean;
-};
-
-type Board = {
-  spaces: Space[];
 };
 
 type Space = {

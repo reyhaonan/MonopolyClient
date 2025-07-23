@@ -25,6 +25,8 @@ function App() {
 
   const [gameState, setGameState] = useState<GameState | null>(null);
 
+  const isYourTurn = gameState?.activePlayers[gameState.currentPlayerIndex]?.id === playerId
+
   useEffect(() => {
     connection.current = new signalR.HubConnectionBuilder()
       .withUrl("http://localhost:5217/gameHubs")
@@ -50,12 +52,13 @@ function App() {
       setGameState(game)
     });
 
-    connection.current.on(AvailableResponse.StartGameResponse, (_, firstPlayerIndex: number) => {
+    connection.current.on(AvailableResponse.StartGameResponse, (_, newPlayerOrder: Player[]) => {
       setGameState(state => {
         if (!state) throw new Error("No active game")
         return produce(state, draft => {
           draft.currentPhase = GamePhase.PlayerTurnStart
-          draft.currentPlayerIndex = firstPlayerIndex
+          draft.currentPlayerIndex = 0;
+          draft.activePlayers = newPlayerOrder;
         })
       })
     });
@@ -120,7 +123,7 @@ function App() {
           Start Game
         </button>
       }
-      {gameState && <>
+      {isYourTurn && <>
         <button onClick={() => {
           sendMessage("rollDice", gameId, playerId);
         }}>
@@ -143,6 +146,10 @@ function App() {
         </p>
         <p>Current Game phase: {gameState?.currentPhase}</p>
       </>}
+
+      <ol className='list-decimal'>
+        {gameState?.board.spaces.map((space, i) => <li key={space.id}>{i} - {JSON.stringify(space, null, 2)}</li>)}
+      </ol>
 
 
 
