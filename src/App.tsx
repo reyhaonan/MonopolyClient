@@ -5,7 +5,7 @@ import * as signalR from '@microsoft/signalr'
 import { produce } from 'immer'
 import { GamePhase } from './types/GamePhase'
 
-type AvailableTask = 'createGame' | 'joinGame' | 'startGame' | 'rollDice'
+type AvailableTask = 'createGame' | 'joinGame' | 'startGame' | 'rollDice' | 'endTurn'
 enum AvailableResponse {
   // Game control
   CreateGameResponse = 'createGameResponse',
@@ -13,7 +13,8 @@ enum AvailableResponse {
   StartGameResponse = 'startGameResponse',
   // Game event
   PlayerIdAssignmentResponse = 'playerIdAssignmentResponse',
-  DiceRolledResponse = 'diceRolledResponse'
+  DiceRolledResponse = 'diceRolledResponse',
+  EndTurnResponse = 'endTurnResponse'
 }
 
 function App() {
@@ -63,8 +64,18 @@ function App() {
       setGameState(state => {
         if (!state) throw new Error("No active game")
         return produce(state, draft => {
-          draft.currentPhase = GamePhase.PlayerTurnStart
+          // Play animation then change the current phase
+          draft.currentPhase = GamePhase.LandingOnSpaceAction
           draft.activePlayers[draft.currentPlayerIndex].currentPosition = newPosition
+        })
+      })
+    });
+    connection.current.on(AvailableResponse.EndTurnResponse, (_, newPlayerIndex: number) => {
+      setGameState(state => {
+        if (!state) throw new Error("No active game")
+        return produce(state, draft => {
+          draft.currentPhase = GamePhase.PlayerTurnStart
+          draft.currentPlayerIndex = newPlayerIndex
         })
       })
     });
@@ -115,6 +126,11 @@ function App() {
         }}>
           Roll dice
         </button>
+        <button onClick={() => {
+          sendMessage("endTurn", gameId, playerId);
+        }}>
+          End Turn
+        </button>
       </>}
       <br />
       Important info:
@@ -122,11 +138,10 @@ function App() {
         <p>
           Player:
           {gameState.activePlayers.map((player, i) =>
-            <li key={i}>{player.id.substring(0, 8)} -- pos: {player.currentPosition}</li>
+            <li key={i}>{player.id.substring(0, 8)} -- pos: {player.currentPosition} -- {gameState.activePlayers[gameState.currentPlayerIndex]?.id === player.id && "CURRENT TURN"}</li>
           )}
         </p>
         <p>Current Game phase: {gameState?.currentPhase}</p>
-        <p>Current player: {gameState.currentPlayerIndex} - {gameState.activePlayers[gameState.currentPlayerIndex]?.id}</p>
       </>}
 
 
