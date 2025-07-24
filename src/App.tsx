@@ -3,9 +3,9 @@ import './App.css'
 
 import * as signalR from '@microsoft/signalr'
 import { produce } from 'immer'
-import { GamePhase } from './types/GamePhase'
+import { GamePhase } from './enums/GamePhase'
 
-type AvailableTask = 'createGame' | 'joinGame' | 'startGame' | 'rollDice' | 'endTurn'
+type AvailableTask = 'createGame' | 'joinGame' | 'startGame' | 'rollDice' | 'buyProperty' | 'endTurn'
 enum AvailableResponse {
   // Game control
   CreateGameResponse = 'createGameResponse',
@@ -14,7 +14,8 @@ enum AvailableResponse {
   // Game event
   PlayerIdAssignmentResponse = 'playerIdAssignmentResponse',
   DiceRolledResponse = 'diceRolledResponse',
-  EndTurnResponse = 'endTurnResponse'
+  EndTurnResponse = 'endTurnResponse',
+  PropertyBoughtResponse = 'propertyBoughtResponse'
 }
 
 function App() {
@@ -47,8 +48,8 @@ function App() {
       })
     });
 
-    connection.current.on(AvailableResponse.PlayerIdAssignmentResponse, (gameId: string, game: GameState) => {
-      setPlayerId(gameId)
+    connection.current.on(AvailableResponse.PlayerIdAssignmentResponse, (playerId: string, game: GameState) => {
+      setPlayerId(playerId)
       setGameState(game)
     });
 
@@ -63,13 +64,33 @@ function App() {
       })
     });
 
-    connection.current.on(AvailableResponse.DiceRolledResponse, (_, roll1: number, roll2: number, totalRoll: number, newPosition: number) => {
+    connection.current.on(AvailableResponse.DiceRolledResponse, (_, playerId: string, rollResult: RollResult) => {
       setGameState(state => {
         if (!state) throw new Error("No active game")
         return produce(state, draft => {
           // Play animation then change the current phase
           draft.currentPhase = GamePhase.LandingOnSpaceAction
-          draft.activePlayers[draft.currentPlayerIndex].currentPosition = newPosition
+          const activePlayer = draft.activePlayers.find(player => player.id === playerId)
+          if (!activePlayer) throw new Error("no player found?????")
+          activePlayer.currentPosition = rollResult.playerState.newPlayerPosition
+          activePlayer.money = rollResult.playerState.newPlayerMoney
+
+          if (rollResult.playerState.wasJailed) {
+            activePlayer.isInJail = true
+            activePlayer.getOutOfJailFreeCards = 3
+          }
+        })
+      })
+    });
+    connection.current.on(AvailableResponse.PropertyBoughtResponse, (_, buyerId: string, propertyGuid: string, playerRemainingMoney: number) => {
+      setGameState(state => {
+        if (!state) throw new Error("No active game")
+        return produce(state, draft => {
+          draft.currentPhase = GamePhase.PlayerTurnStart
+          const activePlayer = draft.activePlayers.find(p => p.id === buyerId)
+          if (!activePlayer) throw new Error("no player found?????")
+          activePlayer.money = playerRemainingMoney;
+          activePlayer.propertiesOwned.push(propertyGuid)
         })
       })
     });
@@ -130,6 +151,12 @@ function App() {
           Roll dice
         </button>
         <button onClick={() => {
+          sendMessage("buyProperty", gameId, playerId);
+        }}>
+          Buy Property
+        </button>
+
+        <button onClick={() => {
           sendMessage("endTurn", gameId, playerId);
         }}>
           End Turn
@@ -141,7 +168,7 @@ function App() {
         <p>
           Player:
           {gameState.activePlayers.map((player, i) =>
-            <li key={i}>{player.id.substring(0, 8)} -- pos: {player.currentPosition} -- {gameState.activePlayers[gameState.currentPlayerIndex]?.id === player.id && "CURRENT TURN"}</li>
+            <li key={i}>{player.id.substring(0, 8)} -- pos: {player.currentPosition} -- money: {player.money} -- property: {player.propertiesOwned} -- {gameState.activePlayers[gameState.currentPlayerIndex]?.id === player.id && "CURRENT TURN"}</li>
           )}
         </p>
         <p>Current Game phase: {gameState?.currentPhase}</p>
