@@ -10,7 +10,8 @@ type DiceInfo = {
 };
 
 type PlayerStateInfo = {
-  wasJailed: boolean;
+  isInJail: boolean;
   newPlayerPosition: number;
   newPlayerMoney: number;
+  newPlayerJailTurnsRemaining: number;
 };

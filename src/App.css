@@ -1,1 +1,65 @@
 @import "tailwindcss";
+
+/* Base styles with Tailwind */
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Debug-friendly styles */
+.debug-outline {
+  @apply outline outline-1 outline-gray-300;
+}
+
+.debug-grid {
+  @apply bg-gray-50 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)];
+  background-size: 20px 20px;
+}
+
+/* Game-specific styles */
+.game-board {
+  @apply bg-white rounded-lg shadow-md p-4;
+}
+
+.property-card {
+  @apply border rounded-md p-2 transition-all duration-200;
+}
+
+/* Property color groups */
+.property-group-0 {
+  @apply bg-amber-900;
+}
+.property-group-1 {
+  @apply bg-sky-100 border-sky-500;
+}
+.property-group-2 {
+  @apply bg-pink-100 border-pink-500;
+}
+.property-group-3 {
+  @apply bg-orange-100 border-orange-500;
+}
+.property-group-4 {
+  @apply bg-red-100 border-red-500;
+}
+.property-group-5 {
+  @apply bg-yellow-100 border-yellow-500;
+}
+.property-group-6 {
+  @apply bg-green-100 border-green-500;
+}
+.property-group-7 {
+  @apply bg-blue-100 border-blue-500;
+}
+
+/* Special spaces */
+.space-railroad {
+  @apply bg-gray-100 border-gray-500;
+}
+.space-utility {
+  @apply bg-emerald-100 border-emerald-500;
+}
+.space-special {
+  @apply bg-gray-50 border-gray-400;
+}
