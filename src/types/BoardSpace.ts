@@ -1,4 +1,6 @@
-declare type BoardSpace =
+import type { RentStage } from "../enums/RentStage";
+
+export type BoardSpace =
   | GoSpace
   | CountrySpace
   | CommunityChestSpace
@@ -24,12 +26,11 @@ interface CountrySpace {
   group: number;
   rentScheme: number[];
   houseCost: number;
-  numHouses: number;
-  hasHotel: boolean;
   purchasePrice: number;
   mortgageValue: number;
   ownerId: string | null;
   isMortgaged: boolean;
+  currentRentStage: RentStage;
   id: string;
   name: string;
   boardPosition: number;

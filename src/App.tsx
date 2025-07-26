@@ -5,8 +5,21 @@ import * as signalR from '@microsoft/signalr'
 import { produce } from 'immer'
 import { GamePhase } from './enums/GamePhase'
 import { ColorGroup } from './enums/ColorGroup'
+import type { GameState } from './types/GameState'
+import type { Player } from './types/Player'
+import type { RollResult } from './types/RollResult'
 
-type AvailableTask = 'createGame' | 'joinGame' | 'startGame' | 'rollDice' | 'buyProperty' | 'endTurn'
+type AvailableTask =
+  'createGame' |
+  'joinGame' |
+  'startGame' |
+  'rollDice' |
+  'buyProperty' |
+  'upgradeProperty' |
+  'downgradeProperty' |
+  'mortgageProperty' |
+  'unmortgageProperty' |
+  'endTurn'
 enum AvailableResponse {
   // Game control
   CreateGameResponse = 'createGameResponse',
@@ -16,7 +29,11 @@ enum AvailableResponse {
   PlayerIdAssignmentResponse = 'playerIdAssignmentResponse',
   DiceRolledResponse = 'diceRolledResponse',
   EndTurnResponse = 'endTurnResponse',
-  PropertyBoughtResponse = 'propertyBoughtResponse'
+  PropertyBoughtResponse = 'propertyBoughtResponse',
+  PropertyUpgradeResponse = 'propertyUpgradeResponse',
+  PropertyDowngradeResponse = 'propertyDowngradeResponse',
+  PropertyMortgagedResponse = 'propertyMortgagedResponse',
+  PropertyUnmortgagedResponse = 'propertyUnmortgagedResponse'
 }
 
 function App() {
@@ -106,6 +123,72 @@ function App() {
         })
       })
     });
+    connection.current.on(AvailableResponse.PropertyUpgradeResponse, (_, buyerId: string, propertyGuid: string, playerRemainingMoney: number) => {
+      setGameState(state => {
+        if (!state) throw new Error("No active game")
+        return produce(state, draft => {
+          draft.currentPhase = GamePhase.PostLandingActions
+          const activePlayer = draft.activePlayers.find(p => p.id === buyerId)
+          if (!activePlayer) throw new Error("no player found?????")
+          activePlayer.money = playerRemainingMoney;
+          activePlayer.propertiesOwned.push(propertyGuid)
+
+          const propertyBought = draft.board.spaces.find(space => space.id === propertyGuid)
+          if (!propertyBought) throw new Error("no property found")
+          if (propertyBought.$type !== "country") throw new Error("Not an upgradable property")
+          propertyBought.currentRentStage++
+        })
+      })
+    });
+    connection.current.on(AvailableResponse.PropertyDowngradeResponse, (_, buyerId: string, propertyGuid: string, playerRemainingMoney: number) => {
+      setGameState(state => {
+        if (!state) throw new Error("No active game")
+        return produce(state, draft => {
+          draft.currentPhase = GamePhase.PostLandingActions
+          const activePlayer = draft.activePlayers.find(p => p.id === buyerId)
+          if (!activePlayer) throw new Error("no player found?????")
+          activePlayer.money = playerRemainingMoney;
+
+          const propertyBought = draft.board.spaces.find(space => space.id === propertyGuid)
+          if (!propertyBought) throw new Error("no property found")
+          if (propertyBought.$type !== "country") throw new Error("Not an upgradable property")
+          propertyBought.currentRentStage--
+        })
+      })
+    });
+    connection.current.on(AvailableResponse.PropertyMortgagedResponse, (_, buyerId: string, propertyGuid: string, playerRemainingMoney: number) => {
+      setGameState(state => {
+        if (!state) throw new Error("No active game")
+        return produce(state, draft => {
+          draft.currentPhase = GamePhase.PostLandingActions
+          const activePlayer = draft.activePlayers.find(p => p.id === buyerId)
+          if (!activePlayer) throw new Error("no player found?????")
+          activePlayer.money = playerRemainingMoney;
+
+          const space = draft.board.spaces.find(space => space.id === propertyGuid)
+          if (!space) throw new Error("no property found")
+          if (space.$type === "special") throw new Error("Not an mortgageAble property")
+          space.isMortgaged = true
+        })
+      })
+    });
+    connection.current.on(AvailableResponse.PropertyUnmortgagedResponse, (_, buyerId: string, propertyGuid: string, playerRemainingMoney: number) => {
+      setGameState(state => {
+        if (!state) throw new Error("No active game")
+        return produce(state, draft => {
+          draft.currentPhase = GamePhase.PostLandingActions
+          const activePlayer = draft.activePlayers.find(p => p.id === buyerId)
+          if (!activePlayer) throw new Error("no player found?????")
+          activePlayer.money = playerRemainingMoney;
+
+          const space = draft.board.spaces.find(space => space.id === propertyGuid)
+          if (!space) throw new Error("no property found")
+          if (space.$type === "special") throw new Error("Not an mortgageAble property")
+          space.isMortgaged = false
+        })
+      })
+    });
+
     connection.current.on(AvailableResponse.EndTurnResponse, (_, newPlayerIndex: number) => {
       setGameState(state => {
         if (!state) throw new Error("No active game")
@@ -267,7 +350,7 @@ function App() {
           {/* Game board */}
           <div className="bg-white rounded-lg shadow-sm p-4 lg:col-span-2 overflow-auto">
             <h2 className="text-lg font-semibold mb-3">Game Board</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-10 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 xl:grid-cols-10 gap-2">
               {gameState.board.spaces.map((space, i) => {
                 // Determine space type for styling
                 let spaceClass = "space-special";
@@ -319,16 +402,28 @@ function App() {
                       <span className="text-xs bg-gray-700 text-white font-medium rounded-full px-2 py-0.5">{i}</span>
                       {space.$type === "country" && space.ownerId && (
                         <span className="text-xs bg-blue-600 text-white font-medium rounded-full px-2 py-0.5">
-                          Owned
+                          {space.ownerId.substring(0, 4)}
                         </span>
                       )}
                     </div>
                     <div className={`font-medium mt-1 ${textColor}`}>{space.name}</div>
 
-                    {(space.$type === "country" || space.$type === "railroad") && (
+                    {(space.$type !== "special") && (
                       <div className={`text-xs ${textColor} mt-1`}>
                         <div className="font-medium">Price: ${space.purchasePrice}</div>
-                        <div className="font-medium">Owner: {space.ownerId}</div>
+                        {space.$type === 'country' && <>
+                          {space.ownerId == playerId && <>
+                            <button onClick={() => sendMessage(space.isMortgaged ? 'unmortgageProperty' : 'mortgageProperty', gameId, playerId, space.id)} className='bg-black text-white p-1 px-2 cursor-pointer mr-2'>
+                              {space.isMortgaged ? 'Unmortgage' : 'Mortgage'}
+                            </button>
+                            <br />
+                            <button onClick={() => sendMessage('downgradeProperty', gameId, playerId, space.id)} className='bg-black text-white p-1 px-2 cursor-pointer mr-2'>-</button>
+                            <button onClick={() => sendMessage('upgradeProperty', gameId, playerId, space.id)} className='bg-black text-white p-1 px-2 cursor-pointer'>+</button>
+
+                          </>}
+                          <div className="font-medium">House Cost: {space.houseCost}</div>
+                          <div className="font-medium">Rent Stage: {space.currentRentStage}</div>
+                        </>}
                       </div>
                     )}
 

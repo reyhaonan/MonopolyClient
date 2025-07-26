@@ -1,4 +1,7 @@
-declare type GameState = {
+import type { BoardSpace } from "./BoardSpace";
+import type { Player } from "./Player";
+
+export type GameState = {
   gameId: string;
   players: Player[];
   activePlayers: Player[];
@@ -8,10 +11,4 @@ declare type GameState = {
   currentPlayerIndex: number;
   totalDiceRoll: number;
   currentPhase: number;
-};
-
-type Space = {
-  id: string;
-  name: string;
-  boardPosition: number;
 };
