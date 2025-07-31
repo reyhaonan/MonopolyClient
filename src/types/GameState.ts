@@ -1,5 +1,6 @@
 import type { BoardSpace } from "./BoardSpace";
 import type { Player } from "./Player";
+import type { TransactionInfo } from "./TransactionInfo";
 
 export type GameState = {
   gameId: string;
@@ -11,4 +12,7 @@ export type GameState = {
   currentPlayerIndex: number;
   totalDiceRoll: number;
   currentPhase: number;
+  transactionsHistory: {
+    history: TransactionInfo[];
+  };
 };
