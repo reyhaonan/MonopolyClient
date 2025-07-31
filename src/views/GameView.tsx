@@ -8,9 +8,9 @@ import type { GameState } from '@/types/GameState'
 import type { Player } from '@/types/Player'
 import type { RollResult } from '@/types/RollResult'
 import { RentStage } from '@/enums/RentStage'
+import { useCreateGame } from '@/services/useCreateGame'
 
 type AvailableTask =
-    'createGame' |
     'joinGame' |
     'startGame' |
     'rollDice' |
@@ -24,7 +24,6 @@ type AvailableTask =
     'declareBankcruptcy'
 enum AvailableResponse {
     // Game control
-    CreateGameResponse = 'createGameResponse',
     JoinGameResponse = 'joinGameResponse',
     StartGameResponse = 'startGameResponse',
     // Game event
@@ -52,14 +51,12 @@ export const GameView = () => {
 
     const isYourTurn = gameState?.activePlayers[gameState.currentPlayerIndex]?.id === playerId
 
+    const { mutate: createGame } = useCreateGame()
+
     useEffect(() => {
         connection.current = new signalR.HubConnectionBuilder()
             .withUrl(`${import.meta.env.VITE_API_URL}/gameHubs`)
             .build();
-
-        connection.current.on(AvailableResponse.CreateGameResponse, (gameId: string) => {
-            setGameId(gameId)
-        });
 
         // Player join
         connection.current.on(AvailableResponse.JoinGameResponse, (_, players: Player[]) => {
@@ -295,7 +292,9 @@ export const GameView = () => {
                     {!gameState && (
                         <button
                             className="bg-blue-700 hover:bg-blue-800 text-white font-medium px-4 py-2 rounded-md transition-colors"
-                            onClick={() => sendMessage("createGame")}
+                            onClick={() => createGame(undefined, {
+                                onSuccess: res => setGameId(res.data)
+                            })}
                         >
                             Create Game
                         </button>
