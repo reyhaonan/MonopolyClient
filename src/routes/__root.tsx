@@ -1,6 +1,7 @@
 import * as React from 'react'
-import { Link, Outlet, createRootRoute } from '@tanstack/react-router'
-
+import { Outlet, createRootRoute } from '@tanstack/react-router'
+import "@/index.css"
+import { Navbar } from '@/components/organisms/Navbar'
 export const Route = createRootRoute({
     component: RootComponent,
 })
@@ -8,10 +9,8 @@ export const Route = createRootRoute({
 function RootComponent() {
     return (
         <React.Fragment>
+            <Navbar />
             <Outlet />
-            <Link to="/game" >
-                About
-            </Link>
         </React.Fragment>
     )
 }

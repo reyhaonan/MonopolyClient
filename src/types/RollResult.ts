@@ -15,6 +15,5 @@ interface DiceInfo {
 interface PlayerStateInfo {
   isInJail: boolean;
   newPlayerPosition: number;
-  newPlayerMoney: number;
   newPlayerJailTurnsRemaining: number;
 }

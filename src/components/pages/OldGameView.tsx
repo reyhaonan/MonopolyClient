@@ -9,6 +9,7 @@ import type { Player } from '@/types/Player'
 import type { RollResult } from '@/types/RollResult'
 import { RentStage } from '@/enums/RentStage'
 import { useCreateGame } from '@/services/useCreateGame'
+import type { TransactionInfo } from '@/types/TransactionInfo'
 
 type AvailableTask =
     'joinGame' |
@@ -20,6 +21,7 @@ type AvailableTask =
     'downgradeProperty' |
     'mortgageProperty' |
     'unmortgageProperty' |
+    'initiateTrade' |
     'endTurn' |
     'declareBankcruptcy'
 enum AvailableResponse {
@@ -96,20 +98,52 @@ export const GameView = () => {
                     const activePlayer = draft.activePlayers.find(player => player.id === playerId)
                     if (!activePlayer) throw new Error("no player found?????")
                     activePlayer.currentPosition = rollResult.playerState.newPlayerPosition
-                    activePlayer.money = rollResult.playerState.newPlayerMoney
+
+                    rollResult.transaction.forEach(transaction => {
+                        // Transaction to bank
+                        if (transaction.isTransactionWithBank) {
+                            // Player pay to bank
+                            if (transaction.receiverId === null) {
+                                const playerToDeductIndex = draft.activePlayers.findIndex(p => p.id === transaction.senderId);
+                                if (playerToDeductIndex != -1) {
+                                    draft.activePlayers[playerToDeductIndex].money -= transaction.amount;
+                                } throw new Error("player to deduct not found")
+                            }
+                            // Bank pay to player
+                            else {
+                                const playerToAddMoneyIndex = draft.activePlayers.findIndex(p => p.id === transaction.receiverId);
+                                if (playerToAddMoneyIndex != -1) {
+                                    draft.activePlayers[playerToAddMoneyIndex].money += transaction.amount;
+                                } throw new Error("player to AddMoney not found")
+                            }
+                        }
+                        // Transaction between player(rent)
+                        else {
+                            const playerToAddMoneyIndex = draft.activePlayers.findIndex(p => p.id === transaction.receiverId);
+                            if (playerToAddMoneyIndex != -1) {
+                                draft.activePlayers[playerToAddMoneyIndex].money += transaction.amount;
+                            }
+                            const playerToDeductIndex = draft.activePlayers.findIndex(p => p.id === transaction.senderId);
+                            if (playerToDeductIndex != -1) {
+                                draft.activePlayers[playerToDeductIndex].money -= transaction.amount;
+                            }
+                        }
+                    })
+
                     activePlayer.jailTurnsRemaining = rollResult.playerState.newPlayerJailTurnsRemaining
                     activePlayer.isInJail = rollResult.playerState.isInJail;
                 })
             })
         });
-        connection.current.on(AvailableResponse.PropertyBoughtResponse, (_, buyerId: string, propertyGuid: string, playerRemainingMoney: number) => {
+        connection.current.on(AvailableResponse.PropertyBoughtResponse, (_, buyerId: string, propertyGuid: string, transactions: TransactionInfo[]) => {
             setGameState(state => {
                 if (!state) throw new Error("No active game")
                 return produce(state, draft => {
                     draft.currentPhase = GamePhase.PostLandingActions
                     const activePlayer = draft.activePlayers.find(p => p.id === buyerId)
                     if (!activePlayer) throw new Error("no player found?????")
-                    activePlayer.money = playerRemainingMoney;
+                    draft.transactionsHistory.history.push(transactions[0])
+                    activePlayer.money -= transactions[0].amount
                     activePlayer.propertiesOwned.push(propertyGuid)
 
                     const propertyBought = draft.board.spaces.find(space => space.id === propertyGuid)
@@ -126,14 +160,15 @@ export const GameView = () => {
                 })
             })
         });
-        connection.current.on(AvailableResponse.PropertySoldResponse, (_, buyerId: string, propertyGuid: string, playerRemainingMoney: number) => {
+        connection.current.on(AvailableResponse.PropertySoldResponse, (_, buyerId: string, propertyGuid: string, transactions: TransactionInfo[]) => {
             setGameState(state => {
                 if (!state) throw new Error("No active game")
                 return produce(state, draft => {
                     draft.currentPhase = GamePhase.PostLandingActions
                     const activePlayer = draft.activePlayers.find(p => p.id === buyerId)
                     if (!activePlayer) throw new Error("no player found?????")
-                    activePlayer.money = playerRemainingMoney;
+                    draft.transactionsHistory.history.push(transactions[0])
+                    activePlayer.money += transactions[0].amount
                     const toDelete = activePlayer.propertiesOwned.findIndex(p => p == propertyGuid)
 
                     if (toDelete !== -1) activePlayer.propertiesOwned.splice(toDelete, 1)
@@ -152,14 +187,16 @@ export const GameView = () => {
                 })
             })
         });
-        connection.current.on(AvailableResponse.PropertyUpgradeResponse, (_, buyerId: string, propertyGuid: string, playerRemainingMoney: number) => {
+        connection.current.on(AvailableResponse.PropertyUpgradeResponse, (_, buyerId: string, propertyGuid: string, transactions: TransactionInfo[]) => {
             setGameState(state => {
                 if (!state) throw new Error("No active game")
                 return produce(state, draft => {
                     draft.currentPhase = GamePhase.PostLandingActions
                     const activePlayer = draft.activePlayers.find(p => p.id === buyerId)
                     if (!activePlayer) throw new Error("no player found?????")
-                    activePlayer.money = playerRemainingMoney;
+
+                    draft.transactionsHistory.history.push(transactions[0])
+                    activePlayer.money -= transactions[0].amount
 
                     const propertyBought = draft.board.spaces.find(space => space.id === propertyGuid)
                     if (!propertyBought) throw new Error("no property found")
@@ -168,14 +205,16 @@ export const GameView = () => {
                 })
             })
         });
-        connection.current.on(AvailableResponse.PropertyDowngradeResponse, (_, buyerId: string, propertyGuid: string, playerRemainingMoney: number) => {
+        connection.current.on(AvailableResponse.PropertyDowngradeResponse, (_, buyerId: string, propertyGuid: string, transactions: TransactionInfo[]) => {
             setGameState(state => {
                 if (!state) throw new Error("No active game")
                 return produce(state, draft => {
                     draft.currentPhase = GamePhase.PostLandingActions
                     const activePlayer = draft.activePlayers.find(p => p.id === buyerId)
                     if (!activePlayer) throw new Error("no player found?????")
-                    activePlayer.money = playerRemainingMoney;
+
+                    draft.transactionsHistory.history.push(transactions[0])
+                    activePlayer.money += transactions[0].amount
 
                     const propertyBought = draft.board.spaces.find(space => space.id === propertyGuid)
                     if (!propertyBought) throw new Error("no property found")
@@ -184,14 +223,17 @@ export const GameView = () => {
                 })
             })
         });
-        connection.current.on(AvailableResponse.PropertyMortgagedResponse, (_, buyerId: string, propertyGuid: string, playerRemainingMoney: number) => {
+        connection.current.on(AvailableResponse.PropertyMortgagedResponse, (_, buyerId: string, propertyGuid: string, transactions: TransactionInfo[]) => {
             setGameState(state => {
                 if (!state) throw new Error("No active game")
                 return produce(state, draft => {
                     draft.currentPhase = GamePhase.PostLandingActions
                     const activePlayer = draft.activePlayers.find(p => p.id === buyerId)
                     if (!activePlayer) throw new Error("no player found?????")
-                    activePlayer.money = playerRemainingMoney;
+
+
+                    draft.transactionsHistory.history.push(transactions[0])
+                    activePlayer.money += transactions[0].amount
 
                     const space = draft.board.spaces.find(space => space.id === propertyGuid)
                     if (!space) throw new Error("no property found")
@@ -200,14 +242,16 @@ export const GameView = () => {
                 })
             })
         });
-        connection.current.on(AvailableResponse.PropertyUnmortgagedResponse, (_, buyerId: string, propertyGuid: string, playerRemainingMoney: number) => {
+        connection.current.on(AvailableResponse.PropertyUnmortgagedResponse, (_, buyerId: string, propertyGuid: string, transactions: TransactionInfo[]) => {
             setGameState(state => {
                 if (!state) throw new Error("No active game")
                 return produce(state, draft => {
                     draft.currentPhase = GamePhase.PostLandingActions
                     const activePlayer = draft.activePlayers.find(p => p.id === buyerId)
                     if (!activePlayer) throw new Error("no player found?????")
-                    activePlayer.money = playerRemainingMoney;
+
+                    draft.transactionsHistory.history.push(transactions[0])
+                    activePlayer.money -= transactions[0].amount
 
                     const space = draft.board.spaces.find(space => space.id === propertyGuid)
                     if (!space) throw new Error("no property found")

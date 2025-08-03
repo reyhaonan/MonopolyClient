@@ -1,10 +1,10 @@
 import type { BoardSpace } from "./BoardSpace";
 import type { Player } from "./Player";
+import type { Trade } from "./Trade";
 import type { TransactionInfo } from "./TransactionInfo";
 
 export type GameState = {
   gameId: string;
-  players: Player[];
   activePlayers: Player[];
   board: {
     spaces: BoardSpace[];
@@ -15,4 +15,5 @@ export type GameState = {
   transactionsHistory: {
     history: TransactionInfo[];
   };
+  activeTrades: Trade[];
 };
