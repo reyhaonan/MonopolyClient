@@ -135,7 +135,7 @@ export const GameView = () => {
                 })
             })
         });
-        connection.current.on(AvailableResponse.PropertyBoughtResponse, (_, buyerId: string, propertyGuid: string, transactions: TransactionInfo[]) => {
+        connection.current.on(AvailableResponse.PropertyBoughtResponse, (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
             setGameState(state => {
                 if (!state) throw new Error("No active game")
                 return produce(state, draft => {
@@ -144,9 +144,9 @@ export const GameView = () => {
                     if (!activePlayer) throw new Error("no player found?????")
                     draft.transactionsHistory.history.push(transactions[0])
                     activePlayer.money -= transactions[0].amount
-                    activePlayer.propertiesOwned.push(propertyGuid)
+                    activePlayer.propertiesOwned.push(propertyId)
 
-                    const propertyBought = draft.board.spaces.find(space => space.id === propertyGuid)
+                    const propertyBought = draft.board.spaces.find(space => space.id === propertyId)
                     if (!propertyBought) throw new Error("no property found")
                     switch (propertyBought.$type) {
                         case "country":
@@ -160,7 +160,7 @@ export const GameView = () => {
                 })
             })
         });
-        connection.current.on(AvailableResponse.PropertySoldResponse, (_, buyerId: string, propertyGuid: string, transactions: TransactionInfo[]) => {
+        connection.current.on(AvailableResponse.PropertySoldResponse, (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
             setGameState(state => {
                 if (!state) throw new Error("No active game")
                 return produce(state, draft => {
@@ -169,11 +169,11 @@ export const GameView = () => {
                     if (!activePlayer) throw new Error("no player found?????")
                     draft.transactionsHistory.history.push(transactions[0])
                     activePlayer.money += transactions[0].amount
-                    const toDelete = activePlayer.propertiesOwned.findIndex(p => p == propertyGuid)
+                    const toDelete = activePlayer.propertiesOwned.findIndex(p => p == propertyId)
 
                     if (toDelete !== -1) activePlayer.propertiesOwned.splice(toDelete, 1)
 
-                    const propertyBought = draft.board.spaces.find(space => space.id === propertyGuid)
+                    const propertyBought = draft.board.spaces.find(space => space.id === propertyId)
                     if (!propertyBought) throw new Error("no property found")
                     switch (propertyBought.$type) {
                         case "country":
@@ -187,7 +187,7 @@ export const GameView = () => {
                 })
             })
         });
-        connection.current.on(AvailableResponse.PropertyUpgradeResponse, (_, buyerId: string, propertyGuid: string, transactions: TransactionInfo[]) => {
+        connection.current.on(AvailableResponse.PropertyUpgradeResponse, (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
             setGameState(state => {
                 if (!state) throw new Error("No active game")
                 return produce(state, draft => {
@@ -198,14 +198,14 @@ export const GameView = () => {
                     draft.transactionsHistory.history.push(transactions[0])
                     activePlayer.money -= transactions[0].amount
 
-                    const propertyBought = draft.board.spaces.find(space => space.id === propertyGuid)
+                    const propertyBought = draft.board.spaces.find(space => space.id === propertyId)
                     if (!propertyBought) throw new Error("no property found")
                     if (propertyBought.$type !== "country") throw new Error("Not an upgradable property")
                     propertyBought.currentRentStage++
                 })
             })
         });
-        connection.current.on(AvailableResponse.PropertyDowngradeResponse, (_, buyerId: string, propertyGuid: string, transactions: TransactionInfo[]) => {
+        connection.current.on(AvailableResponse.PropertyDowngradeResponse, (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
             setGameState(state => {
                 if (!state) throw new Error("No active game")
                 return produce(state, draft => {
@@ -216,14 +216,14 @@ export const GameView = () => {
                     draft.transactionsHistory.history.push(transactions[0])
                     activePlayer.money += transactions[0].amount
 
-                    const propertyBought = draft.board.spaces.find(space => space.id === propertyGuid)
+                    const propertyBought = draft.board.spaces.find(space => space.id === propertyId)
                     if (!propertyBought) throw new Error("no property found")
                     if (propertyBought.$type !== "country") throw new Error("Not an upgradable property")
                     propertyBought.currentRentStage--
                 })
             })
         });
-        connection.current.on(AvailableResponse.PropertyMortgagedResponse, (_, buyerId: string, propertyGuid: string, transactions: TransactionInfo[]) => {
+        connection.current.on(AvailableResponse.PropertyMortgagedResponse, (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
             setGameState(state => {
                 if (!state) throw new Error("No active game")
                 return produce(state, draft => {
@@ -235,14 +235,14 @@ export const GameView = () => {
                     draft.transactionsHistory.history.push(transactions[0])
                     activePlayer.money += transactions[0].amount
 
-                    const space = draft.board.spaces.find(space => space.id === propertyGuid)
+                    const space = draft.board.spaces.find(space => space.id === propertyId)
                     if (!space) throw new Error("no property found")
                     if (space.$type === "special") throw new Error("Not an mortgageAble property")
                     space.isMortgaged = true
                 })
             })
         });
-        connection.current.on(AvailableResponse.PropertyUnmortgagedResponse, (_, buyerId: string, propertyGuid: string, transactions: TransactionInfo[]) => {
+        connection.current.on(AvailableResponse.PropertyUnmortgagedResponse, (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
             setGameState(state => {
                 if (!state) throw new Error("No active game")
                 return produce(state, draft => {
@@ -253,7 +253,7 @@ export const GameView = () => {
                     draft.transactionsHistory.history.push(transactions[0])
                     activePlayer.money -= transactions[0].amount
 
-                    const space = draft.board.spaces.find(space => space.id === propertyGuid)
+                    const space = draft.board.spaces.find(space => space.id === propertyId)
                     if (!space) throw new Error("no property found")
                     if (space.$type === "special") throw new Error("Not an mortgageAble property")
                     space.isMortgaged = false
@@ -271,7 +271,7 @@ export const GameView = () => {
             })
         });
 
-        connection.current.on(AvailableResponse.DeclareBankcruptcyResponse, (_, removedPlayerGuid: string, newPlayerIndex: number) => {
+        connection.current.on(AvailableResponse.DeclareBankcruptcyResponse, (_, removedPlayerId: string, newPlayerIndex: number) => {
             setGameState(state => {
                 if (!state) throw new Error("No active game")
                 return produce(state, draft => {
@@ -280,13 +280,13 @@ export const GameView = () => {
                         draft.currentPlayerIndex = newPlayerIndex
                     }
                     draft.board.spaces.forEach(space => {
-                        if (space.$type !== "special" && space.ownerId == removedPlayerGuid) {
+                        if (space.$type !== "special" && space.ownerId == removedPlayerId) {
                             space.ownerId = null
                             space.isMortgaged = false
                             if (space.$type === "country") space.currentRentStage = RentStage.Unimproved
                         }
                     })
-                    const index = draft.activePlayers.findIndex(p => p.id === removedPlayerGuid)
+                    const index = draft.activePlayers.findIndex(p => p.id === removedPlayerId)
                     if (index !== -1) draft.activePlayers.splice(index, 1);
                 })
             })

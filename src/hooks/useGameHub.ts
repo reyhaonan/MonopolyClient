@@ -9,7 +9,7 @@ interface GameHubState {
   // Add more state properties as needed
 }
 
-const useGameHub = (gameGuid: string) => {
+const useGameHub = (gameId: string) => {
   const [gameHubState, setGameHubState] = useState<GameHubState>({
     hubConnection: null,
     playerId: null,
@@ -27,14 +27,14 @@ const useGameHub = (gameGuid: string) => {
         setGameHubState((prevState) => ({ ...prevState, playerId }));
       });
 
-      hubConnection.on("JoinGameResponse", (gameGuid: string, players: any[]) => {
+      hubConnection.on("JoinGameResponse", (gameId: string, players: any[]) => {
         // Handle join game response
-        console.log("JoinGameResponse", gameGuid, players);
+        console.log("JoinGameResponse", gameId, players);
       });
 
-      hubConnection.on("StartGameResponse", (gameGuid: string, newPlayerOrder: any[]) => {
+      hubConnection.on("StartGameResponse", (gameId: string, newPlayerOrder: any[]) => {
         // Handle start game response
-        console.log("StartGameResponse", gameGuid, newPlayerOrder);
+        console.log("StartGameResponse", gameId, newPlayerOrder);
       });
 
       hubConnection.on("SpectateGameResponse", (gameState: GameState) => {
@@ -43,28 +43,28 @@ const useGameHub = (gameGuid: string) => {
 
       hubConnection.on(
         "DiceRolledResponse",
-        (gameGuid: string, playerGuid: string, rollResult: any) => {
+        (gameId: string, playerId: string, rollResult: any) => {
           // Handle dice rolled response
-          console.log("DiceRolledResponse", gameGuid, playerGuid, rollResult);
+          console.log("DiceRolledResponse", gameId, playerId, rollResult);
         }
       );
 
-      hubConnection.on("EndTurnResponse", (gameGuid: string, nextPlayerIndex: number) => {
+      hubConnection.on("EndTurnResponse", (gameId: string, nextPlayerIndex: number) => {
         // Handle end turn response
-        console.log("EndTurnResponse", gameGuid, nextPlayerIndex);
+        console.log("EndTurnResponse", gameId, nextPlayerIndex);
       });
 
       hubConnection.on(
         "DeclareBankcruptcyResponse",
-        (gameGuid: string, removedPlayerGuid: string, nextPlayerIndex: number) => {
-          console.log("DeclareBankcruptcyResponse", gameGuid, removedPlayerGuid, nextPlayerIndex);
+        (gameId: string, removedPlayerId: string, nextPlayerIndex: number) => {
+          console.log("DeclareBankcruptcyResponse", gameId, removedPlayerId, nextPlayerIndex);
         }
       );
 
       hubConnection.on(
         "PropertyBoughtResponse",
-        (gameId: string, buyerId: string, propertyGuid: string, transactions: any[]) => {
-          console.log("PropertyBoughtResponse", gameId, buyerId, propertyGuid, transactions);
+        (gameId: string, buyerId: string, propertyId: string, transactions: any[]) => {
+          console.log("PropertyBoughtResponse", gameId, buyerId, propertyId, transactions);
         }
       );
 
@@ -74,13 +74,13 @@ const useGameHub = (gameGuid: string) => {
 
       hubConnection.on(
         "AcceptTradeResponse",
-        (gameId: string, tradeGuid: string, transactions: any[]) => {
-          console.log("AcceptTradeResponse", gameId, tradeGuid, transactions);
+        (gameId: string, tradeId: string, transactions: any[]) => {
+          console.log("AcceptTradeResponse", gameId, tradeId, transactions);
         }
       );
 
-      hubConnection.on("RejectTradeResponse", (gameId: string, tradeGuid: string) => {
-        console.log("RejectTradeResponse", gameId, tradeGuid);
+      hubConnection.on("RejectTradeResponse", (gameId: string, tradeId: string) => {
+        console.log("RejectTradeResponse", gameId, tradeId);
       });
 
       try {
@@ -90,7 +90,7 @@ const useGameHub = (gameGuid: string) => {
 
         // Invoke SpectateGame after connection
         hubConnection
-          .invoke("SpectateGame", gameGuid)
+          .invoke("SpectateGame", gameId)
           .catch((err) => console.error("Error while calling SpectateGame: ", err));
       } catch (err) {
         console.log(err);
@@ -106,13 +106,13 @@ const useGameHub = (gameGuid: string) => {
         gameHubState.hubConnection.stop();
       }
     };
-  }, [gameGuid]);
+  }, [gameId]);
 
   // Define functions to invoke server methods
-  const joinGame = async (gameGuid: string, playerName: string) => {
+  const joinGame = async (gameId: string, playerName: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke("JoinGame", gameGuid, playerName);
+        await gameHubState.hubConnection.invoke("JoinGame", gameId, playerName);
       } catch (error) {
         console.error("Error while calling JoinGame: ", error);
       }
@@ -121,10 +121,10 @@ const useGameHub = (gameGuid: string) => {
     }
   };
 
-  const startGame = async (gameGuid: string) => {
+  const startGame = async (gameId: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke("StartGame", gameGuid);
+        await gameHubState.hubConnection.invoke("StartGame", gameId);
       } catch (error) {
         console.error("Error while calling StartGame: ", error);
       }
@@ -133,10 +133,10 @@ const useGameHub = (gameGuid: string) => {
     }
   };
 
-  const rollDice = async (gameGuid: string, playerGuid: string) => {
+  const rollDice = async (gameId: string, playerId: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke("RollDice", gameGuid, playerGuid);
+        await gameHubState.hubConnection.invoke("RollDice", gameId, playerId);
       } catch (error) {
         console.error("Error while calling RollDice: ", error);
       }
@@ -145,10 +145,10 @@ const useGameHub = (gameGuid: string) => {
     }
   };
 
-  const endTurn = async (gameGuid: string, playerGuid: string) => {
+  const endTurn = async (gameId: string, playerId: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke("EndTurn", gameGuid, playerGuid);
+        await gameHubState.hubConnection.invoke("EndTurn", gameId, playerId);
       } catch (error) {
         console.error("Error while calling EndTurn: ", error);
       }
@@ -157,10 +157,10 @@ const useGameHub = (gameGuid: string) => {
     }
   };
 
-  const declareBankcruptcy = async (gameGuid: string, playerGuid: string) => {
+  const declareBankcruptcy = async (gameId: string, playerId: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke("DeclareBankcruptcy", gameGuid, playerGuid);
+        await gameHubState.hubConnection.invoke("DeclareBankcruptcy", gameId, playerId);
       } catch (error) {
         console.error("Error while calling DeclareBankcruptcy: ", error);
       }
@@ -169,10 +169,10 @@ const useGameHub = (gameGuid: string) => {
     }
   };
 
-  const useGetOutOfJailCard = async (gameGuid: string, playerGuid: string) => {
+  const useGetOutOfJailCard = async (gameId: string, playerId: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke("UseGetOutOfJailCard", gameGuid, playerGuid);
+        await gameHubState.hubConnection.invoke("UseGetOutOfJailCard", gameId, playerId);
       } catch (error) {
         console.error("Error while calling UseGetOutOfJailCard: ", error);
       }
@@ -181,10 +181,10 @@ const useGameHub = (gameGuid: string) => {
     }
   };
 
-  const payToGetOutOfJail = async (gameGuid: string, playerGuid: string) => {
+  const payToGetOutOfJail = async (gameId: string, playerId: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke("PayToGetOutOfJail", gameGuid, playerGuid);
+        await gameHubState.hubConnection.invoke("PayToGetOutOfJail", gameId, playerId);
       } catch (error) {
         console.error("Error while calling PayToGetOutOfJail: ", error);
       }
@@ -193,10 +193,10 @@ const useGameHub = (gameGuid: string) => {
     }
   };
 
-  const buyProperty = async (gameGuid: string, playerGuid: string) => {
+  const buyProperty = async (gameId: string, playerId: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke("BuyProperty", gameGuid, playerGuid);
+        await gameHubState.hubConnection.invoke("BuyProperty", gameId, playerId);
       } catch (error) {
         console.error("Error while calling BuyProperty: ", error);
       }
@@ -205,10 +205,10 @@ const useGameHub = (gameGuid: string) => {
     }
   };
 
-  const sellProperty = async (gameGuid: string, playerGuid: string, propertyGuid: string) => {
+  const sellProperty = async (gameId: string, playerId: string, propertyId: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke("SellProperty", gameGuid, playerGuid, propertyGuid);
+        await gameHubState.hubConnection.invoke("SellProperty", gameId, playerId, propertyId);
       } catch (error) {
         console.error("Error while calling SellProperty: ", error);
       }
@@ -217,15 +217,10 @@ const useGameHub = (gameGuid: string) => {
     }
   };
 
-  const upgradeProperty = async (gameGuid: string, playerGuid: string, propertyGuid: string) => {
+  const upgradeProperty = async (gameId: string, playerId: string, propertyId: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke(
-          "UpgradeProperty",
-          gameGuid,
-          playerGuid,
-          propertyGuid
-        );
+        await gameHubState.hubConnection.invoke("UpgradeProperty", gameId, playerId, propertyId);
       } catch (error) {
         console.error("Error while calling UpgradeProperty: ", error);
       }
@@ -234,15 +229,10 @@ const useGameHub = (gameGuid: string) => {
     }
   };
 
-  const downgradeProperty = async (gameGuid: string, playerGuid: string, propertyGuid: string) => {
+  const downgradeProperty = async (gameId: string, playerId: string, propertyId: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke(
-          "DowngradeProperty",
-          gameGuid,
-          playerGuid,
-          propertyGuid
-        );
+        await gameHubState.hubConnection.invoke("DowngradeProperty", gameId, playerId, propertyId);
       } catch (error) {
         console.error("Error while calling DowngradeProperty: ", error);
       }
@@ -251,15 +241,10 @@ const useGameHub = (gameGuid: string) => {
     }
   };
 
-  const mortgageProperty = async (gameGuid: string, playerGuid: string, propertyGuid: string) => {
+  const mortgageProperty = async (gameId: string, playerId: string, propertyId: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke(
-          "MortgageProperty",
-          gameGuid,
-          playerGuid,
-          propertyGuid
-        );
+        await gameHubState.hubConnection.invoke("MortgageProperty", gameId, playerId, propertyId);
       } catch (error) {
         console.error("Error while calling MortgageProperty: ", error);
       }
@@ -268,15 +253,10 @@ const useGameHub = (gameGuid: string) => {
     }
   };
 
-  const unmortgageProperty = async (gameGuid: string, playerGuid: string, propertyGuid: string) => {
+  const unmortgageProperty = async (gameId: string, playerId: string, propertyId: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke(
-          "UnmortgageProperty",
-          gameGuid,
-          playerGuid,
-          propertyGuid
-        );
+        await gameHubState.hubConnection.invoke("UnmortgageProperty", gameId, playerId, propertyId);
       } catch (error) {
         console.error("Error while calling UnmortgageProperty: ", error);
       }
@@ -286,9 +266,9 @@ const useGameHub = (gameGuid: string) => {
   };
 
   const initiateTrade = async (
-    gameGuid: string,
-    initiatorGuid: string,
-    recipientGuid: string,
+    gameId: string,
+    initiatorId: string,
+    recipientId: string,
     propertyOffer: string[],
     propertyCounterOffer: string[],
     moneyFromInitiator: number,
@@ -298,9 +278,9 @@ const useGameHub = (gameGuid: string) => {
       try {
         await gameHubState.hubConnection.invoke(
           "InitiateTrade",
-          gameGuid,
-          initiatorGuid,
-          recipientGuid,
+          gameId,
+          initiatorId,
+          recipientId,
           propertyOffer,
           propertyCounterOffer,
           moneyFromInitiator,
@@ -314,10 +294,10 @@ const useGameHub = (gameGuid: string) => {
     }
   };
 
-  const acceptTrade = async (gameGuid: string, approvalId: string, tradeGuid: string) => {
+  const acceptTrade = async (gameId: string, approvalId: string, tradeId: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke("AcceptTrade", gameGuid, approvalId, tradeGuid);
+        await gameHubState.hubConnection.invoke("AcceptTrade", gameId, approvalId, tradeId);
       } catch (error) {
         console.error("Error while calling AcceptTrade: ", error);
       }
@@ -326,10 +306,10 @@ const useGameHub = (gameGuid: string) => {
     }
   };
 
-  const rejectTrade = async (gameGuid: string, approvalId: string, tradeGuid: string) => {
+  const rejectTrade = async (gameId: string, approvalId: string, tradeId: string) => {
     if (gameHubState.hubConnection) {
       try {
-        await gameHubState.hubConnection.invoke("RejectTrade", gameGuid, approvalId, tradeGuid);
+        await gameHubState.hubConnection.invoke("RejectTrade", gameId, approvalId, tradeId);
       } catch (error) {
         console.error("Error while calling RejectTrade: ", error);
       }

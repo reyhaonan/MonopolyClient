@@ -3,10 +3,10 @@ import { useMutation } from "@tanstack/react-query";
 
 export const useVerifyGame = () =>
   useMutation({
-    mutationFn: (gameGuid: string) =>
+    mutationFn: (gameId: string) =>
       axiosInstance.post("/game/verify", undefined, {
         params: {
-          gameGuid,
+          gameId,
         },
       }),
   });
