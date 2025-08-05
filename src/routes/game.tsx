@@ -14,5 +14,7 @@ export const Route = createFileRoute('/game')({
 })
 
 function RouteComponent() {
-  return <GameView />
+
+  const { room } = Route.useSearch()
+  return <GameView gameId={room} />
 }

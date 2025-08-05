@@ -1,10 +1,11 @@
 import { axiosInstance } from "@/utils/axiosInstance";
-import { useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
-export const useVerifyGame = () =>
-  useMutation({
-    mutationFn: (gameId: string) =>
-      axiosInstance.post("/game/verify", undefined, {
+export const useVerifyGame = (gameId?: string) =>
+  useQuery({
+    queryKey: ["verifyGame", gameId],
+    queryFn: () =>
+      axiosInstance.post<string>("/game/verify", undefined, {
         params: {
           gameId,
         },

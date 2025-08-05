@@ -9,7 +9,7 @@ interface GameHubState {
   // Add more state properties as needed
 }
 
-const useGameHub = (gameId: string) => {
+const useGameHub = (gameId?: string) => {
   const [gameHubState, setGameHubState] = useState<GameHubState>({
     hubConnection: null,
     playerId: null,
@@ -17,9 +17,10 @@ const useGameHub = (gameId: string) => {
   });
 
   useEffect(() => {
+    if (!gameId) return;
     const connectToHub = async () => {
       const hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl(`${import.meta.env.VITE_API_URL}/gameHub`)
+        .withUrl(`${import.meta.env.VITE_API_URL}/gameHubs`)
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
