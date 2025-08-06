@@ -1,4 +1,5 @@
 import { axiosInstance } from '@/utils/axiosInstance'
+import { getCookie } from '@/utils/cookie'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import z from 'zod'
@@ -16,11 +17,24 @@ function RouteComponent() {
 
   const { code } = Route.useSearch()
 
+  // useQuery({
+  //   queryKey: [code],
+  //   queryFn: () => axiosInstance.post('/oauth2/discord', {
+  //     code
+  //   },)
+  // })
   useQuery({
     queryKey: [code],
-    queryFn: () => axiosInstance.post('/oauth2/discord', {
-      code
-    })
+    queryFn: async () => {
+      const res = await axiosInstance.post('/auth/login', undefined, {
+        params: {
+          user: crypto.randomUUID()
+        }
+      })
+
+      sessionStorage.setItem("XSRF-TOKEN", getCookie("XSRF-TOKEN"))
+      return res
+    }
   })
 
   return <div>Hello {code}!</div>

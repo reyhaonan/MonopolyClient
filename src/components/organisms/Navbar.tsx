@@ -1,7 +1,9 @@
+import { Link } from "@tanstack/react-router"
+
 export const Navbar = () => {
     return (
         <div className="navbar bg-base-100 flex items-center mx-auto px-4">
-            <a className="btn btn-ghost text-xl">Boring Monopoly</a>
+            <Link to="/" className="btn btn-ghost text-xl">Boring Monopoly</Link>
             <label className="swap swap-rotate ml-auto">
                 {/* this hidden checkbox controls the state */}
                 <input type="checkbox" className="theme-controller" value="caramellatte" />
