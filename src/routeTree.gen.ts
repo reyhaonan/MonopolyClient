@@ -10,52 +10,57 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as Oauth2RouteImport } from './routes/oauth2'
-import { Route as GameRouteImport } from './routes/game'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteRouteImport } from './routes/_auth/route'
+import { Route as AuthIndexRouteImport } from './routes/_auth/index'
+import { Route as AuthGameRouteImport } from './routes/_auth/game'
 
 const Oauth2Route = Oauth2RouteImport.update({
   id: '/oauth2',
   path: '/oauth2',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GameRoute = GameRouteImport.update({
-  id: '/game',
-  path: '/game',
+const AuthRouteRoute = AuthRouteRouteImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthGameRoute = AuthGameRouteImport.update({
+  id: '/game',
+  path: '/game',
+  getParentRoute: () => AuthRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/game': typeof GameRoute
   '/oauth2': typeof Oauth2Route
+  '/game': typeof AuthGameRoute
+  '/': typeof AuthIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/game': typeof GameRoute
   '/oauth2': typeof Oauth2Route
+  '/game': typeof AuthGameRoute
+  '/': typeof AuthIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/game': typeof GameRoute
+  '/_auth': typeof AuthRouteRouteWithChildren
   '/oauth2': typeof Oauth2Route
+  '/_auth/game': typeof AuthGameRoute
+  '/_auth/': typeof AuthIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/game' | '/oauth2'
+  fullPaths: '/oauth2' | '/game' | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/game' | '/oauth2'
-  id: '__root__' | '/' | '/game' | '/oauth2'
+  to: '/oauth2' | '/game' | '/'
+  id: '__root__' | '/_auth' | '/oauth2' | '/_auth/game' | '/_auth/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  GameRoute: typeof GameRoute
+  AuthRouteRoute: typeof AuthRouteRouteWithChildren
   Oauth2Route: typeof Oauth2Route
 }
 
@@ -68,26 +73,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Oauth2RouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/game': {
-      id: '/game'
-      path: '/game'
-      fullPath: '/game'
-      preLoaderRoute: typeof GameRouteImport
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_auth/': {
+      id: '/_auth/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/game': {
+      id: '/_auth/game'
+      path: '/game'
+      fullPath: '/game'
+      preLoaderRoute: typeof AuthGameRouteImport
+      parentRoute: typeof AuthRouteRoute
     }
   }
 }
 
+interface AuthRouteRouteChildren {
+  AuthGameRoute: typeof AuthGameRoute
+  AuthIndexRoute: typeof AuthIndexRoute
+}
+
+const AuthRouteRouteChildren: AuthRouteRouteChildren = {
+  AuthGameRoute: AuthGameRoute,
+  AuthIndexRoute: AuthIndexRoute,
+}
+
+const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
+  AuthRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  GameRoute: GameRoute,
+  AuthRouteRoute: AuthRouteRouteWithChildren,
   Oauth2Route: Oauth2Route,
 }
 export const routeTree = rootRouteImport

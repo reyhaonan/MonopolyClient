@@ -1,6 +1,7 @@
 import { useCurrentUser } from "@/services/useCurrentUser";
 import { useEffect, type ReactNode } from "react";
 import { AuthContext } from "../../context/AuthContext";
+import LoginView from "../pages/LoginView";
 
 type Props = {
   children: ReactNode;
@@ -16,5 +17,5 @@ export const AuthProvider = ({ children }: Props) => {
 
   if (isLoading) return <>Loading...</>
 
-  return <AuthContext value={data?.data || null}>{children}</AuthContext>;
+  return data ? <AuthContext value={data.data}>{children}</AuthContext> : <LoginView />
 };

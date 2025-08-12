@@ -6,7 +6,7 @@ const GameRoomSearch = z.object({
   room: z.guid()
 })
 
-export const Route = createFileRoute('/game')({
+export const Route = createFileRoute('/_auth/game')({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): { room: string } => {
     return GameRoomSearch.parse(search)

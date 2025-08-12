@@ -1,7 +1,8 @@
 import { axiosInstance } from '@/utils/axiosInstance'
 import { getCookie } from '@/utils/cookie'
 import { useQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import z from 'zod'
 
 const searchValidation = z.object({
@@ -17,13 +18,9 @@ function RouteComponent() {
 
   const { code } = Route.useSearch()
 
-  // useQuery({
-  //   queryKey: [code],
-  //   queryFn: () => axiosInstance.post('/oauth2/discord', {
-  //     code
-  //   },)
-  // })
-  useQuery({
+  const navigate = useNavigate({ from: "/oauth2" })
+
+  const { data } = useQuery({
     queryKey: [code],
     queryFn: async () => {
       const res = await axiosInstance.post('/auth/discord', { code })
@@ -33,5 +30,9 @@ function RouteComponent() {
     }
   })
 
-  return <div>Hello {code}!</div>
+  useEffect(() => {
+    if (data) navigate({ to: "/" });
+  }, [data])
+
+  return <div>Loading...</div>
 }
