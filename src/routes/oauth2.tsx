@@ -26,11 +26,7 @@ function RouteComponent() {
   useQuery({
     queryKey: [code],
     queryFn: async () => {
-      const res = await axiosInstance.post('/auth/login', undefined, {
-        params: {
-          user: crypto.randomUUID()
-        }
-      })
+      const res = await axiosInstance.post('/auth/discord', { code })
 
       sessionStorage.setItem("XSRF-TOKEN", getCookie("XSRF-TOKEN"))
       return res

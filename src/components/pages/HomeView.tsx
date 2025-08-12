@@ -4,6 +4,7 @@ import { useVerifyGame } from "@/services/useVerifyGame"
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import phrolova from '@/assets/phrolova-ww.gif'
+import { useAuth } from "@/hooks/useAuth"
 
 export const HomeView = () => {
     const [tempGameId, setTempGameId] = useState("")
@@ -37,11 +38,12 @@ export const HomeView = () => {
             }
         })
     }
-
+    const user = useAuth();
     return (
         <div className="mx-auto">
             <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 space-y-4 w-max">
                 <img className="w-1/2 mx-auto" src={phrolova} />
+                {user}
                 <input type="text" placeholder="Enter Room Code" className="input w-full" value={tempGameId} onChange={e => setTempGameId(e.target.value)} />
                 <button className="btn btn-primary w-full btn-xl" onClick={() => setGameId(tempGameId)}>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">

@@ -4,7 +4,12 @@ export const Navbar = () => {
     return (
         <div className="navbar bg-base-100 flex items-center mx-auto px-4">
             <Link to="/" className="btn btn-ghost text-xl">Boring Monopoly</Link>
-            <label className="swap swap-rotate ml-auto">
+            <a
+                className="ml-auto mr-4"
+                href="https://discord.com/oauth2/authorize?client_id=1402626488079224862&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A5173%2Foauth2&scope=identifyhttps://discord.com/oauth2/authorize?client_id=1402626488079224862&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A5173%2Foauth2&scope=identify+openid">
+                Discord
+            </a>
+            <label className="swap swap-rotate">
                 {/* this hidden checkbox controls the state */}
                 <input type="checkbox" className="theme-controller" value="caramellatte" />
 
