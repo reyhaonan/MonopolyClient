@@ -1,4 +1,4 @@
-import { axiosInstance } from '@/utils/axiosInstance'
+import { loginDiscord } from '@/services/auth'
 import { getCookie } from '@/utils/cookie'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
@@ -23,7 +23,7 @@ function RouteComponent() {
   const { data } = useQuery({
     queryKey: [code],
     queryFn: async () => {
-      const res = await axiosInstance.post('/auth/discord', { code })
+      const res = await loginDiscord(code)
 
       sessionStorage.setItem("XSRF-TOKEN", getCookie("XSRF-TOKEN"))
       return res

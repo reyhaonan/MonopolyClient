@@ -6,9 +6,8 @@ import type { BoardSpace } from "@/types/BoardSpace";
 import type { TransactionInfo } from "@/types/TransactionInfo";
 import type { Trade } from "@/types/Trade";
 
-const useGameHub = (gameId?: string) => {
+const useGameHub = (gameId?: string, playerId?: string) => {
   const [hubConnection, setHubConnection] = useState<signalR.HubConnection | null>(null);
-  const [playerId, setPlayerId] = useState<string | null>(null);
 
   const [activePlayers, setActivePlayers] = useState<Player[]>([]);
   const [board, setBoard] = useState<{ spaces: BoardSpace[] }>({ spaces: [] });
@@ -20,10 +19,8 @@ const useGameHub = (gameId?: string) => {
   });
   const [activeTrades, setActiveTrades] = useState<Trade[]>([]);
 
-  console.log(playerId);
-
   useEffect(() => {
-    if (!gameId) return;
+    if (!gameId || !playerId) return;
     const connectToHub = async () => {
       const csrfToken = sessionStorage.getItem("XSRF-TOKEN");
       if (!csrfToken) return;
@@ -37,18 +34,12 @@ const useGameHub = (gameId?: string) => {
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
-      tempHubConnection.on("PlayerIdAssignmentResponse", (playerId: string) => {
-        setPlayerId(playerId);
-      });
-
-      tempHubConnection.on("JoinGameResponse", (gameId: string, players: any[]) => {
+      tempHubConnection.on("JoinGameResponse", (_, players: any[]) => {
         // Handle join game response
-        console.log("JoinGameResponse", gameId, players);
       });
 
-      tempHubConnection.on("StartGameResponse", (gameId: string, newPlayerOrder: any[]) => {
+      tempHubConnection.on("StartGameResponse", (_, newPlayerOrder: any[]) => {
         // Handle start game response
-        console.log("StartGameResponse", gameId, newPlayerOrder);
       });
 
       tempHubConnection.on("SpectateGameResponse", (gameState: GameState) => {
@@ -61,49 +52,33 @@ const useGameHub = (gameId?: string) => {
         setActiveTrades(gameState.activeTrades);
       });
 
-      tempHubConnection.on(
-        "DiceRolledResponse",
-        (gameId: string, playerId: string, rollResult: any) => {
-          setTotalDiceRoll(rollResult);
-        }
-      );
+      tempHubConnection.on("DiceRolledResponse", (_, playerId: string, rollResult: any) => {
+        setTotalDiceRoll(rollResult);
+      });
 
-      tempHubConnection.on("EndTurnResponse", (gameId: string, nextPlayerIndex: number) => {
+      tempHubConnection.on("EndTurnResponse", (_, nextPlayerIndex: number) => {
         setCurrentPlayerIndex(nextPlayerIndex);
       });
 
       tempHubConnection.on(
         "DeclareBankcruptcyResponse",
-        (gameId: string, removedPlayerId: string, nextPlayerIndex: number) => {
-          console.log("DeclareBankcruptcyResponse", gameId, removedPlayerId, nextPlayerIndex);
-        }
+        (_, removedPlayerId: string, nextPlayerIndex: number) => {}
       );
 
       tempHubConnection.on(
         "PropertyBoughtResponse",
-        (gameId: string, buyerId: string, propertyId: string, transactions: any[]) => {
-          console.log("PropertyBoughtResponse", gameId, buyerId, propertyId, transactions);
-        }
+        (_, buyerId: string, propertyId: string, transactions: any[]) => {}
       );
 
-      tempHubConnection.on("InitiateTradeResponse", (gameId: string, trade: any) => {
-        console.log("InitiateTradeResponse", gameId, trade);
-      });
+      tempHubConnection.on("InitiateTradeResponse", (_, trade: any) => {});
 
-      tempHubConnection.on(
-        "AcceptTradeResponse",
-        (gameId: string, tradeId: string, transactions: any[]) => {
-          console.log("AcceptTradeResponse", gameId, tradeId, transactions);
-        }
-      );
+      tempHubConnection.on("AcceptTradeResponse", (_, tradeId: string, transactions: any[]) => {});
 
-      tempHubConnection.on("RejectTradeResponse", (gameId: string, tradeId: string) => {
-        console.log("RejectTradeResponse", gameId, tradeId);
-      });
+      tempHubConnection.on("RejectTradeResponse", (_, tradeId: string) => {});
 
       try {
         await tempHubConnection.start();
-        console.log("SignalR Connected.");
+
         setHubConnection(tempHubConnection);
 
         // Invoke SpectateGame after connection
@@ -111,7 +86,6 @@ const useGameHub = (gameId?: string) => {
           .invoke("SpectateGame", gameId)
           .catch((err) => console.error("Error while calling SpectateGame: ", err));
       } catch (err) {
-        console.log(err);
         setTimeout(connectToHub, 5000);
       }
     };
@@ -124,10 +98,10 @@ const useGameHub = (gameId?: string) => {
         hubConnection.stop();
       }
     };
-  }, [gameId]);
+  }, [gameId, playerId]);
 
   // Define functions to invoke server methods
-  const joinGame = async (gameId: string, playerName: string) => {
+  const joinGame = async (playerName: string) => {
     if (hubConnection) {
       try {
         await hubConnection.invoke("JoinGame", gameId, playerName);
@@ -139,7 +113,7 @@ const useGameHub = (gameId?: string) => {
     }
   };
 
-  const startGame = async (gameId: string) => {
+  const startGame = async () => {
     if (hubConnection) {
       try {
         await hubConnection.invoke("StartGame", gameId);
@@ -151,7 +125,7 @@ const useGameHub = (gameId?: string) => {
     }
   };
 
-  const rollDice = async (gameId: string, playerId: string) => {
+  const rollDice = async () => {
     if (hubConnection) {
       try {
         await hubConnection.invoke("RollDice", gameId, playerId);
@@ -163,7 +137,7 @@ const useGameHub = (gameId?: string) => {
     }
   };
 
-  const endTurn = async (gameId: string, playerId: string) => {
+  const endTurn = async () => {
     if (hubConnection) {
       try {
         await hubConnection.invoke("EndTurn", gameId, playerId);
@@ -175,7 +149,7 @@ const useGameHub = (gameId?: string) => {
     }
   };
 
-  const declareBankcruptcy = async (gameId: string, playerId: string) => {
+  const declareBankcruptcy = async () => {
     if (hubConnection) {
       try {
         await hubConnection.invoke("DeclareBankcruptcy", gameId, playerId);
@@ -187,7 +161,7 @@ const useGameHub = (gameId?: string) => {
     }
   };
 
-  const useGetOutOfJailCard = async (gameId: string, playerId: string) => {
+  const useGetOutOfJailCard = async () => {
     if (hubConnection) {
       try {
         await hubConnection.invoke("UseGetOutOfJailCard", gameId, playerId);
@@ -199,7 +173,7 @@ const useGameHub = (gameId?: string) => {
     }
   };
 
-  const payToGetOutOfJail = async (gameId: string, playerId: string) => {
+  const payToGetOutOfJail = async () => {
     if (hubConnection) {
       try {
         await hubConnection.invoke("PayToGetOutOfJail", gameId, playerId);
@@ -211,7 +185,7 @@ const useGameHub = (gameId?: string) => {
     }
   };
 
-  const buyProperty = async (gameId: string, playerId: string) => {
+  const buyProperty = async () => {
     if (hubConnection) {
       try {
         await hubConnection.invoke("BuyProperty", gameId, playerId);
@@ -223,7 +197,7 @@ const useGameHub = (gameId?: string) => {
     }
   };
 
-  const sellProperty = async (gameId: string, playerId: string, propertyId: string) => {
+  const sellProperty = async (propertyId: string) => {
     if (hubConnection) {
       try {
         await hubConnection.invoke("SellProperty", gameId, playerId, propertyId);
@@ -235,7 +209,7 @@ const useGameHub = (gameId?: string) => {
     }
   };
 
-  const upgradeProperty = async (gameId: string, playerId: string, propertyId: string) => {
+  const upgradeProperty = async (propertyId: string) => {
     if (hubConnection) {
       try {
         await hubConnection.invoke("UpgradeProperty", gameId, playerId, propertyId);
@@ -247,7 +221,7 @@ const useGameHub = (gameId?: string) => {
     }
   };
 
-  const downgradeProperty = async (gameId: string, playerId: string, propertyId: string) => {
+  const downgradeProperty = async (propertyId: string) => {
     if (hubConnection) {
       try {
         await hubConnection.invoke("DowngradeProperty", gameId, playerId, propertyId);
@@ -259,7 +233,7 @@ const useGameHub = (gameId?: string) => {
     }
   };
 
-  const mortgageProperty = async (gameId: string, playerId: string, propertyId: string) => {
+  const mortgageProperty = async (propertyId: string) => {
     if (hubConnection) {
       try {
         await hubConnection.invoke("MortgageProperty", gameId, playerId, propertyId);
@@ -271,7 +245,7 @@ const useGameHub = (gameId?: string) => {
     }
   };
 
-  const unmortgageProperty = async (gameId: string, playerId: string, propertyId: string) => {
+  const unmortgageProperty = async (propertyId: string) => {
     if (hubConnection) {
       try {
         await hubConnection.invoke("UnmortgageProperty", gameId, playerId, propertyId);
@@ -284,7 +258,6 @@ const useGameHub = (gameId?: string) => {
   };
 
   const initiateTrade = async (
-    gameId: string,
     initiatorId: string,
     recipientId: string,
     propertyOffer: string[],
@@ -312,10 +285,10 @@ const useGameHub = (gameId?: string) => {
     }
   };
 
-  const acceptTrade = async (gameId: string, approvalId: string, tradeId: string) => {
+  const acceptTrade = async (tradeId: string) => {
     if (hubConnection) {
       try {
-        await hubConnection.invoke("AcceptTrade", gameId, approvalId, tradeId);
+        await hubConnection.invoke("AcceptTrade", gameId, playerId, tradeId);
       } catch (error) {
         console.error("Error while calling AcceptTrade: ", error);
       }
@@ -324,10 +297,10 @@ const useGameHub = (gameId?: string) => {
     }
   };
 
-  const rejectTrade = async (gameId: string, approvalId: string, tradeId: string) => {
+  const rejectTrade = async (tradeId: string) => {
     if (hubConnection) {
       try {
-        await hubConnection.invoke("RejectTrade", gameId, approvalId, tradeId);
+        await hubConnection.invoke("RejectTrade", gameId, playerId, tradeId);
       } catch (error) {
         console.error("Error while calling RejectTrade: ", error);
       }
@@ -337,6 +310,15 @@ const useGameHub = (gameId?: string) => {
   };
 
   return {
+    gameState: {
+      activePlayers,
+      board,
+      currentPlayerIndex,
+      totalDiceRoll,
+      currentPhase,
+      transactionsHistory,
+      activeTrades,
+    },
     hubConnection,
     joinGame,
     startGame,

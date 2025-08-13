@@ -1,18 +1,23 @@
 
-import { useCreateGame } from "@/services/useCreateGame"
-import { useVerifyGame } from "@/services/useVerifyGame"
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import phrolova from '@/assets/phrolova-ww.gif'
 import { useAuth } from "@/hooks/useAuth"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import * as GameAPI from "@/services/game"
 
 export const HomeView = () => {
     const [tempGameId, setTempGameId] = useState("")
     const [gameId, setGameId] = useState("")
     const navigate = useNavigate({ from: "/" })
 
-    const { data } = useVerifyGame(gameId);
-    const { mutate: createGame } = useCreateGame();
+    const { data } = useQuery({
+        queryKey: ["verifyGame", gameId],
+        queryFn: () => GameAPI.verifyGame(gameId)
+    })
+    const { mutate: createGame } = useMutation({
+        mutationFn: () => GameAPI.createGame()
+    })
 
     useEffect(() => {
         if (!data) return

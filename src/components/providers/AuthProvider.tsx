@@ -1,7 +1,8 @@
-import { useCurrentUser } from "@/services/useCurrentUser";
 import { useEffect, type ReactNode } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import LoginView from "../pages/LoginView";
+import { useQuery } from "@tanstack/react-query";
+import { getCurrentUser } from "@/services/auth";
 
 type Props = {
   children: ReactNode;
@@ -9,7 +10,10 @@ type Props = {
 
 
 export const AuthProvider = ({ children }: Props) => {
-  const { data, error, isLoading } = useCurrentUser()
+  const { data, error, isLoading } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: () => getCurrentUser()
+  })
 
   useEffect(() => {
     if (error) console.log("BREBRE", error)
