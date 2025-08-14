@@ -12,6 +12,7 @@ export const HomeView = () => {
     const navigate = useNavigate({ from: "/" })
 
     const { data } = useQuery({
+        enabled: !!gameId,
         queryKey: ["verifyGame", gameId],
         queryFn: () => GameAPI.verifyGame(gameId)
     })
