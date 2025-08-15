@@ -1,6 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import phrolova from "@/assets/phrolova-ww.gif";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as GameAPI from "@/services/game";
@@ -45,7 +44,6 @@ export const HomeView = () => {
   return (
     <div className="mx-auto">
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 space-y-4 w-max">
-        <img className="w-1/2 mx-auto" src={phrolova} />
         {user}
         <input
           type="text"

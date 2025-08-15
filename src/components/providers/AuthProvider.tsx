@@ -12,6 +12,8 @@ export const AuthProvider = ({ children }: Props) => {
   const { data, error, isLoading } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => getCurrentUser(),
+    refetchInterval: 1000 * 60 * 5, //Every 5 minute
+    refetchIntervalInBackground: true
   });
 
   useEffect(() => {
