@@ -1,6 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as GameAPI from "@/services/game";
 
@@ -40,11 +39,9 @@ export const HomeView = () => {
       },
     });
   };
-  const user = useAuth();
   return (
     <div className="mx-auto">
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 space-y-4 w-max">
-        {user}
+      <div className="fixed w-full max-w-md px-6 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 space-y-4">
         <input
           type="text"
           placeholder="Enter Room Code"
