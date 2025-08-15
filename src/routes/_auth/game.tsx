@@ -1,20 +1,19 @@
-import { GameView } from '@/components/pages/GameView'
-import { createFileRoute } from '@tanstack/react-router'
-import z from 'zod'
+import { GameView } from "@/components/pages/GameView";
+import { createFileRoute } from "@tanstack/react-router";
+import z from "zod";
 
 const GameRoomSearch = z.object({
-  room: z.guid()
-})
+  room: z.guid(),
+});
 
-export const Route = createFileRoute('/_auth/game')({
+export const Route = createFileRoute("/_auth/game")({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): { room: string } => {
-    return GameRoomSearch.parse(search)
-  }
-})
+    return GameRoomSearch.parse(search);
+  },
+});
 
 function RouteComponent() {
-
-  const { room } = Route.useSearch()
-  return <GameView gameId={room} />
+  const { room } = Route.useSearch();
+  return <GameView gameId={room} />;
 }

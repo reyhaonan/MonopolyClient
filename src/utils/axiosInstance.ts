@@ -14,7 +14,7 @@ axiosInstance.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 axiosInstance.interceptors.response.use(
@@ -24,9 +24,13 @@ axiosInstance.interceptors.response.use(
     if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true; // Mark the request as retried to avoid infinite loops.
       try {
-        await axios.post(`${import.meta.env.VITE_API_URL}/auth/refresh`, undefined, {
-          withCredentials: true,
-        });
+        await axios.post(
+          `${import.meta.env.VITE_API_URL}/auth/refresh`,
+          undefined,
+          {
+            withCredentials: true,
+          },
+        );
 
         sessionStorage.setItem("XSRF-TOKEN", getCookie("XSRF-TOKEN"));
         return axiosInstance(originalRequest); // Retry the original request with the new access token.
@@ -36,5 +40,5 @@ axiosInstance.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );

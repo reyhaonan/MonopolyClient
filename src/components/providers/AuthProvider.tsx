@@ -8,18 +8,21 @@ type Props = {
   children: ReactNode;
 };
 
-
 export const AuthProvider = ({ children }: Props) => {
   const { data, error, isLoading } = useQuery({
     queryKey: ["currentUser"],
-    queryFn: () => getCurrentUser()
-  })
+    queryFn: () => getCurrentUser(),
+  });
 
   useEffect(() => {
-    if (error) console.log("BREBRE", error)
-  }, [error])
+    if (error) console.log("BREBRE", error);
+  }, [error]);
 
-  if (isLoading) return <>Loading...</>
+  if (isLoading) return <>Loading...</>;
 
-  return data ? <AuthContext value={data.data}>{children}</AuthContext> : <LoginView />
+  return data ? (
+    <AuthContext value={data.data}>{children}</AuthContext>
+  ) : (
+    <LoginView />
+  );
 };

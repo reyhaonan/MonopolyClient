@@ -231,7 +231,6 @@
 //                     const activePlayer = draft.activePlayers.find(p => p.id === buyerId)
 //                     if (!activePlayer) throw new Error("no player found?????")
 
-
 //                     draft.transactionsHistory.history.push(transactions[0])
 //                     activePlayer.money += transactions[0].amount
 
@@ -557,4 +556,4 @@
 //     )
 // }
 
-export default ""
+export default "";
