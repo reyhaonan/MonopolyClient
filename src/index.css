@@ -125,3 +125,58 @@
 .space-special {
   @apply bg-gray-50 border-gray-400;
 }
+
+.board {
+  grid-template-areas:
+    "top-left top top-right"
+    "left center right "
+    "bottom-left bottom bottom-right";
+}
+
+.top-left {
+  grid-area: top-left;
+}
+
+.top {
+  grid-area: top;
+}
+
+.top .tile,
+.bottom .tile {
+  @apply aspect-[21/34];
+}
+
+.left .tile,
+.right .tile {
+  @apply aspect-[34/21];
+}
+
+.top-right {
+  grid-area: top-right;
+}
+
+.right {
+  grid-area: right;
+  writing-mode: vertical-rl;
+}
+
+.left {
+  grid-area: left;
+  writing-mode: sideways-lr;
+}
+
+.center {
+  grid-area: center;
+}
+
+.bottom-left {
+  grid-area: bottom-left;
+}
+
+.bottom {
+  grid-area: bottom;
+}
+
+.bottom-right {
+  grid-area: bottom-right;
+}
