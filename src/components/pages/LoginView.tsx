@@ -1,24 +1,33 @@
 import DiscordLogo from "@/assets/oauth/discord.svg";
 import { loginAsGuest } from "@/services/auth";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from "@hookform/resolvers/zod"
 import z from "zod";
 import Button from "../atoms/Button";
 import phrolova from "@/assets/phrolova-ww.gif";
+import { getCookie } from "@/utils/cookie";
 
 const schema = z.object({
   username: z.string().min(1)
 })
 
 const LoginView = () => {
-
+  const qc = useQueryClient()
   const { mutate: login, isPending } = useMutation({
     mutationFn: (username: string) => loginAsGuest(username)
   })
 
   const handleLoginAsGuest: SubmitHandler<z.infer<typeof schema>> = (values) => {
-    login(values.username)
+    login(values.username, {
+      onSuccess: () => {
+
+        sessionStorage.setItem("XSRF-TOKEN", getCookie("XSRF-TOKEN"));
+        qc.refetchQueries({
+          queryKey: ["currentUser"]
+        })
+      }
+    })
   }
 
   const { control, handleSubmit, formState } = useForm({
