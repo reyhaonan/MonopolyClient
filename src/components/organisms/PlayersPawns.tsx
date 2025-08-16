@@ -1,34 +1,88 @@
 import type { Player } from '@/types/Player'
-import React, { useEffect, useMemo, useState } from 'react'
+import classNames from 'classnames'
+import React, { Fragment, useEffect, useMemo, useState } from 'react'
 
 type Props = {
     players: Player[]
+    currentPlayerIndex: number
     tileHeight: number
     tileWidth: number
 }
 
+const pawnOffsets = [
+    [
+        { x: 0, y: 0 },
+        { x: -12, y: 0 },
+        { x: 12, y: 0 },
+        { x: -24, y: 0 },
+        { x: 24, y: 0 },
+        { x: -36, y: 0 },
+        { x: 36, y: 0 },
+    ],
+    [
+        { x: 0, y: 0 },
+        { x: 0, y: -12 },
+        { x: 0, y: 12 },
+        { x: 0, y: -24 },
+        { x: 0, y: 24 },
+        { x: 0, y: -36 },
+        { x: 0, y: 36 },
+    ],
+];
 
-const PlayersPawns = ({ players, tileHeight, tileWidth }: Props) => {
+export const createMockPlayers = (names: string[], startingPosition: number): Player[] => {
+    return names.map((name, index) => ({
+        id: `player-${index + 1}`,
+        name: name,
+        money: 1500,
+        currentPosition: startingPosition,
+        isInJail: false,
+        jailTurnsRemaining: 0,
+        getOutOfJailFreeCards: 0,
+        consecutiveDoubles: 0,
+        propertiesOwned: [],
+        isBankrupt: false,
+    }));
+}
+
+const PlayersPawns = ({ players, tileHeight, tileWidth, currentPlayerIndex }: Props) => {
+
+    // const players = createMockPlayers(["apple", "banana", "cherry", "date", "elderberry", "fig", "boy"], 20)
     const monopolyBoardPositions = useMemo(() => generateMonopolyPositions(tileHeight, tileWidth), [tileHeight, tileWidth])
+
+    const spacesOccupied = players.reduce((prev, p) => {
+        prev[p.currentPosition] = [...(prev[p.currentPosition] || []), p.id]
+        return prev
+    }, {} as Record<number, string[]>)
+
+    console.log("Be", spacesOccupied)
 
     return (
         <>
-            {players.map(((player, i) =>
-                <div className="pawn absolute transition-all" key={player.id}
-                    style={{
-                        top: monopolyBoardPositions[player.currentPosition].y,
-                        left: monopolyBoardPositions[player.currentPosition].x,
-                    }}
-                >
-                    <div
-                        className="absolute w-8 h-8 rounded-full bg-white top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                        style={{
-                            marginTop: i * 4
-                        }}
-                    ></div>
+            {players.map((player) => {
+                const playersOnSameSpace = spacesOccupied[player.currentPosition];
+                const playerIndex = playersOnSameSpace.findIndex(p => p === player.id);
+                const orientation = Math.floor(player.currentPosition / 10) % 2
 
-                </div>
-            ))}
+
+                return (
+                    <div
+                        className="pawn absolute transition-all"
+                        key={player.id}
+                        style={{
+                            top: monopolyBoardPositions[player.currentPosition].y + pawnOffsets[orientation][playerIndex].x,
+                            left: monopolyBoardPositions[player.currentPosition].x + pawnOffsets[orientation][playerIndex].y,
+                        }}
+                    >
+                        <div
+                            className={classNames(
+                                "absolute aspect-square rounded-full bg-white border top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+                                player.id === players[currentPlayerIndex].id ? "w-8 z-20 shadow" : "w-6"
+                            )}
+                        ></div>
+                    </div>
+                );
+            })}
         </>
     )
 }

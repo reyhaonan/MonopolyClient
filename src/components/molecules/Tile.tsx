@@ -179,6 +179,8 @@ const Tile = ({
                 </div>
                 <div className="text-xs opacity-40 m-auto absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
 
+                    {space.boardPosition}
+                    <br />
                     {playerIsGroupOwner ? "Yea" : "Na"}
                     <br />
                     {space.$type === "country" && RentStage[space.currentRentStage]}

@@ -134,7 +134,7 @@ export const GameView = ({ gameId }: Props) => {
 
         }}
       />
-      <PlayersPawns tileHeight={tileHeight} tileWidth={tileWidth} players={activePlayers} />
+      <PlayersPawns currentPlayerIndex={currentPlayerIndex} tileHeight={tileHeight} tileWidth={tileWidth} players={activePlayers} />
     </div>
 
     {/* As a reference */}
