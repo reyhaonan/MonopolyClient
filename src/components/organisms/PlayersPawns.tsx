@@ -14,14 +14,14 @@ const PlayersPawns = ({ players, tileHeight, tileWidth }: Props) => {
     return (
         <>
             {players.map(((player, i) =>
-                <div className="pawn absolute" key={player.id}
+                <div className="pawn absolute transition-all" key={player.id}
                     style={{
                         top: monopolyBoardPositions[player.currentPosition].y,
                         left: monopolyBoardPositions[player.currentPosition].x,
                     }}
                 >
                     <div
-                        className="absolute w-8 h-8 rounded-full bg-purple-700/40 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                        className="absolute w-8 h-8 rounded-full bg-white top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                         style={{
                             marginTop: i * 4
                         }}

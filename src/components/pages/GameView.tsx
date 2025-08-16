@@ -123,7 +123,7 @@ export const GameView = ({ gameId }: Props) => {
               </Button> : null
           ,
           buyPropertyButton:
-            isMyTurn && currentPhase === GamePhase.PostLandingActions && currentPlayerSpace && currentPlayerSpace.$type !== "special" && !currentPlayerSpace.ownerId ?
+            isMyTurn && (currentPhase === GamePhase.PostLandingActions || currentPlayer.consecutiveDoubles > 0) && currentPlayerSpace && currentPlayerSpace.$type !== "special" && !currentPlayerSpace.ownerId ?
               <Button
                 className="btn btn-primary"
                 onClick={() => buyProperty()}

@@ -16,4 +16,5 @@ interface PlayerStateInfo {
   isInJail: boolean;
   newPlayerPosition: number;
   newPlayerJailTurnsRemaining: number;
+  consecutiveDoubles: number;
 }
