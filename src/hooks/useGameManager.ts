@@ -7,7 +7,7 @@ import type { TransactionInfo } from "@/types/TransactionInfo";
 import type { Trade } from "@/types/Trade";
 import { GamePhase } from "@/enums/GamePhase";
 import type { RollResult } from "@/types/RollResult";
-import { produce } from "immer";
+import { produce, type WritableDraft } from "immer";
 
 const useGameManager = (gameId?: string, playerId?: string) => {
   const [hubConnection, setHubConnection] = useState<signalR.HubConnection | null>(null);
@@ -15,7 +15,8 @@ const useGameManager = (gameId?: string, playerId?: string) => {
   const [activePlayers, setActivePlayers] = useState<Player[]>([]);
   const [board, setBoard] = useState<{ spaces: BoardSpace[] }>({ spaces: [] });
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState<number>(0);
-  const [totalDiceRoll, setTotalDiceRoll] = useState<number>(0);
+  const [diceRoll1, setDiceRoll1] = useState<number>(0);
+  const [diceRoll2, setDiceRoll2] = useState<number>(0);
   const [currentPhase, setCurrentPhase] = useState<GamePhase>(GamePhase.WaitingForPlayers);
   const [transactionsHistory, setTransactionsHistory] = useState<{
     history: TransactionInfo[];
@@ -56,14 +57,17 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         setActivePlayers(gameState.activePlayers);
         setBoard(gameState.board);
         setCurrentPlayerIndex(gameState.currentPlayerIndex);
-        setTotalDiceRoll(gameState.totalDiceRoll);
+        setDiceRoll1(0);
+        setDiceRoll2(0);
+
         setCurrentPhase(gameState.currentPhase);
         setTransactionsHistory(gameState.transactionsHistory);
         setActiveTrades(gameState.activeTrades);
       });
 
       tempHubConnection.on("DiceRolledResponse", (_, playerId: string, rollResult: RollResult) => {
-        setTotalDiceRoll(rollResult.dice.totalRoll);
+        setDiceRoll1(rollResult.dice.roll1);
+        setDiceRoll2(rollResult.dice.roll2);
         setCurrentPhase(GamePhase.PostLandingActions);
 
         // TODO: Animate
@@ -73,10 +77,13 @@ const useGameManager = (gameId?: string, playerId?: string) => {
             if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
 
             draft[playerIndex].currentPosition = rollResult.playerState.newPlayerPosition;
+            draft[playerIndex].jailTurnsRemaining =
+              rollResult.playerState.newPlayerJailTurnsRemaining;
+            draft[playerIndex].isInJail = rollResult.playerState.isInJail;
+
+            rollResult.transaction.forEach((transaction) => processTransaction(draft, transaction));
           });
         });
-
-        // TODO: transaction handling(reusable)
       });
 
       tempHubConnection.on("EndTurnResponse", (_, nextPlayerIndex: number) => {
@@ -338,7 +345,8 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       board,
       currentPlayerIndex,
       currentPlayer,
-      totalDiceRoll,
+      diceRoll1,
+      diceRoll2,
       currentPhase,
       transactionsHistory,
       activeTrades,
@@ -364,3 +372,35 @@ const useGameManager = (gameId?: string, playerId?: string) => {
 };
 
 export default useGameManager;
+
+const processTransaction = (players: Player[], transaction: TransactionInfo) => {
+  // Transaction to bank
+  if (transaction.isTransactionWithBank) {
+    // Player pay to bank
+    if (transaction.receiverId === null) {
+      const playerToDeductIndex = players.findIndex((p) => p.id === transaction.senderId);
+      if (playerToDeductIndex == -1) throw new Error("player to deduct not found");
+
+      players[playerToDeductIndex].money -= transaction.amount;
+    }
+    // Bank pay to player
+    else {
+      const playerToAddMoneyIndex = players.findIndex((p) => p.id === transaction.receiverId);
+      if (playerToAddMoneyIndex == -1) throw new Error("player to add money not found");
+      players[playerToAddMoneyIndex].money += transaction.amount;
+    }
+  }
+  // Transaction between player(rent)
+  else {
+    const playerToAddMoneyIndex = players.findIndex((p) => p.id === transaction.receiverId);
+
+    if (playerToAddMoneyIndex == -1) throw new Error("player to add money not found");
+    players[playerToAddMoneyIndex].money += transaction.amount;
+
+    const playerToDeductIndex = players.findIndex((p) => p.id === transaction.senderId);
+
+    if (playerToDeductIndex == -1) throw new Error("player to deduct money from not found");
+
+    players[playerToDeductIndex].money -= transaction.amount;
+  }
+};

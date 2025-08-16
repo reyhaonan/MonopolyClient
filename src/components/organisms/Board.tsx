@@ -1,4 +1,4 @@
-import React, { useEffect, type ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import Tile from '../molecules/Tile'
 import type { BoardSpace } from '@/types/BoardSpace'
 import phrolova from "@/assets/phrolova-ww.gif";
@@ -10,9 +10,21 @@ type Props = {
     rollDiceButton: ReactNode
     endTurnButton: ReactNode
     tileHeight: number
+
+    diceRoll1: number
+    diceRoll2: number
 }
 
-const Board = ({ board, rollDiceButton, joinGameButton, startGameButton, endTurnButton, tileHeight }: Props) => {
+const Board = ({
+    board,
+    rollDiceButton,
+    joinGameButton,
+    startGameButton,
+    endTurnButton,
+    tileHeight,
+    diceRoll1,
+    diceRoll2
+}: Props) => {
     useEffect(() => {
         console.log(document.querySelector(".tile")?.getBoundingClientRect().height)
     }, [])
@@ -21,7 +33,15 @@ const Board = ({ board, rollDiceButton, joinGameButton, startGameButton, endTurn
         <>
 
             <div className='w-fit h-fit grid board'>
-                <div className="center flex items-center justify-center">
+                <div className="center flex flex-col gap-2 items-center justify-center">
+                    <div className="roll flex gap-4 font-bold text-4xl">
+                        <div className="dice1">
+                            {diceRoll1}
+                        </div>
+                        <div className="dice2">
+                            {diceRoll2}
+                        </div>
+                    </div>
                     <img className="w-40 mx-auto col-span-2" src={phrolova} />
                     {startGameButton}
                     {joinGameButton}

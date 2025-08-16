@@ -31,7 +31,9 @@ export const GameView = ({ gameId }: Props) => {
       currentPhase,
       currentPlayer,
       currentPlayerIndex,
-      activePlayers
+      activePlayers,
+      diceRoll1,
+      diceRoll2
     } } = useGameManager(data?.data, playerId || undefined);
 
   const isInGame = activePlayers.findIndex(p => p.id === playerId) !== -1
@@ -41,18 +43,15 @@ export const GameView = ({ gameId }: Props) => {
 
   const [tileHeight, setTileHeight] = useState(0)
   const [tileWidth, setTileWidth] = useState(0)
-  const [boardSize, setBoardSize] = useState(0)
 
 
   const tileRef = useRef<HTMLDivElement>(null)
-  const boardRef = useRef<HTMLDivElement>(null)
 
 
   useLayoutEffect(() => {
     function updateSize() {
       setTileHeight(tileRef.current?.getBoundingClientRect().height || 160);
       setTileWidth(tileRef.current?.getBoundingClientRect().width || 160);
-      setBoardSize(boardRef.current?.getBoundingClientRect().height || 160);
     }
     window.addEventListener('resize', updateSize);
     updateSize();
@@ -61,13 +60,17 @@ export const GameView = ({ gameId }: Props) => {
 
   return <main className="container mx-auto flex gap-4 pb-16">
     <div className="flex-1">
-      {GamePhase[currentPhase]}
+      {GamePhase[currentPhase]}<br />
+      {playerId}
       <PlayersInfo players={activePlayers} currentPlayerIndex={currentPlayerIndex} />
     </div>
-    <div className="relative" ref={boardRef}>
+    <div className="relative">
       <Board
         board={board}
         tileHeight={tileHeight}
+
+        diceRoll1={diceRoll1}
+        diceRoll2={diceRoll2}
         joinGameButton={
           currentPhase === GamePhase.WaitingForPlayers && !isInGame ?
             <Button
@@ -106,7 +109,6 @@ export const GameView = ({ gameId }: Props) => {
       />
       <PlayersPawns tileHeight={tileHeight} tileWidth={tileWidth} players={activePlayers} />
     </div>
-    <div className="flex-1">b</div>
 
     {/* As a reference */}
     <div className="aspect-[21/34] fixed bottom-0 left-0 -z-50 w-fit opacity-0" ref={tileRef}>PHROLOVA</div>
