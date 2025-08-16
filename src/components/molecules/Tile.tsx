@@ -104,13 +104,13 @@ const Tile = ({
                     {space.ownerId === playerId && isPermittedToBuyOrSellProperty &&
                         <div className="property-options flex gap-2 mb-4">
                             {space.$type === "country" && <>
-                                <Button className='btn btn-square btn-primary' onClick={() => upgradeProperty(space.id)}>Bu</Button>
-                                <Button className='btn btn-square btn-primary' onClick={() => downgradeProperty(space.id)}>Se</Button>
+                                <Button className='btn btn-sm btn-square btn-primary' onClick={() => upgradeProperty(space.id)}>Bu</Button>
+                                <Button className='btn btn-sm btn-square btn-primary' onClick={() => downgradeProperty(space.id)}>Se</Button>
                             </>}
-                            <Button className='btn btn-square btn-primary ml-auto' onClick={() => space.isMortgaged ? unmortgageProperty(space.id) : mortgageProperty(space.id)}>
+                            <Button className='btn btn-sm btn-square btn-primary ml-auto' onClick={() => space.isMortgaged ? unmortgageProperty(space.id) : mortgageProperty(space.id)}>
                                 {space.isMortgaged ? "UM" : "M"}
                             </Button>
-                            <Button className='btn btn-square btn-primary' disabled={space.$type === "country" && space.currentRentStage > RentStage.Unimproved} onClick={() => sellProperty(space.id)}>$$</Button>
+                            <Button className='btn btn-sm btn-square btn-primary' disabled={space.$type === "country" && space.currentRentStage > RentStage.Unimproved} onClick={() => sellProperty(space.id)}>$$</Button>
                         </div>}
                     <div className="flex justify-around">
                         <div className="flex flex-col items-center">

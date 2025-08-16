@@ -1,138 +1,130 @@
-import { useEffect, type ReactNode } from 'react'
-import Tile from '../molecules/Tile'
-import type { BoardSpace } from '@/types/BoardSpace'
+// components/organisms/Board.tsx
+import type { ReactNode } from 'react';
+import Tile from '../molecules/Tile';
+import type { BoardSpace } from '@/types/BoardSpace';
 import phrolova from "@/assets/phrolova-ww.gif";
-import { useAuth } from '@/hooks/useAuth';
+
+// Define board layout constants to avoid magic numbers
+const BOARD_LAYOUT = {
+    TOP_ROW: { start: 1, end: 10 },
+    RIGHT_ROW: { start: 11, end: 20 },
+    BOTTOM_ROW: { start: 21, end: 30 },
+    LEFT_ROW: { start: 31, end: 40 },
+};
+
+// Group related props into objects for better organization
+type ActionButtons = {
+    startGameButton: ReactNode;
+    joinGameButton: ReactNode;
+    rollDiceButton: ReactNode;
+    endTurnButton: ReactNode;
+    buyPropertyButton: ReactNode;
+};
+
+type TileActions = {
+    upgradeProperty: (id: string) => void;
+    downgradeProperty: (id: string) => void;
+    mortgageProperty: (id: string) => void;
+    unmortgageProperty: (id: string) => void;
+    sellProperty: (id: string) => void;
+};
 
 type Props = {
-    board: { spaces: BoardSpace[] }
-    startGameButton: ReactNode
-    joinGameButton: ReactNode
-    rollDiceButton: ReactNode
-    endTurnButton: ReactNode
-    buyPropertyButton: ReactNode
-
-    tileHeight: number
-
-    diceRoll1: number
-    diceRoll2: number
-
-    isPermittedToBuyOrSellProperty: boolean
-
-    upgradeProperty: (id: string) => void,
-    downgradeProperty: (id: string) => void,
-    mortgageProperty: (id: string) => void,
-    unmortgageProperty: (id: string) => void,
-    sellProperty: (id: string) => void,
-}
+    board: { spaces: BoardSpace[] };
+    actionButtons: ActionButtons;
+    tileActions: TileActions;
+    diceRoll: { roll1: number; roll2: number };
+    isPermittedToBuyOrSellProperty: boolean;
+};
 
 const Board = ({
-    isPermittedToBuyOrSellProperty,
     board,
-    rollDiceButton,
-    joinGameButton,
-    startGameButton,
-    endTurnButton,
-    buyPropertyButton,
-    tileHeight,
-    diceRoll1,
-    diceRoll2,
-    ...tileProps
+    actionButtons,
+    tileActions,
+    diceRoll,
+    isPermittedToBuyOrSellProperty,
 }: Props) => {
 
-
-    const playerId = useAuth()
+    // Props that need to be passed down to each Tile
+    const tileProps = {
+        isPermittedToBuyOrSellProperty,
+        ...tileActions
+    };
 
     return (
-        <>
-            <div className='w-fit h-fit grid board'>
-                <div className="center flex flex-col gap-2 items-center justify-center">
-                    <div className="roll flex gap-4 font-bold text-4xl">
-                        <div className="dice1">
-                            {diceRoll1}
-                        </div>
-                        <div className="dice2">
-                            {diceRoll2}
-                        </div>
-                    </div>
-                    <img className="w-40 mx-auto col-span-2" src={phrolova} />
-                    {startGameButton}
-                    {joinGameButton}
-                    {rollDiceButton}
-                    {buyPropertyButton}
-                    {endTurnButton}
+        <div className='w-fit h-fit grid board'>
+            {/* Center */}
+            <div className="center flex flex-col gap-2 items-center justify-center">
+                <div className="roll flex gap-4 font-bold text-4xl">
+                    <div className="dice1">{diceRoll.roll1}</div>
+                    <div className="dice2">{diceRoll.roll2}</div>
                 </div>
-                <div
-                    className="top-left aspect-square rounded-field bg-base-200 flex items-center justify-center text-2xl font-bold"
-                    style={{ height: tileHeight, blockSize: tileHeight }}>
-                    GO!
-                </div>
-                <div className="top row flex w-fit">
-                    {board.spaces.slice(1, 10).map((space, i) =>
-                        <Tile
-                            isPermittedToBuyOrSellProperty={isPermittedToBuyOrSellProperty}
-                            space={space}
-                            orientation='top'
-                            key={i}
-                            {...tileProps}
-                        />
-                    )}
-                </div>
-                <div
-                    className="top-right aspect-square rounded-field bg-base-200 flex items-center justify-center text-2xl font-bold"
-                    style={{ height: tileHeight, blockSize: tileHeight }}>
-                    JAIL
-                </div>
-
-                <div className="right row flex flex-row-reverse">
-                    {board.spaces.slice(11, 20).map((space, i) =>
-                        <Tile
-                            isPermittedToBuyOrSellProperty={isPermittedToBuyOrSellProperty}
-                            space={space}
-                            orientation='right'
-                            key={i}
-                            {...tileProps}
-                        />
-                    )}
-                </div>
-
-                <div
-                    className="bottom-right aspect-square rounded-field bg-base-200 flex items-center justify-center text-2xl font-bold"
-                    style={{ height: tileHeight, blockSize: tileHeight }}>
-                    PARK
-                </div>
-
-                <div className="bottom row flex w-fit flex-row-reverse">
-                    {board.spaces.slice(21, 30).map((space, i) =>
-                        <Tile
-                            isPermittedToBuyOrSellProperty={isPermittedToBuyOrSellProperty}
-                            space={space}
-                            orientation='bottom'
-                            key={i}
-                            {...tileProps}
-                        />
-                    )}
-                </div>
-                <div
-                    className="bottom-left aspect-square rounded-field bg-base-200 flex items-center justify-center text-2xl font-bold"
-                    style={{ height: tileHeight, blockSize: tileHeight }}>
-                    Go to Jail!
-                </div>
-                <div className="left flex flex-row-reverse">
-                    {board.spaces.slice(31, 40).map((space, i) =>
-                        <Tile
-                            isPermittedToBuyOrSellProperty={isPermittedToBuyOrSellProperty}
-                            space={space}
-                            orientation='left'
-                            key={i}
-                            {...tileProps}
-                        />
-                    )}
-                </div>
-
+                <img className="w-40 mx-auto" src={phrolova} alt="Monopoly center art" />
+                {actionButtons.startGameButton}
+                {actionButtons.joinGameButton}
+                {actionButtons.rollDiceButton}
+                {actionButtons.buyPropertyButton}
+                {actionButtons.endTurnButton}
             </div>
-        </>
-    )
-}
 
-export default Board
+            <div className="top-left corner rounded-field bg-base-200">GO!</div>
+            <div className="top-right corner rounded-field bg-base-200">JAIL</div>
+            <div className="bottom-right corner rounded-field bg-base-200">PARK</div>
+            <div className="bottom-left corner rounded-field bg-base-200">Go to Jail!</div>
+
+            <BoardRow
+                orientation='top'
+                spaces={board.spaces.slice(BOARD_LAYOUT.TOP_ROW.start, BOARD_LAYOUT.TOP_ROW.end)}
+                className='w-fit top'
+                {...tileProps}
+            />
+            <BoardRow
+                orientation='right'
+                spaces={board.spaces.slice(BOARD_LAYOUT.RIGHT_ROW.start, BOARD_LAYOUT.RIGHT_ROW.end)}
+                className='flex-row-reverse right'
+                {...tileProps}
+            />
+            <BoardRow
+                orientation='bottom'
+                spaces={board.spaces.slice(BOARD_LAYOUT.BOTTOM_ROW.start, BOARD_LAYOUT.BOTTOM_ROW.end)}
+                className='w-fit flex-row-reverse bottom'
+                {...tileProps}
+            />
+            <BoardRow
+                orientation='left'
+                spaces={board.spaces.slice(BOARD_LAYOUT.LEFT_ROW.start, BOARD_LAYOUT.LEFT_ROW.end)}
+                className='flex-row-reverse left'
+                {...tileProps}
+            />
+        </div>
+    );
+};
+
+export default Board;
+
+import type { ComponentProps } from 'react';
+
+// Get the props required by the Tile component, but omit 'space' and 'orientation'
+// as the BoardRow will manage these itself.
+type TileProps = Omit<ComponentProps<typeof Tile>, 'space' | 'orientation'>;
+
+type BoardRowProps = TileProps & {
+    spaces: BoardSpace[];
+    orientation: 'top' | 'right' | 'bottom' | 'left';
+    className?: string;
+};
+
+const BoardRow = ({ spaces, orientation, className, ...tileProps }: BoardRowProps) => {
+    return (
+        <div className={`row flex ${className}`}>
+            {spaces.map((space) => (
+                <Tile
+                    key={space.id}
+                    space={space}
+                    orientation={orientation}
+                    {...tileProps}
+                />
+            ))}
+        </div>
+    );
+};

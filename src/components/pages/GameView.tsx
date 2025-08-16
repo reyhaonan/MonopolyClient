@@ -75,58 +75,63 @@ export const GameView = ({ gameId }: Props) => {
       <Board
         isPermittedToBuyOrSellProperty={isMyTurn && (currentPhase === GamePhase.PostLandingActions || currentPhase === GamePhase.PlayerTurnStart)}
         board={board}
-        tileHeight={tileHeight}
-        diceRoll1={diceRoll1}
-        diceRoll2={diceRoll2}
-        sellProperty={sellProperty}
-        upgradeProperty={upgradeProperty}
-        downgradeProperty={downgradeProperty}
-        mortgageProperty={mortgageProperty}
-        unmortgageProperty={unmortgageProperty}
-        joinGameButton={
-          currentPhase === GamePhase.WaitingForPlayers && !isInGame ?
+        diceRoll={{
+          roll1: diceRoll1,
+          roll2: diceRoll2,
+        }}
+        tileActions={{
+          sellProperty,
+          upgradeProperty,
+          downgradeProperty,
+          mortgageProperty,
+          unmortgageProperty,
+        }}
+        actionButtons={{
+          joinGameButton:
+            currentPhase === GamePhase.WaitingForPlayers && !isInGame ?
+              <Button
+                className="btn btn-primary"
+                onClick={() => joinGame(getCookie("Username"))}
+              >
+                Join Game
+              </Button> : null
+          ,
+          rollDiceButton:
+            isMyTurn && currentPhase === GamePhase.PlayerTurnStart ?
+              <Button
+                className="btn btn-primary"
+                onClick={() => rollDice()}
+              >
+                Roll za Dice
+              </Button> : null
+          ,
+          endTurnButton: isMyTurn && currentPhase === GamePhase.PostLandingActions ?
             <Button
               className="btn btn-primary"
-              onClick={() => joinGame(getCookie("Username"))}
+              onClick={() => endTurn()}
             >
-              Join Game
+              End Turn
             </Button> : null
-        }
-        rollDiceButton={
-          isMyTurn && currentPhase === GamePhase.PlayerTurnStart ?
-            <Button
-              className="btn btn-primary"
-              onClick={() => rollDice()}
-            >
-              Roll za Dice
-            </Button> : null
-        }
-        endTurnButton={isMyTurn && currentPhase === GamePhase.PostLandingActions ?
-          <Button
-            className="btn btn-primary"
-            onClick={() => endTurn()}
-          >
-            End Turn
-          </Button> : null
-        }
-        startGameButton={
-          isInGame && currentPhase === GamePhase.WaitingForPlayers ?
-            <Button
-              className="btn btn-primary"
-              onClick={() => startGame()}
-            >
-              Start Game
-            </Button> : null
-        }
-        buyPropertyButton={
-          isMyTurn && currentPhase === GamePhase.PostLandingActions && currentPlayerSpace && currentPlayerSpace.$type !== "special" && !currentPlayerSpace.ownerId ?
-            <Button
-              className="btn btn-primary"
-              onClick={() => buyProperty()}
-            >
-              Buy Property
-            </Button> : null
-        }
+          ,
+          startGameButton:
+            isInGame && currentPhase === GamePhase.WaitingForPlayers ?
+              <Button
+                className="btn btn-primary"
+                onClick={() => startGame()}
+              >
+                Start Game
+              </Button> : null
+          ,
+          buyPropertyButton:
+            isMyTurn && currentPhase === GamePhase.PostLandingActions && currentPlayerSpace && currentPlayerSpace.$type !== "special" && !currentPlayerSpace.ownerId ?
+              <Button
+                className="btn btn-primary"
+                onClick={() => buyProperty()}
+              >
+                Buy Property
+              </Button> : null
+
+        }}
       />
       <PlayersPawns tileHeight={tileHeight} tileWidth={tileWidth} players={activePlayers} />
     </div>
