@@ -71,6 +71,11 @@
   --noise: 0;
 }
 
+body,
+html {
+  @apply bg-base-200;
+}
+
 .debug-outline {
   @apply outline outline-1 outline-gray-300;
 }
@@ -140,6 +145,9 @@
 .top {
   grid-area: top;
 }
+.top .tile {
+  @apply flex-col-reverse;
+}
 
 .top .tile,
 .bottom .tile {
@@ -157,12 +165,12 @@
 
 .right {
   grid-area: right;
-  writing-mode: vertical-rl;
+  writing-mode: sideways-lr;
 }
 
 .left {
   grid-area: left;
-  writing-mode: sideways-lr;
+  writing-mode: vertical-rl;
 }
 
 .center {

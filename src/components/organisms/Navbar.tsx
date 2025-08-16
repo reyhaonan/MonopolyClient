@@ -18,7 +18,7 @@ export const Navbar = () => {
   };
 
   return (
-    <div className="navbar bg-base-100 flex items-center mx-auto px-4">
+    <div className="navbar flex items-center mx-auto px-4">
       <Link to="/" className="btn btn-ghost text-xl">
         Boring Monopoly
       </Link>
