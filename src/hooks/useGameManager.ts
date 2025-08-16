@@ -7,7 +7,7 @@ import type { TransactionInfo } from "@/types/TransactionInfo";
 import type { Trade } from "@/types/Trade";
 import { GamePhase } from "@/enums/GamePhase";
 import type { RollResult } from "@/types/RollResult";
-import { produce, type WritableDraft } from "immer";
+import { produce } from "immer";
 
 const useGameManager = (gameId?: string, playerId?: string) => {
   const [hubConnection, setHubConnection] = useState<signalR.HubConnection | null>(null);
@@ -25,6 +25,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
   });
   const [activeTrades, setActiveTrades] = useState<Trade[]>([]);
   const currentPlayer = activePlayers[currentPlayerIndex];
+  const currentPlayerSpace = currentPlayer ? board.spaces[currentPlayer.currentPosition] : null;
 
   useEffect(() => {
     if (!gameId || !playerId) return;
@@ -98,7 +99,176 @@ const useGameManager = (gameId?: string, playerId?: string) => {
 
       tempHubConnection.on(
         "PropertyBoughtResponse",
-        (_, buyerId: string, propertyId: string, transactions: any[]) => {}
+        (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
+          setActivePlayers((state) =>
+            produce(state, (draft) => {
+              const activePlayerIndex = draft.findIndex((p) => p.id === buyerId);
+              if (activePlayerIndex == -1) throw new Error("Buyer is not found");
+              transactions.forEach((transactions) => processTransaction(draft, transactions));
+              draft[activePlayerIndex].propertiesOwned.push(propertyId);
+            })
+          );
+
+          setBoard((state) =>
+            produce(state, (draft) => {
+              const propertyBought = draft.spaces.find((space) => space.id === propertyId);
+              if (!propertyBought) throw new Error("no property found");
+              switch (propertyBought.$type) {
+                case "country":
+                case "railroad":
+                case "utility":
+                  propertyBought.ownerId = buyerId;
+                  break;
+                default:
+                  throw new Error("Not a purchasable space");
+              }
+            })
+          );
+        }
+      );
+
+      tempHubConnection.on(
+        "PropertySoldResponse",
+        (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
+          setActivePlayers((state) =>
+            produce(state, (draft) => {
+              const activePlayerIndex = draft.findIndex((p) => p.id === buyerId);
+              if (activePlayerIndex == -1) throw new Error("Buyer is not found");
+              transactions.forEach((transactions) => processTransaction(draft, transactions));
+
+              const toDeleteIndex = draft[activePlayerIndex].propertiesOwned.findIndex(
+                (p) => p == propertyId
+              );
+              if (toDeleteIndex !== -1)
+                draft[activePlayerIndex].propertiesOwned.splice(toDeleteIndex, 1);
+            })
+          );
+
+          setBoard((state) =>
+            produce(state, (draft) => {
+              const propertyBoughtIndex = draft.spaces.findIndex(
+                (space) => space.id === propertyId
+              );
+              if (propertyBoughtIndex == -1) throw new Error("no property found");
+              switch (draft.spaces[propertyBoughtIndex].$type) {
+                case "country":
+                case "railroad":
+                case "utility":
+                  draft.spaces[propertyBoughtIndex].ownerId = null;
+                  draft.spaces[propertyBoughtIndex].isMortgaged = false;
+                  break;
+                default:
+                  throw new Error("Not a sellable space");
+              }
+            })
+          );
+        }
+      );
+
+      tempHubConnection.on(
+        "PropertyMortgagedResponse",
+        (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
+          setActivePlayers((state) =>
+            produce(state, (draft) => {
+              transactions.forEach((transactions) => processTransaction(draft, transactions));
+            })
+          );
+
+          setBoard((state) =>
+            produce(state, (draft) => {
+              const propertyBoughtIndex = draft.spaces.findIndex(
+                (space) => space.id === propertyId
+              );
+              if (propertyBoughtIndex == -1) throw new Error("not a mortgage-able space");
+              switch (draft.spaces[propertyBoughtIndex].$type) {
+                case "country":
+                case "railroad":
+                case "utility":
+                  draft.spaces[propertyBoughtIndex].isMortgaged = true;
+                  break;
+                default:
+                  throw new Error("Not a sellable space");
+              }
+            })
+          );
+        }
+      );
+
+      tempHubConnection.on(
+        "PropertyUnmortgagedResponse",
+        (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
+          setActivePlayers((state) =>
+            produce(state, (draft) => {
+              transactions.forEach((transactions) => processTransaction(draft, transactions));
+            })
+          );
+
+          setBoard((state) =>
+            produce(state, (draft) => {
+              const propertyBoughtIndex = draft.spaces.findIndex(
+                (space) => space.id === propertyId
+              );
+              if (propertyBoughtIndex == -1) throw new Error("not a mortgage-able space");
+              switch (draft.spaces[propertyBoughtIndex].$type) {
+                case "country":
+                case "railroad":
+                case "utility":
+                  draft.spaces[propertyBoughtIndex].isMortgaged = false;
+                  break;
+                default:
+                  throw new Error("Not a sellable space");
+              }
+            })
+          );
+        }
+      );
+
+      tempHubConnection.on(
+        "PropertyUpgradeResponse",
+        (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
+          setActivePlayers((state) =>
+            produce(state, (draft) => {
+              transactions.forEach((transactions) => processTransaction(draft, transactions));
+            })
+          );
+
+          setBoard((state) =>
+            produce(state, (draft) => {
+              const propertyBoughtIndex = draft.spaces.findIndex(
+                (space) => space.id === propertyId
+              );
+              if (propertyBoughtIndex == -1) throw new Error("not a mortgage-able space");
+              if (draft.spaces[propertyBoughtIndex].$type !== "country")
+                throw new Error("Not a country");
+
+              draft.spaces[propertyBoughtIndex].currentRentStage++;
+            })
+          );
+        }
+      );
+
+      tempHubConnection.on(
+        "PropertyDowngradeResponse",
+        (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
+          setActivePlayers((state) =>
+            produce(state, (draft) => {
+              transactions.forEach((transactions) => processTransaction(draft, transactions));
+            })
+          );
+
+          setBoard((state) =>
+            produce(state, (draft) => {
+              const propertyBoughtIndex = draft.spaces.findIndex(
+                (space) => space.id === propertyId
+              );
+              if (propertyBoughtIndex == -1) throw new Error("not a mortgage-able space");
+              if (draft.spaces[propertyBoughtIndex].$type !== "country")
+                throw new Error("Not a country");
+
+              draft.spaces[propertyBoughtIndex].currentRentStage--;
+            })
+          );
+        }
       );
 
       tempHubConnection.on("InitiateTradeResponse", (_, trade: any) => {});
@@ -345,6 +515,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       board,
       currentPlayerIndex,
       currentPlayer,
+      currentPlayerSpace,
       diceRoll1,
       diceRoll2,
       currentPhase,

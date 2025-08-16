@@ -26,10 +26,17 @@ export const GameView = ({ gameId }: Props) => {
     joinGame,
     startGame,
     endTurn,
+    buyProperty,
+    sellProperty,
+    upgradeProperty,
+    downgradeProperty,
+    mortgageProperty,
+    unmortgageProperty,
     gameState: {
       board,
       currentPhase,
       currentPlayer,
+      currentPlayerSpace,
       currentPlayerIndex,
       activePlayers,
       diceRoll1,
@@ -66,15 +73,20 @@ export const GameView = ({ gameId }: Props) => {
     </div>
     <div className="relative">
       <Board
+        isPermittedToBuyOrSellProperty={isMyTurn && (currentPhase === GamePhase.PostLandingActions || currentPhase === GamePhase.PlayerTurnStart)}
         board={board}
         tileHeight={tileHeight}
-
         diceRoll1={diceRoll1}
         diceRoll2={diceRoll2}
+        sellProperty={sellProperty}
+        upgradeProperty={upgradeProperty}
+        downgradeProperty={downgradeProperty}
+        mortgageProperty={mortgageProperty}
+        unmortgageProperty={unmortgageProperty}
         joinGameButton={
           currentPhase === GamePhase.WaitingForPlayers && !isInGame ?
             <Button
-              className="btn btn-lg btn-primary"
+              className="btn btn-primary"
               onClick={() => joinGame(getCookie("Username"))}
             >
               Join Game
@@ -83,7 +95,7 @@ export const GameView = ({ gameId }: Props) => {
         rollDiceButton={
           isMyTurn && currentPhase === GamePhase.PlayerTurnStart ?
             <Button
-              className="btn btn-lg btn-primary"
+              className="btn btn-primary"
               onClick={() => rollDice()}
             >
               Roll za Dice
@@ -91,7 +103,7 @@ export const GameView = ({ gameId }: Props) => {
         }
         endTurnButton={isMyTurn && currentPhase === GamePhase.PostLandingActions ?
           <Button
-            className="btn btn-lg btn-primary"
+            className="btn btn-primary"
             onClick={() => endTurn()}
           >
             End Turn
@@ -100,10 +112,19 @@ export const GameView = ({ gameId }: Props) => {
         startGameButton={
           isInGame && currentPhase === GamePhase.WaitingForPlayers ?
             <Button
-              className="btn btn-lg btn-primary"
+              className="btn btn-primary"
               onClick={() => startGame()}
             >
               Start Game
+            </Button> : null
+        }
+        buyPropertyButton={
+          isMyTurn && currentPhase === GamePhase.PostLandingActions && currentPlayerSpace && currentPlayerSpace.$type !== "special" && !currentPlayerSpace.ownerId ?
+            <Button
+              className="btn btn-primary"
+              onClick={() => buyProperty()}
+            >
+              Buy Property
             </Button> : null
         }
       />

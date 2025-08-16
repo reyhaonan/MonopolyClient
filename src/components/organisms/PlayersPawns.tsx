@@ -45,7 +45,6 @@ function generateMonopolyPositions(tileHeight: number, tileWidth: number): { x: 
     const boardDimension = cornerSize * 2 + tileWidth * propertiesPerSide;
     const farEdgeCenter = boardDimension - nearEdgeCenter;
 
-
     // Side 1: Top Row (Indices 0-10)
     // Corner 0: GO
     positions.push({ x: nearEdgeCenter, y: nearEdgeCenter });
