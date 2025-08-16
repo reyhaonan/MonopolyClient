@@ -170,7 +170,7 @@ html {
 
 .left {
   grid-area: left;
-  writing-mode: vertical-rl;
+  writing-mode: sideways-rl;
 }
 
 .center {
