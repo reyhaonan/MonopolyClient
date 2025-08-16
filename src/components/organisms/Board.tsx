@@ -1,8 +1,13 @@
 // components/organisms/Board.tsx
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { RentStage } from '@/enums/RentStage';
 import Tile from '../molecules/Tile';
-import type { BoardSpace } from '@/types/BoardSpace';
+import type { BoardSpace, CountrySpace } from '@/types/BoardSpace';
 import phrolova from "@/assets/phrolova-ww.gif";
+
+import type { ComponentProps } from 'react';
+import type { ColorGroup } from '@/enums/ColorGroup';
 
 // Define board layout constants to avoid magic numbers
 const BOARD_LAYOUT = {
@@ -35,9 +40,11 @@ type Props = {
     tileActions: TileActions;
     diceRoll: { roll1: number; roll2: number };
     isPermittedToBuyOrSellProperty: boolean;
+    currentPlayerMoney: number
 };
 
 const Board = ({
+    currentPlayerMoney,
     board,
     actionButtons,
     tileActions,
@@ -48,7 +55,8 @@ const Board = ({
     // Props that need to be passed down to each Tile
     const tileProps = {
         isPermittedToBuyOrSellProperty,
-        ...tileActions
+        currentPlayerMoney,
+        tileActions
     };
 
     return (
@@ -102,29 +110,46 @@ const Board = ({
 
 export default Board;
 
-import type { ComponentProps } from 'react';
-
 // Get the props required by the Tile component, but omit 'space' and 'orientation'
 // as the BoardRow will manage these itself.
-type TileProps = Omit<ComponentProps<typeof Tile>, 'space' | 'orientation'>;
+type TileProps = Omit<ComponentProps<typeof Tile>, 'space' | 'orientation' | 'playerIsGroupOwner' | 'groupHasHouse' | 'groupHasMortgagedProperty' | 'playerId' | 'isOwnedByPlayer'>;
 
 type BoardRowProps = TileProps & {
     spaces: BoardSpace[];
     orientation: 'top' | 'right' | 'bottom' | 'left';
     className?: string;
 };
-
 const BoardRow = ({ spaces, orientation, className, ...tileProps }: BoardRowProps) => {
+    const playerId = useAuth();
+
+    const groupData = useMemo(() => {
+        const countrySpaces = spaces.filter(property => property.$type === "country");
+
+        return countrySpaces.reduce((prev, c) => {
+            if (prev[c.group]) prev[c.group].push(c)
+            else prev[c.group] = [c]
+            return prev
+        }, {} as Record<ColorGroup, CountrySpace[]>)
+    }, [spaces]);
+
     return (
         <div className={`row flex ${className}`}>
-            {spaces.map((space) => (
-                <Tile
-                    key={space.id}
-                    space={space}
-                    orientation={orientation}
-                    {...tileProps}
-                />
-            ))}
+            {spaces.map((space) => {
+                const isOwnedByPlayer = space.$type !== "special" && space.ownerId === playerId;
+
+                return (
+                    <Tile
+                        key={space.id}
+                        space={space}
+                        orientation={orientation}
+                        // now when i say player, i mean THE player, not another player
+                        isOwnedByPlayer={isOwnedByPlayer}
+                        playerIsGroupOwner={space.$type === "country" && groupData[space.group].every(c => c.ownerId === playerId)}
+                        groupHasMortgagedProperty={space.$type === "country" && groupData[space.group].some(c => c.isMortgaged)}
+                        groupHasHouse={space.$type === "country" && groupData[space.group].some(c => c.currentRentStage > RentStage.Unimproved)}
+                        {...tileProps} />
+                );
+            })}
         </div>
     );
 };

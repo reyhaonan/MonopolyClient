@@ -20,7 +20,12 @@ const PlayersPawns = ({ players, tileHeight, tileWidth }: Props) => {
                         left: monopolyBoardPositions[player.currentPosition].x,
                     }}
                 >
-                    <div className="absolute w-8 h-8 rounded-full bg-purple-500 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+                    <div
+                        className="absolute w-8 h-8 rounded-full bg-purple-700/40 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                        style={{
+                            marginTop: i * 4
+                        }}
+                    ></div>
 
                 </div>
             ))}

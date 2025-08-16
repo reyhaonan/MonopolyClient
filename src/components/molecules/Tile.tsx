@@ -6,16 +6,26 @@ import { ArrowContainer, Popover, type PopoverPosition } from 'react-tiny-popove
 import Button from '../atoms/Button'
 import { useAuth } from '@/hooks/useAuth'
 import { RentStage } from '@/enums/RentStage'
+import { ColorGroup } from '@/enums/ColorGroup'
 
 type Props = {
     orientation: "top" | "bottom" | "left" | "right",
     space: BoardSpace
     isPermittedToBuyOrSellProperty: boolean
-    upgradeProperty: (id: string) => void,
-    downgradeProperty: (id: string) => void,
-    mortgageProperty: (id: string) => void,
-    unmortgageProperty: (id: string) => void,
-    sellProperty: (id: string) => void,
+    tileActions: TileActions,
+    playerIsGroupOwner: boolean,
+    groupHasHouse: boolean,
+    groupHasMortgagedProperty: boolean,
+    isOwnedByPlayer: boolean,
+    currentPlayerMoney: number
+}
+
+type TileActions = {
+    upgradeProperty: (id: string) => void;
+    downgradeProperty: (id: string) => void;
+    mortgageProperty: (id: string) => void;
+    unmortgageProperty: (id: string) => void;
+    sellProperty: (id: string) => void;
 }
 
 
@@ -23,19 +33,17 @@ const Tile = ({
     orientation,
     space,
     isPermittedToBuyOrSellProperty,
-    upgradeProperty,
-    downgradeProperty,
-    mortgageProperty,
-    unmortgageProperty,
-    sellProperty,
+    tileActions,
+    playerIsGroupOwner,
+    groupHasHouse,
+    groupHasMortgagedProperty,
+    isOwnedByPlayer,
+    currentPlayerMoney
 }: Props) => {
-
-    const playerId = useAuth()
 
     if (space.$type === "special") return <div
         className={'relative tile w-fit flex flex-col justify-between rounded-field bg-base-200 select-none'}>
         <div className="opacity-0">PHROLOVA</div>
-        <div className="text-xs opacity-40 m-auto absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">{space.boardPosition}</div>
     </div>
 
     const [isPopoverOpen, setIsPopoverOpen] = useState(false)
@@ -101,16 +109,47 @@ const Tile = ({
                     }
 
                     <div className="divider my-2"></div>
-                    {space.ownerId === playerId && isPermittedToBuyOrSellProperty &&
+                    {isOwnedByPlayer && isPermittedToBuyOrSellProperty &&
                         <div className="property-options flex gap-2 mb-4">
                             {space.$type === "country" && <>
-                                <Button className='btn btn-sm btn-square btn-primary' onClick={() => upgradeProperty(space.id)}>Bu</Button>
-                                <Button className='btn btn-sm btn-square btn-primary' onClick={() => downgradeProperty(space.id)}>Se</Button>
+                                <Button
+                                    className='btn btn-sm btn-square btn-primary'
+                                    disabled={groupHasMortgagedProperty || space.currentRentStage === RentStage.Hotel || currentPlayerMoney < space.houseCost}
+                                    onClick={() => tileActions.upgradeProperty(space.id)}
+                                >
+                                    Bu
+                                </Button>
+                                <Button
+                                    className='btn btn-sm btn-square btn-primary'
+                                    onClick={() => tileActions.downgradeProperty(space.id)}
+                                    disabled={space.currentRentStage === RentStage.Unimproved}
+                                >
+                                    Se
+                                </Button>
                             </>}
-                            <Button className='btn btn-sm btn-square btn-primary ml-auto' onClick={() => space.isMortgaged ? unmortgageProperty(space.id) : mortgageProperty(space.id)}>
-                                {space.isMortgaged ? "UM" : "M"}
+                            {space.isMortgaged ?
+                                <Button
+                                    className='btn btn-sm btn-square btn-primary ml-auto'
+                                    onClick={() => tileActions.unmortgageProperty(space.id)}
+                                    disabled={currentPlayerMoney < space.unmortgageCost}
+                                >
+                                    UM
+                                </Button> :
+                                <Button
+                                    className='btn btn-sm btn-square btn-primary ml-auto'
+                                    onClick={() => tileActions.mortgageProperty(space.id)}
+                                    disabled={groupHasHouse}
+                                >
+                                    M
+                                </Button>
+                            }
+                            <Button
+                                className='btn btn-sm btn-square btn-primary'
+                                disabled={groupHasHouse}
+                                onClick={() => tileActions.sellProperty(space.id)}
+                            >
+                                $$
                             </Button>
-                            <Button className='btn btn-sm btn-square btn-primary' disabled={space.$type === "country" && space.currentRentStage > RentStage.Unimproved} onClick={() => sellProperty(space.id)}>$$</Button>
                         </div>}
                     <div className="flex justify-around">
                         <div className="flex flex-col items-center">
@@ -138,12 +177,17 @@ const Tile = ({
                 )}>
                     {space.name}
                 </div>
-                <div className="text-xs opacity-40 m-auto absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">{space.boardPosition}</div>
+                <div className="text-xs opacity-40 m-auto absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+
+                    {playerIsGroupOwner ? "Yea" : "Na"}
+                    <br />
+                    {space.$type === "country" && RentStage[space.currentRentStage]}
+                </div>
 
                 <div className={cn("rounded-field text-center text-sm font-semibold py-2")}>{space.ownerId?.substring(0, 6) || `$${space.purchasePrice}`}</div>
             </div>
-        </Popover >
-    )
-}
+        </Popover>
+    );
+};
 
-export default Tile
+export default Tile;

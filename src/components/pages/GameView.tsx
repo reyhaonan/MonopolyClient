@@ -68,13 +68,13 @@ export const GameView = ({ gameId }: Props) => {
   return <main className="container mx-auto flex gap-4 pb-16">
     <div className="flex-1">
       {GamePhase[currentPhase]}<br />
-      {playerId}
       <PlayersInfo players={activePlayers} currentPlayerIndex={currentPlayerIndex} />
     </div>
     <div className="relative">
       <Board
         isPermittedToBuyOrSellProperty={isMyTurn && (currentPhase === GamePhase.PostLandingActions || currentPhase === GamePhase.PlayerTurnStart)}
         board={board}
+        currentPlayerMoney={currentPlayer?.money}
         diceRoll={{
           roll1: diceRoll1,
           roll2: diceRoll2,
@@ -127,6 +127,7 @@ export const GameView = ({ gameId }: Props) => {
               <Button
                 className="btn btn-primary"
                 onClick={() => buyProperty()}
+                disabled={currentPlayerSpace.purchasePrice > currentPlayer.money}
               >
                 Buy Property
               </Button> : null

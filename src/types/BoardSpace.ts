@@ -1,3 +1,4 @@
+import type { ColorGroup } from "@/enums/ColorGroup";
 import type { RentStage } from "../enums/RentStage";
 
 export type BoardSpace =
@@ -21,19 +22,42 @@ interface GoSpace {
   boardPosition: 0;
 }
 
-interface CountrySpace {
+export interface CountrySpace {
   $type: "country";
-  group: number;
+  group: ColorGroup;
   rentScheme: number[];
   houseCost: number;
   purchasePrice: number;
   mortgageValue: number;
+  unmortgageCost: number;
   ownerId: string | null;
   isMortgaged: boolean;
   currentRentStage: RentStage;
   id: string;
   name: string;
   boardPosition: number;
+}
+interface RailroadSpace {
+  $type: "railroad";
+  purchasePrice: number;
+  mortgageValue: number;
+  ownerId: string | null;
+  isMortgaged: boolean;
+  id: string;
+  name: string;
+  boardPosition: number;
+  unmortgageCost: number;
+}
+interface UtilitySpace {
+  $type: "utility";
+  purchasePrice: number;
+  mortgageValue: number;
+  ownerId: string | null;
+  isMortgaged: boolean;
+  id: string;
+  name: string;
+  boardPosition: number;
+  unmortgageCost: number;
 }
 
 interface CommunityChestSpace {
@@ -52,17 +76,6 @@ interface IncomeTaxSpace {
   boardPosition: number;
 }
 
-interface RailroadSpace {
-  $type: "railroad";
-  purchasePrice: number;
-  mortgageValue: number;
-  ownerId: string | null;
-  isMortgaged: boolean;
-  id: string;
-  name: string;
-  boardPosition: number;
-}
-
 interface ChanceSpace {
   $type: "special";
   type: 5;
@@ -77,17 +90,6 @@ interface JailSpace {
   id: string;
   name: "Jail / Just Visiting";
   boardPosition: 10;
-}
-
-interface UtilitySpace {
-  $type: "utility";
-  purchasePrice: number;
-  mortgageValue: number;
-  ownerId: string | null;
-  isMortgaged: boolean;
-  id: string;
-  name: string;
-  boardPosition: number;
 }
 
 interface FreeParkingSpace {
