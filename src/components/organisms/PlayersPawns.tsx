@@ -11,18 +11,13 @@ type Props = {
 const PlayersPawns = ({ players, tileHeight, tileWidth }: Props) => {
     const monopolyBoardPositions = useMemo(() => generateMonopolyPositions(tileHeight, tileWidth), [tileHeight, tileWidth])
 
-    const [currentPosition, setCurrentPosition] = useState(0)
-
     return (
         <>
-            <button className='btn' onClick={() =>
-                setCurrentPosition(state => (state + 1) % 40)}>Next</button>
-            {tileHeight} x {tileWidth}
             {players.map(((player, i) =>
                 <div className="pawn absolute" key={player.id}
                     style={{
-                        top: monopolyBoardPositions[currentPosition].y,
-                        left: monopolyBoardPositions[currentPosition].x,
+                        top: monopolyBoardPositions[player.currentPosition].y,
+                        left: monopolyBoardPositions[player.currentPosition].x,
                     }}
                 >
                     <div className="absolute w-8 h-8 rounded-full bg-purple-500 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>

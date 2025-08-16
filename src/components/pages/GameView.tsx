@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import useGameHub from "@/hooks/useGameHub";
+import useGameManager from "@/hooks/useGameManager";
 import * as GameAPI from "@/services/game";
 import { useQuery } from "@tanstack/react-query";
 import Board from "../organisms/Board";
@@ -32,7 +32,7 @@ export const GameView = ({ gameId }: Props) => {
       currentPlayer,
       currentPlayerIndex,
       activePlayers
-    } } = useGameHub(data?.data, playerId || undefined);
+    } } = useGameManager(data?.data, playerId || undefined);
 
   const isInGame = activePlayers.findIndex(p => p.id === playerId) !== -1
 

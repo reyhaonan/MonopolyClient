@@ -9,7 +9,7 @@ import { GamePhase } from "@/enums/GamePhase";
 import type { RollResult } from "@/types/RollResult";
 import { produce } from "immer";
 
-const useGameHub = (gameId?: string, playerId?: string) => {
+const useGameManager = (gameId?: string, playerId?: string) => {
   const [hubConnection, setHubConnection] = useState<signalR.HubConnection | null>(null);
 
   const [activePlayers, setActivePlayers] = useState<Player[]>([]);
@@ -363,4 +363,4 @@ const useGameHub = (gameId?: string, playerId?: string) => {
   };
 };
 
-export default useGameHub;
+export default useGameManager;

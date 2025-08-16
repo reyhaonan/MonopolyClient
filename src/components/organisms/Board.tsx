@@ -1,7 +1,7 @@
-import React, { useEffect, useLayoutEffect, useRef, type ReactNode, type Ref } from 'react'
+import React, { useEffect, type ReactNode } from 'react'
 import Tile from '../molecules/Tile'
 import type { BoardSpace } from '@/types/BoardSpace'
-import PlayersPawns from './PlayersPawns'
+import phrolova from "@/assets/phrolova-ww.gif";
 
 type Props = {
     board: { spaces: BoardSpace[] }
@@ -22,6 +22,7 @@ const Board = ({ board, rollDiceButton, joinGameButton, startGameButton, endTurn
 
             <div className='w-fit h-fit grid board'>
                 <div className="center flex items-center justify-center">
+                    <img className="w-40 mx-auto col-span-2" src={phrolova} />
                     {startGameButton}
                     {joinGameButton}
                     {rollDiceButton}
