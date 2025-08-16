@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, type ReactNode, type Ref } from 'react'
 import Tile from '../molecules/Tile'
 import type { BoardSpace } from '@/types/BoardSpace'
+import PlayersPawns from './PlayersPawns'
 
 type Props = {
     board: { spaces: BoardSpace[] }
@@ -8,36 +9,17 @@ type Props = {
     joinGameButton: ReactNode
     rollDiceButton: ReactNode
     endTurnButton: ReactNode
+    tileHeight: number
 }
 
-const Board = ({ board, rollDiceButton, joinGameButton, startGameButton, endTurnButton }: Props) => {
+const Board = ({ board, rollDiceButton, joinGameButton, startGameButton, endTurnButton, tileHeight }: Props) => {
     useEffect(() => {
         console.log(document.querySelector(".tile")?.getBoundingClientRect().height)
     }, [])
 
-    const [height, setHeight] = React.useState(0)
-
-    // https://tkdodo.eu/blog/avoiding-use-effect-with-callback-refs
-    // const measuredRef = React.useCallback((node: HTMLDivElement) => {
-
-    //     if (node !== null) {
-    //         setHeight(node.getBoundingClientRect().height)
-    //     }
-
-    // }, [])
-
-    const tileRef = useRef<HTMLDivElement>(null)
-
-    useLayoutEffect(() => {
-        function updateSize() {
-            setHeight(tileRef.current?.getBoundingClientRect().height || 160);
-        }
-        window.addEventListener('resize', updateSize);
-        updateSize();
-        return () => window.removeEventListener('resize', updateSize);
-    }, []);
     return (
         <>
+
             <div className='w-fit h-fit grid board'>
                 <div className="center flex items-center justify-center">
                     {startGameButton}
@@ -45,7 +27,7 @@ const Board = ({ board, rollDiceButton, joinGameButton, startGameButton, endTurn
                     {rollDiceButton}
                     {endTurnButton}
                 </div>
-                <div className="top-left aspect-square rounded-field bg-base-100" style={{ height, blockSize: height }}>
+                <div className="top-left aspect-square rounded-field bg-base-100" style={{ height: tileHeight, blockSize: tileHeight }}>
                     GO!
                 </div>
                 <div className="top row flex w-fit">
@@ -53,7 +35,7 @@ const Board = ({ board, rollDiceButton, joinGameButton, startGameButton, endTurn
                         <Tile space={space} orientation='top' key={i} />
                     )}
                 </div>
-                <div className="top-right aspect-square rounded-field bg-base-100" style={{ height, blockSize: height }}>
+                <div className="top-right aspect-square rounded-field bg-base-100" style={{ height: tileHeight, blockSize: tileHeight }}>
                     JAIL
                 </div>
 
@@ -63,7 +45,7 @@ const Board = ({ board, rollDiceButton, joinGameButton, startGameButton, endTurn
                     )}
                 </div>
 
-                <div className="bottom-right aspect-square rounded-field bg-base-100" style={{ height, blockSize: height }}>
+                <div className="bottom-right aspect-square rounded-field bg-base-100" style={{ height: tileHeight, blockSize: tileHeight }}>
                     PARK
                 </div>
 
@@ -72,7 +54,7 @@ const Board = ({ board, rollDiceButton, joinGameButton, startGameButton, endTurn
                         <Tile space={space} orientation='bottom' key={i} />
                     )}
                 </div>
-                <div className="bottom-left aspect-square rounded-field bg-base-100" style={{ height, blockSize: height }}>
+                <div className="bottom-left aspect-square rounded-field bg-base-100" style={{ height: tileHeight, blockSize: tileHeight }}>
                     Go to Jail!
                 </div>
                 <div className="left flex flex-row-reverse">
@@ -82,8 +64,6 @@ const Board = ({ board, rollDiceButton, joinGameButton, startGameButton, endTurn
                 </div>
 
             </div>
-            {/* As a reference */}
-            <div className="aspect-[21/34] fixed bottom-0 left-0 -z-50 w-fit opacity-0" ref={tileRef}>PHROLOVA</div>
         </>
     )
 }
