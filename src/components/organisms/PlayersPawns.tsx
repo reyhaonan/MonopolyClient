@@ -12,21 +12,21 @@ type Props = {
 const pawnOffsets = [
     [
         { x: 0, y: 0 },
-        { x: -12, y: 0 },
-        { x: 12, y: 0 },
-        { x: -24, y: 0 },
-        { x: 24, y: 0 },
-        { x: -36, y: 0 },
-        { x: 36, y: 0 },
+        { x: -16, y: 0 },
+        { x: 16, y: 0 },
+        { x: -32, y: 0 },
+        { x: 32, y: 0 },
+        { x: -48, y: 0 },
+        { x: 48, y: 0 },
     ],
     [
         { x: 0, y: 0 },
-        { x: 0, y: -12 },
-        { x: 0, y: 12 },
-        { x: 0, y: -24 },
-        { x: 0, y: 24 },
-        { x: 0, y: -36 },
-        { x: 0, y: 36 },
+        { x: 0, y: -16 },
+        { x: 0, y: 16 },
+        { x: 0, y: -32 },
+        { x: 0, y: 32 },
+        { x: 0, y: -48 },
+        { x: 0, y: 48 },
     ],
 ];
 
@@ -77,7 +77,7 @@ const PlayersPawns = ({ players, tileHeight, tileWidth, currentPlayerIndex }: Pr
                         <div
                             className={classNames(
                                 "absolute aspect-square rounded-full bg-white border top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-                                player.id === players[currentPlayerIndex].id ? "w-8 z-20 shadow" : "w-6"
+                                player.id === players[currentPlayerIndex]?.id ? "w-10 z-20 shadow" : "w-8"
                             )}
                         ></div>
                     </div>

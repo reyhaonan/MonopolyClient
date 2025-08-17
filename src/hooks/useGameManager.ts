@@ -69,9 +69,8 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       tempHubConnection.on("DiceRolledResponse", (_, playerId: string, rollResult: RollResult) => {
         setDiceRoll1(rollResult.dice.roll1);
         setDiceRoll2(rollResult.dice.roll2);
-        if (rollResult.playerState.consecutiveDoubles > 0 && !rollResult.playerState.isInJail)
-          setCurrentPhase(GamePhase.PlayerTurnStart);
-        else setCurrentPhase(GamePhase.PostLandingActions);
+        setCurrentPhase(rollResult.newGamePhase);
+
         // TODO: Animate
         setActivePlayers((state) => {
           return produce(state, (draft) => {

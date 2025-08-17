@@ -67,9 +67,10 @@ const Tile = ({
             positions={getPopoverPosition()}
             onClickOutside={() => setIsPopoverOpen(false)}
             padding={10}
+            containerClassName='z-30'
             content={() => (
                 <div tabIndex={0}
-                    className="select-none z-20 w-52 bg-base-100 p-4 shadow rounded-box"
+                    className="select-none w-52 bg-base-100 p-4 shadow rounded-box"
                     style={{
                         writingMode: "horizontal-tb"
                     }}>
@@ -114,7 +115,7 @@ const Tile = ({
                             {space.$type === "country" && <>
                                 <Button
                                     className='btn btn-sm btn-square btn-primary'
-                                    disabled={groupHasMortgagedProperty || space.currentRentStage === RentStage.Hotel || currentPlayerMoney < space.houseCost}
+                                    disabled={!playerIsGroupOwner || groupHasMortgagedProperty || space.currentRentStage === RentStage.Hotel || currentPlayerMoney < space.houseCost}
                                     onClick={() => tileActions.upgradeProperty(space.id)}
                                 >
                                     Bu
@@ -122,7 +123,7 @@ const Tile = ({
                                 <Button
                                     className='btn btn-sm btn-square btn-primary'
                                     onClick={() => tileActions.downgradeProperty(space.id)}
-                                    disabled={space.currentRentStage === RentStage.Unimproved}
+                                    disabled={!playerIsGroupOwner || space.currentRentStage === RentStage.Unimproved}
                                 >
                                     Se
                                 </Button>
