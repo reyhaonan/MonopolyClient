@@ -1,6 +1,7 @@
+import { useAuth } from '@/hooks/useAuth'
 import type { Player } from '@/types/Player'
 import classNames from 'classnames'
-import React, { Fragment, useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
 type Props = {
     players: Player[]
@@ -46,6 +47,8 @@ export const createMockPlayers = (names: string[], startingPosition: number): Pl
 }
 
 const PlayersPawns = ({ players, tileHeight, tileWidth, currentPlayerIndex }: Props) => {
+
+    const playerId = useAuth();
 
     // const players = createMockPlayers(["apple", "banana", "cherry", "date", "elderberry", "fig", "boy"], 20)
     const monopolyBoardPositions = useMemo(() => generateMonopolyPositions(tileHeight, tileWidth), [tileHeight, tileWidth])

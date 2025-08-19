@@ -9,15 +9,24 @@ type Props = {
 
 const PlayersInfo = ({ players, currentPlayerIndex }: Props) => {
     return (
-        <div>
+        <ul className="list bg-base-200 rounded-box shadow-md">
+            <li className="p-2 pb-2 text-xs opacity-60 tracking-wide">Players</li>
             {players.map((player, i) =>
-                <div className={classNames("flex items-center p-4 rounded-field flex-wrap", currentPlayerIndex === i && "bg-base-100 border-l-8 border-success")} key={player.id}>
-                    <div className="font-bold mr-auto capitalize">{player.name}</div>
-                    <div className="">${player.money}</div>
-                    <div className="w-full text-sm opacity-40">{player.consecutiveDoubles}</div>
-                </div>
+                <li className={classNames("list-row flex items-center p-4 flex-wrap", currentPlayerIndex === i && "bg-base-100 border-success")} key={player.id}>
+
+                    <div>
+                        <div className="font-bold capitalize">{player.name}</div>
+                        <div className="text-xs font-semibold opacity-60">
+                            Jail: {player.isInJail ? player.jailTurnsRemaining : "N"}
+                            {" | "}
+                            Doubles: {player.consecutiveDoubles}
+                        </div>
+                    </div>
+
+                    <div className="ml-auto">${player.money}</div>
+                </li>
             )}
-        </div>
+        </ul>
     )
 }
 

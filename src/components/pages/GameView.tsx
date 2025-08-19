@@ -9,6 +9,7 @@ import { GamePhase } from "@/enums/GamePhase";
 import PlayersInfo from "../organisms/PlayersInfo";
 import PlayersPawns from "../organisms/PlayersPawns";
 import { useLayoutEffect, useRef, useState } from "react";
+import TradeSection from "../organisms/TradeSection";
 
 type Props = {
   gameId: string;
@@ -40,7 +41,8 @@ export const GameView = ({ gameId }: Props) => {
       currentPlayerIndex,
       activePlayers,
       diceRoll1,
-      diceRoll2
+      diceRoll2,
+      activeTrades
     } } = useGameManager(data?.data, playerId || undefined);
 
   const isInGame = activePlayers.findIndex(p => p.id === playerId) !== -1
@@ -66,9 +68,12 @@ export const GameView = ({ gameId }: Props) => {
   }, []);
 
   return <main className="container mx-auto flex gap-4 pb-16">
-    <div className="flex-1">
-      {GamePhase[currentPhase]}<br />
+    <div className="flex-1 flex flex-col gap-4">
+      <div>
+        Game Phase: <span className="badge badge-soft">{GamePhase[currentPhase]}</span><br />
+      </div>
       <PlayersInfo players={activePlayers} currentPlayerIndex={currentPlayerIndex} />
+      <TradeSection players={activePlayers} activeTrades={activeTrades} />
     </div>
     <div className="relative">
       <Board

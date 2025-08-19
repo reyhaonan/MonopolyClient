@@ -71,11 +71,6 @@
   --noise: 0;
 }
 
-body,
-html {
-  @apply bg-base-300;
-}
-
 .debug-outline {
   @apply outline outline-1 outline-gray-300;
 }

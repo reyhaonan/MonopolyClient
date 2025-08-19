@@ -11,6 +11,7 @@ function RootComponent() {
     <React.Fragment>
       <Navbar />
       <Outlet />
+      <div className="bg-base-300 -z-50 fixed inset-0"></div>
     </React.Fragment>
   );
 }
