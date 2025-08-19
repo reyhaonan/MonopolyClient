@@ -1,4 +1,4 @@
-// components/organisms/Board.tsx
+// components/organisms/tsx
 import { useMemo, type ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { RentStage } from '@/enums/RentStage';
@@ -35,7 +35,7 @@ type TileActions = {
 };
 
 type Props = {
-    board: { spaces: BoardSpace[] };
+    spaces: BoardSpace[]
     actionButtons: ActionButtons;
     tileActions: TileActions;
     diceRoll: { roll1: number; roll2: number };
@@ -45,7 +45,7 @@ type Props = {
 
 const Board = ({
     currentPlayerMoney,
-    board,
+    spaces,
     actionButtons,
     tileActions,
     diceRoll,
@@ -82,25 +82,25 @@ const Board = ({
 
             <BoardRow
                 orientation='top'
-                spaces={board.spaces.slice(BOARD_LAYOUT.TOP_ROW.start, BOARD_LAYOUT.TOP_ROW.end)}
+                spaces={spaces.slice(BOARD_LAYOUT.TOP_ROW.start, BOARD_LAYOUT.TOP_ROW.end)}
                 className='w-fit top'
                 {...tileProps}
             />
             <BoardRow
                 orientation='right'
-                spaces={board.spaces.slice(BOARD_LAYOUT.RIGHT_ROW.start, BOARD_LAYOUT.RIGHT_ROW.end)}
+                spaces={spaces.slice(BOARD_LAYOUT.RIGHT_ROW.start, BOARD_LAYOUT.RIGHT_ROW.end)}
                 className='flex-row-reverse right'
                 {...tileProps}
             />
             <BoardRow
                 orientation='bottom'
-                spaces={board.spaces.slice(BOARD_LAYOUT.BOTTOM_ROW.start, BOARD_LAYOUT.BOTTOM_ROW.end)}
+                spaces={spaces.slice(BOARD_LAYOUT.BOTTOM_ROW.start, BOARD_LAYOUT.BOTTOM_ROW.end)}
                 className='w-fit flex-row-reverse bottom'
                 {...tileProps}
             />
             <BoardRow
                 orientation='left'
-                spaces={board.spaces.slice(BOARD_LAYOUT.LEFT_ROW.start, BOARD_LAYOUT.LEFT_ROW.end)}
+                spaces={spaces.slice(BOARD_LAYOUT.LEFT_ROW.start, BOARD_LAYOUT.LEFT_ROW.end)}
                 className='flex-row-reverse left'
                 {...tileProps}
             />

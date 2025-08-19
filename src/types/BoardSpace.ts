@@ -1,5 +1,6 @@
 import type { ColorGroup } from "@/enums/ColorGroup";
 import type { RentStage } from "../enums/RentStage";
+import type { SpecialSpaceType } from "./SpecialSpaceType";
 
 export type BoardSpace =
   | GoSpace
@@ -22,95 +23,83 @@ interface GoSpace {
   boardPosition: 0;
 }
 
-export interface CountrySpace {
+export interface Space {
+  id: string;
+  name: string;
+  boardPosition: number;
+}
+
+export interface PropertySpace extends Space {
+  purchasePrice: number;
+  mortgageValue: number;
+  unmortgageCost: number;
+  ownerId: string | null;
+  isMortgaged: boolean;
+}
+
+export interface CountrySpace extends PropertySpace {
   $type: "country";
   group: ColorGroup;
   rentScheme: number[];
   houseCost: number;
-  purchasePrice: number;
-  mortgageValue: number;
-  unmortgageCost: number;
-  ownerId: string | null;
-  isMortgaged: boolean;
   currentRentStage: RentStage;
-  id: string;
-  name: string;
-  boardPosition: number;
 }
-interface RailroadSpace {
+interface RailroadSpace extends PropertySpace {
   $type: "railroad";
-  purchasePrice: number;
-  mortgageValue: number;
-  ownerId: string | null;
-  isMortgaged: boolean;
-  id: string;
-  name: string;
-  boardPosition: number;
-  unmortgageCost: number;
 }
-interface UtilitySpace {
+interface UtilitySpace extends PropertySpace {
   $type: "utility";
-  purchasePrice: number;
-  mortgageValue: number;
-  ownerId: string | null;
-  isMortgaged: boolean;
-  id: string;
-  name: string;
-  boardPosition: number;
-  unmortgageCost: number;
 }
 
-interface CommunityChestSpace {
+interface SpecialSpace extends Space {
   $type: "special";
-  type: 4;
+  type: SpecialSpaceType;
+}
+
+interface CommunityChestSpace extends SpecialSpace {
+  type: SpecialSpaceType.CommunityChest;
   id: string;
   name: "Community Chest";
   boardPosition: number;
 }
 
-interface IncomeTaxSpace {
-  $type: "special";
-  type: 6;
+interface IncomeTaxSpace extends SpecialSpace {
+  type: SpecialSpaceType.IncomeTax;
   id: string;
   name: "Income Tax";
   boardPosition: number;
 }
 
-interface ChanceSpace {
-  $type: "special";
-  type: 5;
+interface ChanceSpace extends SpecialSpace {
+  type: SpecialSpaceType.Chance;
   id: string;
   name: "Chance";
   boardPosition: number;
 }
 
-interface JailSpace {
-  $type: "special";
-  type: 8;
+interface JailSpace extends SpecialSpace {
+  type: SpecialSpaceType.Jail;
   id: string;
   name: "Jail / Just Visiting";
   boardPosition: 10;
 }
 
-interface FreeParkingSpace {
-  $type: "special";
-  type: 10;
+interface FreeParkingSpace extends SpecialSpace {
+  type: SpecialSpaceType.FreeParking;
   id: string;
   name: "Free Parking";
   boardPosition: 20;
 }
 
-interface GoToJailSpace {
-  $type: "special";
-  type: 9;
+interface GoToJailSpace extends SpecialSpace {
+  type: SpecialSpaceType.GoToJail;
   id: string;
   name: "Go To Jail";
   boardPosition: 30;
 }
 
-interface LuxuryTaxSpace {
-  $type: "special";
-  type: 7;
+interface LuxuryTaxSpace extends SpecialSpace {
+  type: SpecialSpaceType.LuxuryTax;
   id: string;
   name: "Luxury Tax";
   boardPosition: 38;

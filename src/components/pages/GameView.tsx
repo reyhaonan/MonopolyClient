@@ -73,12 +73,12 @@ export const GameView = ({ gameId }: Props) => {
         Game Phase: <span className="badge badge-soft">{GamePhase[currentPhase]}</span><br />
       </div>
       <PlayersInfo players={activePlayers} currentPlayerIndex={currentPlayerIndex} />
-      <TradeSection players={activePlayers} activeTrades={activeTrades} />
+      <TradeSection players={activePlayers} activeTrades={activeTrades} spaces={board.spaces} />
     </div>
     <div className="relative">
       <Board
         isPermittedToBuyOrSellProperty={isMyTurn && (currentPhase === GamePhase.PostLandingActions || currentPhase === GamePhase.PlayerTurnStart)}
-        board={board}
+        spaces={board.spaces}
         currentPlayerMoney={currentPlayer?.money}
         diceRoll={{
           roll1: diceRoll1,
