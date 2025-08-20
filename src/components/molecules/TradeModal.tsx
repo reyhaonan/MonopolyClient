@@ -4,20 +4,16 @@ import classNames from 'classnames'
 import React, { useState, type Ref } from 'react'
 import Button from '../atoms/Button'
 import Modal from './Modal'
+import type { TradeOffer } from '@/types/Trade'
 
-type TradeOffer = {
-    offer: PropertySpace['id'][]
-    counterOffer: PropertySpace['id'][]
-    moneyFromInitiator: number
-    moneyFromRecipient: number
-}
+
 
 type Props = {
     initiator: PlayerWithProperties | null
     recipient: PlayerWithProperties | null
     ref: Ref<HTMLDialogElement>
     onClose: () => void
-    onOffer: ({ offer, counterOffer, moneyFromInitiator, moneyFromRecipient }: TradeOffer) => void
+    onOffer: (tradeOffer: TradeOffer & { recipientId: string }) => void
 }
 
 const TradeModal = ({ ref, initiator, recipient, onClose, onOffer }: Props) => {
@@ -51,7 +47,8 @@ const TradeModal = ({ ref, initiator, recipient, onClose, onOffer }: Props) => {
     }
 
     const handleSendTrade = () => {
-        onOffer({ offer, counterOffer, moneyFromInitiator, moneyFromRecipient })
+        if (!recipient) throw new Error("No recipient")
+        onOffer({ offer, counterOffer, moneyFromInitiator, moneyFromRecipient, recipientId: recipient.id })
         closeOfferModal()
     }
 

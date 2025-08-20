@@ -33,6 +33,8 @@ export const GameView = ({ gameId }: Props) => {
     downgradeProperty,
     mortgageProperty,
     unmortgageProperty,
+
+    initiateTrade,
     gameState: {
       board,
       currentPhase,
@@ -73,7 +75,19 @@ export const GameView = ({ gameId }: Props) => {
         Game Phase: <span className="badge badge-soft">{GamePhase[currentPhase]}</span><br />
       </div>
       <PlayersInfo players={activePlayers} currentPlayerIndex={currentPlayerIndex} />
-      <TradeSection players={activePlayers} activeTrades={activeTrades} spaces={board.spaces} />
+      <TradeSection
+        players={activePlayers}
+        activeTrades={activeTrades}
+        spaces={board.spaces}
+        onInitiateTrade={
+          ({
+            recipientId,
+            offer,
+            counterOffer,
+            moneyFromInitiator,
+            moneyFromRecipient }) =>
+            initiateTrade(recipientId, offer, counterOffer, moneyFromInitiator, moneyFromRecipient)
+        } />
     </div>
     <div className="relative">
       <Board

@@ -1,3 +1,5 @@
+import type { PropertySpace } from "./BoardSpace";
+
 export type Trade = {
   id: string;
   initiatorId: string;
@@ -7,4 +9,11 @@ export type Trade = {
   moneyFromInitiator: number;
   moneyFromRecipient: number;
   approvalId: string;
+};
+
+export type TradeOffer = {
+  offer: PropertySpace["id"][];
+  counterOffer: PropertySpace["id"][];
+  moneyFromInitiator: number;
+  moneyFromRecipient: number;
 };

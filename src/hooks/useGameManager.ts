@@ -460,7 +460,6 @@ const useGameManager = (gameId?: string, playerId?: string) => {
   };
 
   const initiateTrade = async (
-    initiatorId: string,
     recipientId: string,
     propertyOffer: string[],
     propertyCounterOffer: string[],

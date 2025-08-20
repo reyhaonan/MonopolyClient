@@ -1,5 +1,5 @@
 import type { Player, PlayerWithProperties } from '@/types/Player'
-import type { Trade } from '@/types/Trade'
+import type { Trade, TradeOffer } from '@/types/Trade'
 import Button from '../atoms/Button'
 import { useAuth } from '@/hooks/useAuth'
 import { useRef, useState } from 'react'
@@ -12,9 +12,10 @@ type Props = {
     players: Player[]
     activeTrades: Trade[]
     spaces: BoardSpace[]
+    onInitiateTrade: (tradeOffer: TradeOffer & { recipientId: string }) => void
 }
 
-const TradeSection = ({ activeTrades, players, spaces }: Props) => {
+const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade }: Props) => {
     const playerId = useAuth()
 
     const propertyOnlySpace: PropertySpace[] = spaces.filter(sp => sp.$type != "special")
@@ -72,7 +73,7 @@ const TradeSection = ({ activeTrades, players, spaces }: Props) => {
                     setInitiator(null)
                     setRecipient(null)
                 }}
-                onOffer={(pr) => console.log("BREH", pr)}
+                onOffer={(pr) => onInitiateTrade(pr)}
             />
 
 
