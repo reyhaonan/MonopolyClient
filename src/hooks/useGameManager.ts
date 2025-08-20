@@ -272,7 +272,9 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         }
       );
 
-      tempHubConnection.on("InitiateTradeResponse", (_, trade: any) => {});
+      tempHubConnection.on("InitiateTradeResponse", (_, trade: Trade) => {
+        setActiveTrades((state) => state.concat(trade));
+      });
 
       tempHubConnection.on("AcceptTradeResponse", (_, tradeId: string, transactions: any[]) => {});
 

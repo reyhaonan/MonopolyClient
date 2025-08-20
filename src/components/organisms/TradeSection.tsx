@@ -37,10 +37,10 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade }: Props)
 
     const [initiator, setInitiator] = useState<PlayerWithProperties | null>(null)
     const [recipient, setRecipient] = useState<PlayerWithProperties | null>(null)
+    const [tradeToInspect, setTradeToInspect] = useState<Trade | null>(null)
 
     const selectPlayerDialogRef = useRef<HTMLDialogElement>(null)
     const offerDialogRef = useRef<HTMLDialogElement>(null)
-
 
 
     return (
@@ -74,6 +74,7 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade }: Props)
                     setRecipient(null)
                 }}
                 onOffer={(pr) => onInitiateTrade(pr)}
+                tradeToInspect={tradeToInspect}
             />
 
 
@@ -82,28 +83,20 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade }: Props)
                     <h2 className='text-lg font-semibold'>Trade</h2>
                     <Button className='btn btn-primary btn-sm' onClick={() => selectPlayerDialogRef.current?.showModal()}>+ Trade</Button>
                 </div>
-                <div className="trade-lists">
+                <div className="trade-lists flex flex-col">
                     {activeTrades.map(trade =>
-                        <div className="trade" key={trade.id}>
-                            {trade.initiatorId} - {trade.approvalId}<br />
-                            {trade.moneyFromInitiator} for {trade.moneyFromRecipient}<br />
-                            <div className="flex">
-                                <div className="flex-1">
-                                    <ol className='list-disc'>
-                                        {trade.propertyOffer.map(p =>
-                                            <li key={p}>{p}</li>
-                                        )}
-                                    </ol>
-                                </div>
-                                <div className="flex-1">
-                                    <ol className='list-disc'>
-                                        {trade.propertyCounterOffer.map(p =>
-                                            <li key={p}>{p}</li>
-                                        )}
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
+                        <Button
+                            key={trade.id}
+                            className='btn btn-ghost'
+                            onClick={() => {
+                                setInitiator(playersWithProperties.find(p => p.id === trade.initiatorId) || null)
+                                setRecipient(playersWithProperties.find(p => p.id === trade.recipientId) || null)
+                                setTradeToInspect(trade)
+                                offerDialogRef.current?.showModal()
+                            }}
+                        >
+                            {players.find(p => p.id === trade.initiatorId)?.name} to {players.find(p => p.id === trade.recipientId)?.name}
+                        </Button>
                     )}
                 </div>
             </section>

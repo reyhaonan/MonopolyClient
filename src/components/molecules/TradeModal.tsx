@@ -1,10 +1,11 @@
 import type { PropertySpace } from '@/types/BoardSpace'
 import type { Player, PlayerWithProperties } from '@/types/Player'
 import classNames from 'classnames'
-import React, { useState, type Ref } from 'react'
+import React, { useEffect, useState, type Ref } from 'react'
 import Button from '../atoms/Button'
 import Modal from './Modal'
-import type { TradeOffer } from '@/types/Trade'
+import type { Trade, TradeOffer } from '@/types/Trade'
+import { useAuth } from '@/hooks/useAuth'
 
 
 
@@ -14,13 +15,25 @@ type Props = {
     ref: Ref<HTMLDialogElement>
     onClose: () => void
     onOffer: (tradeOffer: TradeOffer & { recipientId: string }) => void
+    tradeToInspect: Trade | null
 }
 
-const TradeModal = ({ ref, initiator, recipient, onClose, onOffer }: Props) => {
+const TradeModal = ({ ref, initiator, recipient, onClose, onOffer, tradeToInspect }: Props) => {
     const [offer, setOffer] = useState<PropertySpace['id'][]>([])
     const [counterOffer, setCounterOffer] = useState<PropertySpace['id'][]>([])
     const [moneyFromInitiator, setMoneyFromInitiator] = useState(0)
     const [moneyFromRecipient, setMoneyFromRecipient] = useState(0)
+
+    const playerId = useAuth()
+
+    useEffect(() => {
+        if (!tradeToInspect) return
+
+        setOffer(tradeToInspect.propertyOffer)
+        setCounterOffer(tradeToInspect.propertyCounterOffer)
+        setMoneyFromInitiator(tradeToInspect.moneyFromInitiator)
+        setMoneyFromRecipient(tradeToInspect.moneyFromRecipient)
+    }, [tradeToInspect])
 
     const closeOfferModal = () => {
         setCounterOffer([])
@@ -122,9 +135,25 @@ const TradeModal = ({ ref, initiator, recipient, onClose, onOffer }: Props) => {
                 </div>
             </div>
             <div className="w-full flex justify-center">
-                <Button onClick={handleSendTrade} className="btn btn-primary">
-                    Send Trade
-                </Button>
+                {!tradeToInspect &&
+                    <Button onClick={handleSendTrade} className="btn btn-primary">
+                        Send Trade
+                    </Button>
+                }
+                {tradeToInspect?.initiatorId === playerId && <>
+                    {/* TODO */}
+                    <Button onClick={handleSendTrade} className="btn btn-primary">
+                        Negotiate
+                    </Button>
+                    {/* TODO */}
+                    <Button onClick={handleSendTrade} className="btn btn-primary">
+                        Reject
+                    </Button>
+                    {/* TODO */}
+                    <Button onClick={handleSendTrade} className="btn btn-primary">
+                        Accept
+                    </Button>
+                </>}
             </div>
         </Modal>
     )
