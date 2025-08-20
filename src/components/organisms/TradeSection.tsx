@@ -1,10 +1,12 @@
-import type { Player } from '@/types/Player'
+import type { Player, PlayerWithProperties } from '@/types/Player'
 import type { Trade } from '@/types/Trade'
 import Button from '../atoms/Button'
 import { useAuth } from '@/hooks/useAuth'
 import { useRef, useState } from 'react'
 import type { BoardSpace, PropertySpace } from '@/types/BoardSpace'
 import classNames from 'classnames'
+import TradeModal from '../molecules/TradeModal'
+import Modal from '../molecules/Modal'
 
 type Props = {
     players: Player[]
@@ -28,113 +30,50 @@ const TradeSection = ({ activeTrades, players, spaces }: Props) => {
         }
     })
 
-    const player = playersWithProperties.find(p => p.id === playerId)
+    const player = playersWithProperties.find(p => p.id === playerId) || null
 
     const otherPlayers = playersWithProperties.filter(p => p.id !== playerId)
 
-    const [selectedPlayerToTrade, setSelectedPlayerToTrade] = useState<typeof playersWithProperties[number] | null>(null)
+    const [initiator, setInitiator] = useState<PlayerWithProperties | null>(null)
+    const [recipient, setRecipient] = useState<PlayerWithProperties | null>(null)
 
     const selectPlayerDialogRef = useRef<HTMLDialogElement>(null)
     const offerDialogRef = useRef<HTMLDialogElement>(null)
 
-    const [offer, setOffer] = useState<PropertySpace['id'][]>([])
-    const [counterOffer, setCounterOffer] = useState<PropertySpace['id'][]>([])
 
-    const handleOfferChange = (checkedPropertyId: PropertySpace['id']) => {
-        const isChecked = offer.some(propertyId => propertyId === checkedPropertyId)
-        if (isChecked) {
-            setOffer(
-                offer.filter(
-                    (propertyId) => propertyId !== checkedPropertyId
-                )
-            );
-        } else {
-            setOffer(state => state.concat(checkedPropertyId));
-        }
-    };
-    const handleCounterOfferChange = (checkedPropertyId: PropertySpace['id']) => {
-        const isChecked = counterOffer.some(propertyId => propertyId === checkedPropertyId)
-        if (isChecked) {
-            setCounterOffer(
-                counterOffer.filter(
-                    (propertyId) => propertyId !== checkedPropertyId
-                )
-            );
-        } else {
-            setCounterOffer(state => state.concat(checkedPropertyId));
-        }
-    };
 
     return (
         <>
-            <dialog ref={selectPlayerDialogRef} className="modal">
-                <div className="modal-box">
-                    <h3 className="font-bold text-lg">Trade with...</h3>
-                    <div className="modal-action">
-                        <ul className="menu rounded-box w-full">
-                            {otherPlayers.map(p =>
-                                <li key={p.id}>
-                                    <Button className='btn capitalize' onClick={() => {
-                                        setSelectedPlayerToTrade(p)
-                                        selectPlayerDialogRef.current?.close()
-                                        offerDialogRef.current?.showModal()
-                                    }}>{p.name}</Button>
-                                </li>)}
-                        </ul>
-                    </div>
-                </div>
-            </dialog>
+            <Modal ref={selectPlayerDialogRef} onClose={() =>
+                selectPlayerDialogRef.current?.close()}>
 
-            <dialog ref={offerDialogRef} className="modal">
-                <div className="modal-box">
-                    <h3 className="font-bold text-lg">Negotiate</h3>
-                    <div className="modal-action">
-                        <div className="flex w-full">
-                            <div className="player flex-1">
-                                <ul className="menu rounded-box w-full">
-                                    {player?.propertiesOwned.map(p => {
-                                        const checked = offer.some(propertyId => propertyId === p.id)
-                                        return <li key={p.id}>
-                                            <label className={classNames('btn capitalize flex', checked && "btn-primary")}>
-                                                <input
-                                                    value={p.id}
-                                                    type='checkbox'
-                                                    name='offer'
-                                                    className='hidden'
-                                                    checked={checked}
-                                                    onChange={() => handleOfferChange(p.id)}
-                                                />
-                                                {p.name}
-                                            </label>
-                                        </li>
-                                    })}
-                                </ul>
-                            </div>
-                            <div className="">S</div>
-                            <div className="otherPlayer flex-1">
-                                <ul className="menu rounded-box w-full">
-                                    {selectedPlayerToTrade?.propertiesOwned.map(p => {
-                                        const checked = counterOffer.some(propertyId => propertyId === p.id)
-                                        return <li key={p.id}>
-                                            <label className={classNames('btn capitalize flex', checked && "btn-primary")}>
-                                                <input
-                                                    value={p.id}
-                                                    type='checkbox'
-                                                    name='offer'
-                                                    className='hidden'
-                                                    checked={checked}
-                                                    onChange={() => handleCounterOfferChange(p.id)}
-                                                />
-                                                {p.name}
-                                            </label>
-                                        </li>
-                                    })}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
+                <h3 className="font-bold text-lg">Trade with...</h3>
+                <div className="modal-action">
+                    <ul className="menu rounded-box w-full">
+                        {otherPlayers.map(p =>
+                            <li key={p.id}>
+                                <Button className='btn capitalize' onClick={() => {
+                                    setInitiator(player)
+                                    setRecipient(p)
+                                    selectPlayerDialogRef.current?.close()
+                                    offerDialogRef.current?.showModal()
+                                }}>{p.name}</Button>
+                            </li>)}
+                    </ul>
                 </div>
-            </dialog>
+            </Modal >
+
+            <TradeModal
+                ref={offerDialogRef}
+                initiator={initiator}
+                recipient={recipient}
+                onClose={() => {
+                    offerDialogRef.current?.close()
+                    setInitiator(null)
+                    setRecipient(null)
+                }}
+                onOffer={(pr) => console.log("BREH", pr)}
+            />
 
 
             <section className='bg-base-200 rounded-box p-2'>

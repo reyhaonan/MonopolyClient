@@ -1,3 +1,5 @@
+import type { PropertySpace } from "./BoardSpace";
+
 export type Player = {
   id: string;
   name: string;
@@ -10,3 +12,7 @@ export type Player = {
   propertiesOwned: string[];
   isBankrupt: boolean;
 };
+
+export type PlayerWithProperties = {
+  propertiesOwned: PropertySpace[];
+} & Omit<Player, "propertiesOwned">;
