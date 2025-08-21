@@ -285,9 +285,84 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         );
       });
 
-      tempHubConnection.on("AcceptTradeResponse", (_, tradeId: string, transactions: any[]) => {});
+      tempHubConnection.on(
+        "AcceptTradeResponse",
+        (_, trade: Trade, transactions: TransactionInfo[]) => {
+          setActiveTrades((state) =>
+            produce(state, (draft) => {
+              const index = draft.findIndex((tr) => tr.id === trade.id);
+              if (index == -1) throw new Error("Trade to remove is not found");
+              draft.splice(index, 1);
+            })
+          );
 
-      tempHubConnection.on("RejectTradeResponse", (_, tradeId: string) => {});
+          setActivePlayers((state) =>
+            produce(state, (draft) => {
+              // Update the initiator
+              {
+                const initiatorIndex = draft.findIndex((p) => p.id === trade.initiatorId);
+                if (initiatorIndex == -1) throw new Error("Initiator not found");
+                draft[initiatorIndex].propertiesOwned = draft[
+                  initiatorIndex
+                ].propertiesOwned.filter((pr) => !trade.propertyOffer.includes(pr));
+                draft[initiatorIndex].propertiesOwned.push(...trade.propertyCounterOffer);
+              }
+
+              // Update the recipient
+              {
+                const recipientIndex = draft.findIndex((p) => p.id === trade.recipientId);
+                if (recipientIndex == -1) throw new Error("Recipient not found");
+                draft[recipientIndex].propertiesOwned = draft[
+                  recipientIndex
+                ].propertiesOwned.filter((pr) => !trade.propertyCounterOffer.includes(pr));
+                draft[recipientIndex].propertiesOwned.push(...trade.propertyOffer);
+              }
+
+              transactions.forEach((transactions) => processTransaction(draft, transactions));
+            })
+          );
+
+          setBoard((state) =>
+            produce(state, (draft) => {
+              trade.propertyOffer.forEach((offer) => {
+                const index = draft.spaces.findIndex((p) => p.id === offer);
+                if (index == -1) throw new Error("Property not found");
+                if (draft.spaces[index].$type === "special")
+                  throw new Error("HUH HOW DID YOU BOUGHT A SPECIAL SPACE???");
+                draft.spaces[index].ownerId = trade.recipientId;
+              });
+              trade.propertyCounterOffer.forEach((offer) => {
+                const index = draft.spaces.findIndex((p) => p.id === offer);
+                if (index == -1) throw new Error("Property not found");
+
+                if (draft.spaces[index].$type === "special")
+                  throw new Error("HUH HOW DID YOU BOUGHT A SPECIAL SPACE???");
+                draft.spaces[index].ownerId = trade.initiatorId;
+              });
+            })
+          );
+        }
+      );
+
+      tempHubConnection.on("RejectTradeResponse", (_, tradeId: string) => {
+        setActiveTrades((state) =>
+          produce(state, (draft) => {
+            const index = draft.findIndex((tr) => tr.id === tradeId);
+            if (index == -1) throw new Error("Trade to remove is not found");
+            draft.splice(index, 1);
+          })
+        );
+      });
+
+      tempHubConnection.on("CancelTradeResponse", (_, tradeId: string) => {
+        setActiveTrades((state) =>
+          produce(state, (draft) => {
+            const index = draft.findIndex((tr) => tr.id === tradeId);
+            if (index == -1) throw new Error("Trade to remove is not found");
+            draft.splice(index, 1);
+          })
+        );
+      });
 
       try {
         await tempHubConnection.start();
@@ -514,7 +589,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
           moneyFromRecipient
         );
       } catch (error) {
-        console.error("Error while calling InitiateTrade: ", error);
+        console.error("Error while calling NegotiateTrade: ", error);
       }
     } else {
       console.warn("Hub connection not established.");
@@ -539,6 +614,17 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         await hubConnection.invoke("RejectTrade", gameId, tradeId);
       } catch (error) {
         console.error("Error while calling RejectTrade: ", error);
+      }
+    } else {
+      console.warn("Hub connection not established.");
+    }
+  };
+  const cancelTrade = async (tradeId: string) => {
+    if (hubConnection) {
+      try {
+        await hubConnection.invoke("CancelTrade", gameId, tradeId);
+      } catch (error) {
+        console.error("Error while calling CancelTrade: ", error);
       }
     } else {
       console.warn("Hub connection not established.");
@@ -576,6 +662,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
     negotiateTrade,
     acceptTrade,
     rejectTrade,
+    cancelTrade,
   };
 };
 

@@ -20,6 +20,8 @@ const PlayersInfo = ({ players, currentPlayerIndex }: Props) => {
                             Jail: {player.isInJail ? player.jailTurnsRemaining : "N"}
                             {" | "}
                             Doubles: {player.consecutiveDoubles}
+                            {" | "}
+                            ID: {player.id.substring(0, 6)}
                         </div>
                     </div>
 

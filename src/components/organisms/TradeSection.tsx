@@ -13,7 +13,7 @@ type Props = {
     spaces: BoardSpace[]
 } & Pick<ComponentProps<typeof TradeModal>, "onInitiateTrade" | "onNegotiateTrade" | "onAcceptTrade" | "onCancelTrade" | "onRejectTrade">
 
-const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, onNegotiateTrade, ...tradeModalProps }: Props) => {
+const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, ...tradeModalProps }: Props) => {
     const playerId = useAuth()
 
     const propertyOnlySpace: PropertySpace[] = spaces.filter(sp => sp.$type != "special")

@@ -30,6 +30,9 @@ const TradeModal = ({
     tradeToInspect,
     onInitiateTrade,
     onNegotiateTrade,
+    onRejectTrade,
+    onCancelTrade,
+    onAcceptTrade,
 }: TradeModalProps) => {
 
     const [negotiateMode, setNegotiateMode] = useState(false)
@@ -54,9 +57,11 @@ const TradeModal = ({
     }
 
     const onSubmit: SubmitHandler<any> = ({ offer, counterOffer, moneyFromInitiator, moneyFromRecipient }) => {
+        console.log(offer)
         if (!recipient) throw new Error("No recipient")
         if (negotiateMode) {
             if (!tradeToInspect) throw new Error("No trade to negotiate")
+            console.log("Startt")
             if (playerId !== recipient.id) throw new Error("You are not permitted to do this action")
             // Negotiate just flips around so...
             onNegotiateTrade?.({
@@ -68,7 +73,9 @@ const TradeModal = ({
             })
 
         }
-        else onInitiateTrade?.({ offer, counterOffer, moneyFromInitiator, moneyFromRecipient, recipientId: recipient.id })
+        else {
+            onInitiateTrade?.({ offer, counterOffer, moneyFromInitiator, moneyFromRecipient, recipientId: recipient.id })
+        }
         closeOfferModal()
     }
 
@@ -80,18 +87,24 @@ const TradeModal = ({
     const handleRejectTrade = () => {
         if (!recipient) throw new Error("No recipient")
         if (playerId !== recipient.id) throw new Error("You are not permitted to do this action")
-        throw new Error('Function not implemented.')
+        if (!tradeToInspect) throw new Error("What the hell how did you trigger this")
+        onRejectTrade?.(tradeToInspect.id)
+        closeOfferModal()
     }
 
     const handleAcceptTrade = () => {
         if (!recipient) throw new Error("No recipient")
         if (playerId !== recipient.id) throw new Error("You are not permitted to do this action")
-        throw new Error('Function not implemented.')
+        if (!tradeToInspect) throw new Error("What the hell how did you trigger this")
+        onAcceptTrade?.(tradeToInspect.id)
+        closeOfferModal()
     }
     const handleCancelTrade = () => {
         if (!initiator) throw new Error("No initiator")
         if (playerId !== initiator.id) throw new Error("You are not permitted to do this action")
-        throw new Error('Function not implemented.')
+        if (!tradeToInspect) throw new Error("What the hell how did you trigger this")
+        onCancelTrade?.(tradeToInspect.id)
+        closeOfferModal()
     }
 
 
@@ -158,7 +171,7 @@ const TradeModal = ({
                                     name={selectedProperties}
                                     render={({ field }) => {
                                         const checked = field.value.includes(p.id)
-                                        return <label className={classNames('btn capitalize flex', checked && 'btn-accent')}>
+                                        return <label className={classNames('btn capitalize flex', checked && 'btn-accent ')}>
                                             <input
                                                 {...field}
                                                 value={p.id}

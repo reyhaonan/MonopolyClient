@@ -35,6 +35,9 @@ export const GameView = ({ gameId }: Props) => {
     unmortgageProperty,
     initiateTrade,
     negotiateTrade,
+    acceptTrade,
+    rejectTrade,
+    cancelTrade,
     gameState: {
       board,
       currentPhase,
@@ -99,9 +102,9 @@ export const GameView = ({ gameId }: Props) => {
           }) =>
             negotiateTrade(tradeId, offer, counterOffer, moneyFromInitiator, moneyFromRecipient)
         }
-        onAcceptTrade={tradeId => { }}
-        onRejectTrade={tradeId => { }}
-        onCancelTrade={tradeId => { }}
+        onAcceptTrade={acceptTrade}
+        onRejectTrade={rejectTrade}
+        onCancelTrade={cancelTrade}
       />
     </div>
     <div className="relative">
