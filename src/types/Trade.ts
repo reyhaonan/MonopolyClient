@@ -8,7 +8,7 @@ export type Trade = {
   propertyCounterOffer: string[];
   moneyFromInitiator: number;
   moneyFromRecipient: number;
-  approvalId: string;
+  negotiateCount: number;
 };
 
 export type TradeOffer = {

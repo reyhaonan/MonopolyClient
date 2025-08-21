@@ -275,6 +275,15 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       tempHubConnection.on("InitiateTradeResponse", (_, trade: Trade) => {
         setActiveTrades((state) => state.concat(trade));
       });
+      tempHubConnection.on("NegotiateTradeResponse", (_, trade: Trade) => {
+        setActiveTrades((state) =>
+          produce(state, (draft) => {
+            const index = draft.findIndex((tr) => tr.id === trade.id);
+            if (index == -1) throw new Error("Trade to replace is not found");
+            draft[index] = trade;
+          })
+        );
+      });
 
       tempHubConnection.on("AcceptTradeResponse", (_, tradeId: string, transactions: any[]) => {});
 
@@ -486,6 +495,31 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       console.warn("Hub connection not established.");
     }
   };
+  const negotiateTrade = async (
+    tradeId: string,
+    propertyOffer: string[],
+    propertyCounterOffer: string[],
+    moneyFromInitiator: number,
+    moneyFromRecipient: number
+  ) => {
+    if (hubConnection) {
+      try {
+        await hubConnection.invoke(
+          "NegotiateTrade",
+          gameId,
+          tradeId,
+          propertyOffer,
+          propertyCounterOffer,
+          moneyFromInitiator,
+          moneyFromRecipient
+        );
+      } catch (error) {
+        console.error("Error while calling InitiateTrade: ", error);
+      }
+    } else {
+      console.warn("Hub connection not established.");
+    }
+  };
 
   const acceptTrade = async (tradeId: string) => {
     if (hubConnection) {
@@ -539,6 +573,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
     mortgageProperty,
     unmortgageProperty,
     initiateTrade,
+    negotiateTrade,
     acceptTrade,
     rejectTrade,
   };

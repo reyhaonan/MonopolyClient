@@ -2,9 +2,8 @@ import type { Player, PlayerWithProperties } from '@/types/Player'
 import type { Trade, TradeOffer } from '@/types/Trade'
 import Button from '../atoms/Button'
 import { useAuth } from '@/hooks/useAuth'
-import { useRef, useState } from 'react'
+import { useRef, useState, type ComponentProps } from 'react'
 import type { BoardSpace, PropertySpace } from '@/types/BoardSpace'
-import classNames from 'classnames'
 import TradeModal from '../molecules/TradeModal'
 import Modal from '../molecules/Modal'
 
@@ -12,10 +11,9 @@ type Props = {
     players: Player[]
     activeTrades: Trade[]
     spaces: BoardSpace[]
-    onInitiateTrade: (tradeOffer: TradeOffer & { recipientId: string }) => void
-}
+} & Pick<ComponentProps<typeof TradeModal>, "onInitiateTrade" | "onNegotiateTrade" | "onAcceptTrade" | "onCancelTrade" | "onRejectTrade">
 
-const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade }: Props) => {
+const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, onNegotiateTrade, ...tradeModalProps }: Props) => {
     const playerId = useAuth()
 
     const propertyOnlySpace: PropertySpace[] = spaces.filter(sp => sp.$type != "special")
@@ -35,9 +33,7 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade }: Props)
 
     const otherPlayers = playersWithProperties.filter(p => p.id !== playerId)
 
-    const [initiator, setInitiator] = useState<PlayerWithProperties | null>(null)
     const [recipient, setRecipient] = useState<PlayerWithProperties | null>(null)
-    const [tradeToInspect, setTradeToInspect] = useState<Trade | null>(null)
 
     const selectPlayerDialogRef = useRef<HTMLDialogElement>(null)
     const offerDialogRef = useRef<HTMLDialogElement>(null)
@@ -54,7 +50,6 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade }: Props)
                         {otherPlayers.map(p =>
                             <li key={p.id}>
                                 <Button className='btn capitalize' onClick={() => {
-                                    setInitiator(player)
                                     setRecipient(p)
                                     selectPlayerDialogRef.current?.close()
                                     offerDialogRef.current?.showModal()
@@ -66,15 +61,13 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade }: Props)
 
             <TradeModal
                 ref={offerDialogRef}
-                initiator={initiator}
+                initiator={player}
                 recipient={recipient}
                 onClose={() => {
                     offerDialogRef.current?.close()
-                    setInitiator(null)
-                    setRecipient(null)
                 }}
-                onOffer={(pr) => onInitiateTrade(pr)}
-                tradeToInspect={tradeToInspect}
+                onInitiateTrade={onInitiateTrade}
+                tradeToInspect={null}
             />
 
 
@@ -85,23 +78,54 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade }: Props)
                 </div>
                 <div className="trade-lists flex flex-col">
                     {activeTrades.map(trade =>
-                        <Button
+                        <TradeItem
                             key={trade.id}
-                            className='btn btn-ghost'
-                            onClick={() => {
-                                setInitiator(playersWithProperties.find(p => p.id === trade.initiatorId) || null)
-                                setRecipient(playersWithProperties.find(p => p.id === trade.recipientId) || null)
-                                setTradeToInspect(trade)
-                                offerDialogRef.current?.showModal()
-                            }}
-                        >
-                            {players.find(p => p.id === trade.initiatorId)?.name} to {players.find(p => p.id === trade.recipientId)?.name}
-                        </Button>
+                            trade={trade}
+                            initiator={playersWithProperties.find(p => p.id === trade.initiatorId)}
+                            recipient={playersWithProperties.find(p => p.id === trade.recipientId)}
+                            {...tradeModalProps}
+                        />
                     )}
                 </div>
             </section>
         </>
     )
+}
+
+
+
+type TradeItemProps = {
+    trade: Trade,
+    initiator?: PlayerWithProperties
+    recipient?: PlayerWithProperties
+} & Pick<ComponentProps<typeof TradeModal>, "onNegotiateTrade" | "onAcceptTrade" | "onCancelTrade" | "onRejectTrade">
+
+export const TradeItem = ({ trade, initiator, recipient, ...tradeModalProps }: TradeItemProps) => {
+    const offerDialogRef = useRef<HTMLDialogElement>(null)
+
+    if (!initiator || !recipient) return null
+    return <>
+        <Button
+            key={trade.id}
+            className='btn btn-ghost'
+            onClick={() => {
+                offerDialogRef.current?.showModal()
+            }}
+        >
+            {initiator?.name} to {recipient?.name}
+        </Button>
+
+        <TradeModal
+            ref={offerDialogRef}
+            initiator={initiator}
+            recipient={recipient}
+            onClose={() => {
+                offerDialogRef.current?.close()
+            }}
+            tradeToInspect={trade}
+            {...tradeModalProps}
+        />
+    </>
 }
 
 export default TradeSection
