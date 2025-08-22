@@ -26,7 +26,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
   useEffect(() => {
     if (!gameId || !playerId) return;
     const connectToHub = async () => {
-      const csrfToken = sessionStorage.getItem("XSRF-TOKEN");
+      const csrfToken = localStorage.getItem("XSRF-TOKEN");
       if (!csrfToken) return;
       const tempHubConnection = new signalR.HubConnectionBuilder()
         .withUrl(`${import.meta.env.VITE_API_URL}/gameHubs`, {
@@ -50,7 +50,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         setCurrentPhase(GamePhase.PlayerTurnStart);
       });
 
-      tempHubConnection.on("SpectateGameResponse", (gameState: GameState) => {
+      tempHubConnection.on("SyncGameResponse", (gameState: GameState) => {
         setActivePlayers(gameState.activePlayers);
         setBoard(gameState.board);
         setCurrentPlayerIndex(gameState.currentPlayerIndex);
@@ -385,6 +385,9 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         tempHubConnection
           .invoke("SpectateGame", gameId)
           .catch((err) => console.error("Error while calling SpectateGame: ", err));
+        tempHubConnection
+          .invoke("SyncGame", gameId)
+          .catch((err) => console.error("Error while calling SyncGame: ", err));
       } catch (err) {
         setTimeout(connectToHub, 5000);
       }
@@ -401,160 +404,114 @@ const useGameManager = (gameId?: string, playerId?: string) => {
   }, [gameId, playerId]);
 
   // Define functions to invoke server methods
-  const joinGame = async (playerName: string) => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("JoinGame", gameId, playerName);
-      } catch (error) {
-        console.error("Error while calling JoinGame: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+  const syncGame = async () => {
+    if (!hubConnection) return;
+    await hubConnection
+      .invoke("SyncGame", gameId)
+      .catch((err) => console.error("Error while calling SyncGame: ", err));
+  };
+  const joinGame = async (playerName: string, hexColor: string) => {
+    if (!hubConnection) return;
+    await hubConnection.invoke("JoinGame", gameId, playerName, hexColor).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   const startGame = async () => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("StartGame", gameId);
-      } catch (error) {
-        console.error("Error while calling StartGame: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("StartGame", gameId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   const rollDice = async () => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("RollDice", gameId);
-      } catch (error) {
-        console.error("Error while calling RollDice: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("RollDice", gameId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   const endTurn = async () => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("EndTurn", gameId);
-      } catch (error) {
-        console.error("Error while calling EndTurn: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("EndTurn", gameId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   const declareBankcruptcy = async () => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("DeclareBankcruptcy", gameId);
-      } catch (error) {
-        console.error("Error while calling DeclareBankcruptcy: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("DeclareBankcruptcy", gameId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   const useGetOutOfJailCard = async () => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("UseGetOutOfJailCard", gameId);
-      } catch (error) {
-        console.error("Error while calling UseGetOutOfJailCard: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("UseGetOutOfJailCard", gameId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   const payToGetOutOfJail = async () => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("PayToGetOutOfJail", gameId);
-      } catch (error) {
-        console.error("Error while calling PayToGetOutOfJail: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("PayToGetOutOfJail", gameId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   const buyProperty = async () => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("BuyProperty", gameId);
-      } catch (error) {
-        console.error("Error while calling BuyProperty: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("BuyProperty", gameId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   const sellProperty = async (propertyId: string) => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("SellProperty", gameId, propertyId);
-      } catch (error) {
-        console.error("Error while calling SellProperty: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("SellProperty", gameId, propertyId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   const upgradeProperty = async (propertyId: string) => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("UpgradeProperty", gameId, propertyId);
-      } catch (error) {
-        console.error("Error while calling UpgradeProperty: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("UpgradeProperty", gameId, propertyId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   const downgradeProperty = async (propertyId: string) => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("DowngradeProperty", gameId, propertyId);
-      } catch (error) {
-        console.error("Error while calling DowngradeProperty: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("DowngradeProperty", gameId, propertyId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   const mortgageProperty = async (propertyId: string) => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("MortgageProperty", gameId, propertyId);
-      } catch (error) {
-        console.error("Error while calling MortgageProperty: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("MortgageProperty", gameId, propertyId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   const unmortgageProperty = async (propertyId: string) => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("UnmortgageProperty", gameId, propertyId);
-      } catch (error) {
-        console.error("Error while calling UnmortgageProperty: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("UnmortgageProperty", gameId, propertyId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   const initiateTrade = async (
@@ -564,23 +521,21 @@ const useGameManager = (gameId?: string, playerId?: string) => {
     moneyFromInitiator: number,
     moneyFromRecipient: number
   ) => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke(
-          "InitiateTrade",
-          gameId,
-          recipientId,
-          propertyOffer,
-          propertyCounterOffer,
-          moneyFromInitiator,
-          moneyFromRecipient
-        );
-      } catch (error) {
-        console.error("Error while calling InitiateTrade: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection
+      .invoke(
+        "InitiateTrade",
+        gameId,
+        recipientId,
+        propertyOffer,
+        propertyCounterOffer,
+        moneyFromInitiator,
+        moneyFromRecipient
+      )
+      .catch((err) => {
+        console.error(err);
+        syncGame();
+      });
   };
   const negotiateTrade = async (
     tradeId: string,
@@ -589,58 +544,44 @@ const useGameManager = (gameId?: string, playerId?: string) => {
     moneyFromInitiator: number,
     moneyFromRecipient: number
   ) => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke(
-          "NegotiateTrade",
-          gameId,
-          tradeId,
-          propertyOffer,
-          propertyCounterOffer,
-          moneyFromInitiator,
-          moneyFromRecipient
-        );
-      } catch (error) {
-        console.error("Error while calling NegotiateTrade: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection
+      .invoke(
+        "NegotiateTrade",
+        gameId,
+        tradeId,
+        propertyOffer,
+        propertyCounterOffer,
+        moneyFromInitiator,
+        moneyFromRecipient
+      )
+      .catch((err) => {
+        console.error(err);
+        syncGame();
+      });
   };
 
   const acceptTrade = async (tradeId: string) => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("AcceptTrade", gameId, tradeId);
-      } catch (error) {
-        console.error("Error while calling AcceptTrade: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("AcceptTrade", gameId, tradeId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   const rejectTrade = async (tradeId: string) => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("RejectTrade", gameId, tradeId);
-      } catch (error) {
-        console.error("Error while calling RejectTrade: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("RejectTrade", gameId, tradeId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
   const cancelTrade = async (tradeId: string) => {
-    if (hubConnection) {
-      try {
-        await hubConnection.invoke("CancelTrade", gameId, tradeId);
-      } catch (error) {
-        console.error("Error while calling CancelTrade: ", error);
-      }
-    } else {
-      console.warn("Hub connection not established.");
-    }
+    if (!hubConnection) return;
+    await hubConnection.invoke("CancelTrade", gameId, tradeId).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
   };
 
   return {

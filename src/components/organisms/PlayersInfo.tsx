@@ -10,7 +10,7 @@ type Props = {
 const PlayersInfo = ({ players, currentPlayerIndex }: Props) => {
     const playerId = useAuth()
     return (
-        <ul className="list bg-base-100 rounded-box shadow-md">
+        <ul className="list bg-base-100 rounded-box">
             <li className="p-2 pb-2 text-xs opacity-60 tracking-wide">Players</li>
             {players.map((player, i) =>
                 <li className={classNames("list-row flex items-center p-4 flex-wrap border transition-colors", currentPlayerIndex === i ? "border-primary" : "border-transparent")} key={player.id}>

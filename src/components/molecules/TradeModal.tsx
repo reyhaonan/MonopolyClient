@@ -296,7 +296,7 @@ const PlayerTradePanel = ({
                     {propertiesToList.map((property) => {
                         const playerIsGroupOwner = property.$type === "country" && countryGroupData[(property as CountrySpace).group].every(c => c.ownerId === player.id)
                         const groupHasHouse = property.$type === "country" && countryGroupData[(property as CountrySpace).group].some(c => c.currentRentStage > RentStage.Unimproved)
-
+                        const propertyIsDisabled = playerIsGroupOwner && groupHasHouse
                         return (
                             <li key={property.id}>
                                 <Controller
@@ -308,7 +308,8 @@ const PlayerTradePanel = ({
                                             <label
                                                 className={classNames(
                                                     'btn w-full justify-start',
-                                                    isChecked ? 'btn-accent' : 'btn-ghost'
+                                                    isChecked ? 'btn-accent' : 'btn-ghost',
+                                                    propertyIsDisabled && "btn-disabled"
                                                 )}
                                             >
                                                 <input
@@ -316,7 +317,7 @@ const PlayerTradePanel = ({
                                                     className="hidden"
                                                     value={property.id}
                                                     checked={isChecked}
-                                                    disabled={playerIsGroupOwner && groupHasHouse}
+                                                    disabled={propertyIsDisabled}
                                                     onChange={(e) => {
                                                         const updatedValue = isChecked
                                                             ? field.value.filter((id) => id !== e.target.value)

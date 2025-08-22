@@ -14,6 +14,7 @@ import type { ColorGroup } from "@/enums/ColorGroup";
 import type { CountrySpace } from "@/types/BoardSpace";
 import TransactionHistory from "../organisms/TransactionHistory";
 import type { Player } from "@/types/Player";
+import classNames from "classnames";
 
 type Props = {
   gameId: string;
@@ -21,6 +22,17 @@ type Props = {
 
 const MIN_PLAYER = 2
 const MAX_PLAYER = 8
+
+const COLOR_OPTIONS = [
+  "#EC3560",
+  "#F8A538",
+  "#F4D50D",
+  "#97CD2C",
+  "#33CDEC",
+  "#0C7ED5",
+  "#792CEC",
+  "#D55DC2"
+]
 
 export const GameView = ({ gameId }: Props) => {
   const { data } = useQuery({
@@ -96,6 +108,8 @@ export const GameView = ({ gameId }: Props) => {
     return prev
   }, {} as { [key: Player['id']]: Player })
 
+  const [selectedColor, setSelectedColor] = useState("");
+
   return <main className="container mx-auto flex gap-4 pb-16">
     <div className="flex-1 flex flex-col gap-4">
       <div>
@@ -125,12 +139,32 @@ export const GameView = ({ gameId }: Props) => {
         actionButtons={{
           joinGameButton:
             activePlayers.length < MAX_PLAYER && currentPhase === GamePhase.WaitingForPlayers && !isInGame ?
-              <Button
-                className="btn btn-primary"
-                onClick={() => joinGame(getCookie("Username"))}
-              >
-                Join Game
-              </Button> : null
+              <>
+                <div className="colorSelection grid grid-cols-4 gap-2 items-center mb-2">
+                  {COLOR_OPTIONS.map(color =>
+                    <Button
+                      key={color}
+                      className={
+                        classNames("btn btn-circle border-0",
+                          color === selectedColor && "ring-4",
+                          activePlayers.some(p => p.hexColor === color) && "btn-disabled opacity-10"
+                        )
+                      }
+                      style={{ background: color }}
+                      onClick={() => setSelectedColor(color)}
+                      disabled={activePlayers.some(p => p.hexColor === color)}
+                    ></Button>
+                  )}
+                </div>
+                <Button
+                  className="btn btn-primary"
+                  disabled={!selectedColor}
+                  onClick={() => joinGame(getCookie("Username"), selectedColor)}
+                >
+                  Join Game
+                </Button>
+              </>
+              : null
           ,
           rollDiceButton:
             isMyTurn && currentPhase === GamePhase.PlayerTurnStart ?

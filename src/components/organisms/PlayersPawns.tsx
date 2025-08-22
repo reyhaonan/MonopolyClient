@@ -42,6 +42,7 @@ export const createMockPlayers = (names: string[], startingPosition: number): Pl
         consecutiveDoubles: 0,
         propertiesOwned: [],
         isBankrupt: false,
+        hexColor: "#FFFFFF"
     }));
 }
 
@@ -63,7 +64,7 @@ const PlayersPawns = ({ players, tileHeight, tileWidth, currentPlayerIndex }: Pr
                 const playersOnSameSpace = spacesOccupied[player.currentPosition];
                 const playerIndex = playersOnSameSpace.findIndex(p => p === player.id);
                 const orientation = Math.floor(player.currentPosition / 10) % 2
-
+                const isCurrentPlayer = player.id === players[currentPlayerIndex]?.id
 
                 return (
                     <div
@@ -76,10 +77,18 @@ const PlayersPawns = ({ players, tileHeight, tileWidth, currentPlayerIndex }: Pr
                     >
                         <div
                             className={classNames(
-                                "absolute aspect-square rounded-full bg-white border top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-                                player.id === players[currentPlayerIndex]?.id ? "w-10 z-20 shadow animate-pulse" : "w-8"
+                                "absolute aspect-square rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+                                isCurrentPlayer ? "w-9 z-20" : "w-8"
                             )}
-                        ></div>
+                            style={{
+                                background: player.hexColor
+                            }}
+                        >
+                            {isCurrentPlayer && <div className="absolute rounded-full inset-0 animate-ping" style={{
+                                background: player.hexColor
+                            }}></div>}
+
+                        </div>
                     </div>
                 );
             })}

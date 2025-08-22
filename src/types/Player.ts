@@ -11,6 +11,7 @@ export type Player = {
   consecutiveDoubles: number;
   propertiesOwned: string[];
   isBankrupt: boolean;
+  hexColor: string;
 };
 
 export type PlayerWithProperties = {

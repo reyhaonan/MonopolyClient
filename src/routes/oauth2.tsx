@@ -24,7 +24,7 @@ function RouteComponent() {
     queryFn: async () => {
       const res = await loginDiscord(code);
 
-      sessionStorage.setItem("XSRF-TOKEN", getCookie("XSRF-TOKEN"));
+      localStorage.setItem("XSRF-TOKEN", getCookie("XSRF-TOKEN"));
       return res;
     },
   });

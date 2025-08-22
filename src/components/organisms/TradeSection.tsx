@@ -74,7 +74,7 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, disableT
             />
 
 
-            <section className='bg-base-100 rounded-box shadow-md p-2'>
+            <section className='bg-base-100 rounded-box p-2'>
                 <div className="flex justify-between items-center">
                     <h6 className="p-2 pb-2 text-xs opacity-60 tracking-wide">Trades</h6>
                     {!disableTrade && <Button className='btn btn-primary btn-square btn-sm btn-soft' onClick={() => selectPlayerDialogRef.current?.showModal()}>+</Button>}

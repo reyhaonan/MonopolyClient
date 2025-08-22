@@ -70,7 +70,7 @@ const Tile = ({
             containerClassName='z-30'
             content={() => (
                 <div tabIndex={0}
-                    className="select-none w-52 bg-base-100 p-4 shadow rounded-box"
+                    className="select-none w-52 bg-base-100 p-4 rounded-box"
                     style={{
                         writingMode: "horizontal-tb"
                     }}>
