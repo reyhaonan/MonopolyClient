@@ -26,7 +26,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
   useEffect(() => {
     if (!gameId || !playerId) return;
     const connectToHub = async () => {
-      const csrfToken = localStorage.getItem("XSRF-TOKEN");
+      const csrfToken = sessionStorage.getItem("XSRF-TOKEN");
       if (!csrfToken) return;
       const tempHubConnection = new signalR.HubConnectionBuilder()
         .withUrl(`${import.meta.env.VITE_API_URL}/gameHubs`, {

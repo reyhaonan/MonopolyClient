@@ -22,7 +22,7 @@ const LoginView = () => {
     login(values.username, {
       onSuccess: () => {
 
-        localStorage.setItem("XSRF-TOKEN", getCookie("XSRF-TOKEN"));
+        sessionStorage.setItem("XSRF-TOKEN", getCookie("XSRF-TOKEN"));
         qc.refetchQueries({
           queryKey: ["currentUser"]
         })

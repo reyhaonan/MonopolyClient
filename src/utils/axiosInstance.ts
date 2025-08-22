@@ -12,7 +12,7 @@ export const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    const csrfToken = localStorage.getItem("XSRF-TOKEN");
+    const csrfToken = sessionStorage.getItem("XSRF-TOKEN");
     if (csrfToken) config.headers["XSRF-TOKEN"] = csrfToken;
     return config;
   },
@@ -32,7 +32,7 @@ axiosInstance.interceptors.response.use(
           withCredentials: true,
         });
 
-        localStorage.setItem("XSRF-TOKEN", getCookie("XSRF-TOKEN"));
+        sessionStorage.setItem("XSRF-TOKEN", getCookie("XSRF-TOKEN"));
         return axiosInstance(originalRequest); // Retry the original request with the new access token.
       } catch (refreshError) {
         return Promise.reject(refreshError);
