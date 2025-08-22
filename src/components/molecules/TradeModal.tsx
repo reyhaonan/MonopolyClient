@@ -134,7 +134,7 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
     return (
         <Modal ref={ref} onClose={handleClose}>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <h3 className="font-bold text-2xl text-center">Trade</h3>
+                <h3 className="font-bold text-2xl text-center">{tradeToInspect && tradeToInspect.negotiateCount > 0 ? `Negotiation no. ${tradeToInspect.negotiateCount}` : "Trade"}</h3>
 
                 <div className={classNames("flex items-start justify-center w-full gap-2 sm:gap-4 transition-all", negotiateMode && "flex-row-reverse")}>
                     {initiator && (

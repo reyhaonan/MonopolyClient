@@ -71,8 +71,27 @@
   --noise: 0;
 }
 
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) var(--color-base-200);
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--color-primary);
+  opacity: 0.4;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-base-200);
+}
+
 .debug-outline {
-  @apply outline outline-1 outline-gray-300;
+  @apply outline outline-1 outline-error;
 }
 
 .debug-grid {

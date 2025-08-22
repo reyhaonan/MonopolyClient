@@ -12,6 +12,8 @@ import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import TradeSection from "../organisms/TradeSection";
 import type { ColorGroup } from "@/enums/ColorGroup";
 import type { CountrySpace } from "@/types/BoardSpace";
+import TransactionHistory from "../organisms/TransactionHistory";
+import type { Player } from "@/types/Player";
 
 type Props = {
   gameId: string;
@@ -52,7 +54,8 @@ export const GameView = ({ gameId }: Props) => {
       activePlayers,
       diceRoll1,
       diceRoll2,
-      activeTrades
+      activeTrades,
+      transactionsHistory
     } } = useGameManager(data?.data, playerId || undefined);
 
   const isInGame = activePlayers.findIndex(p => p.id === playerId) !== -1
@@ -88,6 +91,11 @@ export const GameView = ({ gameId }: Props) => {
     }, {} as Record<ColorGroup, CountrySpace[]>)
   }, [board.spaces]);
 
+  const playersFromId = activePlayers.reduce((prev, player) => {
+    prev[player.id] = player
+    return prev
+  }, {} as { [key: Player['id']]: Player })
+
   return <main className="container mx-auto flex gap-4 pb-16">
     <div className="flex-1 flex flex-col gap-4">
       <div>
@@ -97,6 +105,8 @@ export const GameView = ({ gameId }: Props) => {
     </div>
     <div className="relative">
       <Board
+        tileWidth={tileWidth}
+        transactions={<TransactionHistory transactionsHistory={transactionsHistory} playersFromId={playersFromId} />}
         countryGroupData={countryGroupData}
         isPermittedToBuyOrSellProperty={isMyTurn && (currentPhase === GamePhase.PostLandingActions || currentPhase === GamePhase.PlayerTurnStart)}
         spaces={board.spaces}

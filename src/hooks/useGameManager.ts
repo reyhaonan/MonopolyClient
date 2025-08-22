@@ -18,11 +18,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
   const [diceRoll1, setDiceRoll1] = useState<number>(0);
   const [diceRoll2, setDiceRoll2] = useState<number>(0);
   const [currentPhase, setCurrentPhase] = useState<GamePhase>(GamePhase.WaitingForPlayers);
-  const [transactionsHistory, setTransactionsHistory] = useState<{
-    history: TransactionInfo[];
-  }>({
-    history: [],
-  });
+  const [transactionsHistory, setTransactionsHistory] = useState<TransactionInfo[]>([]);
   const [activeTrades, setActiveTrades] = useState<Trade[]>([]);
   const currentPlayer = activePlayers[currentPlayerIndex];
   const currentPlayerSpace = currentPlayer ? board.spaces[currentPlayer.currentPosition] : null;
@@ -62,7 +58,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         setDiceRoll2(0);
 
         setCurrentPhase(gameState.currentPhase);
-        setTransactionsHistory(gameState.transactionsHistory);
+        setTransactionsHistory(gameState.transactionsHistory.history);
         setActiveTrades(gameState.activeTrades);
       });
 
@@ -86,6 +82,8 @@ const useGameManager = (gameId?: string, playerId?: string) => {
             rollResult.transaction.forEach((transaction) => processTransaction(draft, transaction));
           });
         });
+
+        setTransactionsHistory((state) => state.concat(rollResult.transaction));
       });
 
       tempHubConnection.on("EndTurnResponse", (_, nextPlayerIndex: number) => {
@@ -109,6 +107,8 @@ const useGameManager = (gameId?: string, playerId?: string) => {
               draft[activePlayerIndex].propertiesOwned.push(propertyId);
             })
           );
+
+          setTransactionsHistory((state) => state.concat(transactions));
 
           setBoard((state) =>
             produce(state, (draft) => {
@@ -145,6 +145,8 @@ const useGameManager = (gameId?: string, playerId?: string) => {
             })
           );
 
+          setTransactionsHistory((state) => state.concat(transactions));
+
           setBoard((state) =>
             produce(state, (draft) => {
               const propertyBoughtIndex = draft.spaces.findIndex(
@@ -168,12 +170,14 @@ const useGameManager = (gameId?: string, playerId?: string) => {
 
       tempHubConnection.on(
         "PropertyMortgagedResponse",
-        (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
+        (_, propertyId: string, transactions: TransactionInfo[]) => {
           setActivePlayers((state) =>
             produce(state, (draft) => {
               transactions.forEach((transactions) => processTransaction(draft, transactions));
             })
           );
+
+          setTransactionsHistory((state) => state.concat(transactions));
 
           setBoard((state) =>
             produce(state, (draft) => {
@@ -197,12 +201,14 @@ const useGameManager = (gameId?: string, playerId?: string) => {
 
       tempHubConnection.on(
         "PropertyUnmortgagedResponse",
-        (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
+        (_, propertyId: string, transactions: TransactionInfo[]) => {
           setActivePlayers((state) =>
             produce(state, (draft) => {
               transactions.forEach((transactions) => processTransaction(draft, transactions));
             })
           );
+
+          setTransactionsHistory((state) => state.concat(transactions));
 
           setBoard((state) =>
             produce(state, (draft) => {
@@ -226,12 +232,14 @@ const useGameManager = (gameId?: string, playerId?: string) => {
 
       tempHubConnection.on(
         "PropertyUpgradeResponse",
-        (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
+        (_, propertyId: string, transactions: TransactionInfo[]) => {
           setActivePlayers((state) =>
             produce(state, (draft) => {
               transactions.forEach((transactions) => processTransaction(draft, transactions));
             })
           );
+
+          setTransactionsHistory((state) => state.concat(transactions));
 
           setBoard((state) =>
             produce(state, (draft) => {
@@ -250,12 +258,14 @@ const useGameManager = (gameId?: string, playerId?: string) => {
 
       tempHubConnection.on(
         "PropertyDowngradeResponse",
-        (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
+        (_, propertyId: string, transactions: TransactionInfo[]) => {
           setActivePlayers((state) =>
             produce(state, (draft) => {
               transactions.forEach((transactions) => processTransaction(draft, transactions));
             })
           );
+
+          setTransactionsHistory((state) => state.concat(transactions));
 
           setBoard((state) =>
             produce(state, (draft) => {
@@ -321,6 +331,8 @@ const useGameManager = (gameId?: string, playerId?: string) => {
               transactions.forEach((transactions) => processTransaction(draft, transactions));
             })
           );
+
+          setTransactionsHistory((state) => state.concat(transactions));
 
           setBoard((state) =>
             produce(state, (draft) => {

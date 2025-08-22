@@ -8,6 +8,7 @@ export enum TransactionType {
   Mortgage,
   Unmortgage,
   Fine,
+  Trade,
   Reward,
   FreeFromJail,
 }

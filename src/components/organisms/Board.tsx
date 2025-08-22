@@ -42,12 +42,16 @@ type Props = {
     isPermittedToBuyOrSellProperty: boolean;
     currentPlayerMoney: number
     countryGroupData: Record<ColorGroup, CountrySpace[]>
+    transactions: ReactNode
+    tileWidth: number
 };
 
 const Board = ({
     spaces,
     actionButtons,
     diceRoll,
+    transactions,
+    tileWidth,
     ...tileProps
 }: Props) => {
 
@@ -55,17 +59,21 @@ const Board = ({
     return (
         <div className='w-fit h-fit grid board'>
             {/* Center */}
-            <div className="center flex flex-col gap-2 items-center justify-center">
-                <div className="roll flex gap-4 font-bold text-4xl">
+            <div className="center gap-2 p-12 items-center justify-center relative aspect-square flex flex-col" style={{ width: tileWidth * 9 }}>
+                <img className="w-40 absolute top-0 left-0" src={phrolova} alt="Monopoly center art" />
+                <div className="roll flex gap-4 font-bold text-4xl mt-auto">
                     <div className="dice1">{diceRoll.roll1}</div>
                     <div className="dice2">{diceRoll.roll2}</div>
                 </div>
-                <img className="w-40 mx-auto" src={phrolova} alt="Monopoly center art" />
                 {actionButtons.startGameButton}
                 {actionButtons.joinGameButton}
                 {actionButtons.rollDiceButton}
                 {actionButtons.buyPropertyButton}
                 {actionButtons.endTurnButton}
+
+
+                {transactions}
+
             </div>
 
             <div className="top-left corner rounded-field bg-base-100">GO!</div>
