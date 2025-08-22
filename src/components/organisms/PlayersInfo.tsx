@@ -1,6 +1,5 @@
 import type { Player } from '@/types/Player'
 import classNames from 'classnames'
-import React from 'react'
 
 type Props = {
     players: Player[]

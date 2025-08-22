@@ -1,5 +1,5 @@
 import type { Player, PlayerWithProperties } from '@/types/Player'
-import type { Trade, TradeOffer } from '@/types/Trade'
+import type { Trade } from '@/types/Trade'
 import Button from '../atoms/Button'
 import { useAuth } from '@/hooks/useAuth'
 import { useRef, useState, type ComponentProps } from 'react'
@@ -112,7 +112,7 @@ export const TradeItem = ({ trade, initiator, recipient, ...tradeModalProps }: T
                 offerDialogRef.current?.showModal()
             }}
         >
-            {initiator?.name} to {recipient?.name}
+            <span className="capitalize">{initiator?.name}</span> ↔ <span className="capitalize">{recipient?.name}</span>
         </Button>
 
         <TradeModal

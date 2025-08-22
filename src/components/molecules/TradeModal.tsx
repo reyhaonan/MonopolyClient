@@ -1,29 +1,37 @@
-import type { PlayerWithProperties } from '@/types/Player'
-import classNames from 'classnames'
-import { useState, type Ref } from 'react'
-import Button from '../atoms/Button'
-import Modal from './Modal'
-import type { Trade, TradeOffer } from '@/types/Trade'
-import { useAuth } from '@/hooks/useAuth'
-import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
+import type { PlayerWithProperties } from '@/types/Player';
+import type { Trade, TradeOffer } from '@/types/Trade';
+import { useAuth } from '@/hooks/useAuth';
+import classNames from 'classnames';
+import { useEffect, useState, forwardRef } from 'react';
+import { Controller, useForm, type SubmitHandler, type Control, type UseFormGetValues } from 'react-hook-form';
+import Button from '../atoms/Button';
+import Modal from './Modal';
 
+// --- TYPE DEFINITIONS ---
 
+/** Defines the shape of the data managed by react-hook-form. */
+type TradeFormData = {
+    offer: string[];
+    counterOffer: string[];
+    moneyFromInitiator: number;
+    moneyFromRecipient: number;
+};
 
+/** Props for the main TradeModal component. */
 type TradeModalProps = {
-    initiator: PlayerWithProperties | null
-    recipient: PlayerWithProperties | null
-    ref: Ref<HTMLDialogElement>
-    onClose: () => void
-    onInitiateTrade?: (tradeOffer: TradeOffer & { recipientId: string }) => void,
-    onNegotiateTrade?: (tradeOffer: TradeOffer & { tradeId: string }) => void,
-    onRejectTrade?: (tradeId: string) => void,
-    onCancelTrade?: (tradeId: string) => void,
-    onAcceptTrade?: (tradeId: string) => void,
-    tradeToInspect: Trade | null
-}
+    initiator: PlayerWithProperties | null;
+    recipient: PlayerWithProperties | null;
+    onClose: () => void;
+    onInitiateTrade?: (tradeOffer: TradeOffer & { recipientId: string }) => void;
+    onNegotiateTrade?: (tradeOffer: TradeOffer & { tradeId: string }) => void;
+    onRejectTrade?: (tradeId: string) => void;
+    onCancelTrade?: (tradeId: string) => void;
+    onAcceptTrade?: (tradeId: string) => void;
+    tradeToInspect: Trade | null;
+};
 
-const TradeModal = ({
-    ref,
+
+const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
     initiator,
     recipient,
     onClose,
@@ -33,216 +41,270 @@ const TradeModal = ({
     onRejectTrade,
     onCancelTrade,
     onAcceptTrade,
-}: TradeModalProps) => {
+}, ref) => {
+    const [negotiateMode, setNegotiateMode] = useState(false);
+    const playerId = useAuth();
 
-    const [negotiateMode, setNegotiateMode] = useState(false)
+    // Determine the user's role in the current trade context
+    const isViewing = !!tradeToInspect && !negotiateMode;
+    const isMyTurnAsRecipient = tradeToInspect?.recipientId === playerId && isViewing;
+    const isMyTurnAsInitiator = tradeToInspect?.initiatorId === playerId && isViewing;
 
-    const playerId = useAuth()
-
-
-    const { control, reset, handleSubmit } = useForm({
-        values: {
-            offer: tradeToInspect?.propertyOffer || [],
-            counterOffer: tradeToInspect?.propertyCounterOffer || [],
-            moneyFromInitiator: tradeToInspect?.moneyFromInitiator || 0,
-            moneyFromRecipient: tradeToInspect?.moneyFromRecipient || 0
+    const { control, reset, handleSubmit, getValues } = useForm<TradeFormData>({
+        defaultValues: {
+            offer: [],
+            counterOffer: [],
+            moneyFromInitiator: 0,
+            moneyFromRecipient: 0,
         },
-        disabled: !!tradeToInspect && !negotiateMode
-    })
+        disabled: isViewing, // Disable form fields when just viewing a trade
+    });
 
-    const closeOfferModal = () => {
-        reset()
-        setNegotiateMode(false)
-        onClose()
-    }
+    // Effect to reset the form state when the trade context changes
+    useEffect(() => {
+        if (tradeToInspect) {
+            reset({
+                offer: tradeToInspect.propertyOffer || [],
+                counterOffer: tradeToInspect.propertyCounterOffer || [],
+                moneyFromInitiator: tradeToInspect.moneyFromInitiator || 0,
+                moneyFromRecipient: tradeToInspect.moneyFromRecipient || 0,
+            });
+        } else {
+            // Reset to defaults for a new trade
+            reset({
+                offer: [],
+                counterOffer: [],
+                moneyFromInitiator: 0,
+                moneyFromRecipient: 0,
+            });
+        }
+    }, [tradeToInspect, reset]);
 
-    const onSubmit: SubmitHandler<any> = ({ offer, counterOffer, moneyFromInitiator, moneyFromRecipient }) => {
-        console.log(offer)
-        if (!recipient) throw new Error("No recipient")
+    const handleClose = () => {
+        reset();
+        setNegotiateMode(false);
+        onClose();
+    };
+
+    const onSubmit: SubmitHandler<TradeFormData> = (data) => {
         if (negotiateMode) {
-            if (!tradeToInspect) throw new Error("No trade to negotiate")
-            console.log("Startt")
-            if (playerId !== recipient.id) throw new Error("You are not permitted to do this action")
-            // Negotiate just flips around so...
+            if (!tradeToInspect || !recipient || playerId !== recipient.id) return;
+            // When negotiating, the recipient's offer becomes the new initiator's offer
             onNegotiateTrade?.({
-                offer: counterOffer,
-                counterOffer: offer,
-                moneyFromInitiator: moneyFromRecipient,
-                moneyFromRecipient: moneyFromInitiator,
-                tradeId: tradeToInspect.id
-            })
-
+                offer: data.counterOffer,
+                counterOffer: data.offer,
+                moneyFromInitiator: data.moneyFromRecipient,
+                moneyFromRecipient: data.moneyFromInitiator,
+                tradeId: tradeToInspect.id,
+            });
+        } else {
+            if (!recipient) return;
+            onInitiateTrade?.({ ...data, recipientId: recipient.id });
         }
-        else {
-            onInitiateTrade?.({ offer, counterOffer, moneyFromInitiator, moneyFromRecipient, recipientId: recipient.id })
-        }
-        closeOfferModal()
-    }
+        handleClose();
+    };
+
+    const handleAction = (action?: (tradeId: string) => void) => {
+        if (!tradeToInspect) return;
+        action?.(tradeToInspect.id);
+        handleClose();
+    };
+
+    const handleNegotiate = () => setNegotiateMode(true);
+    const handleReject = () => handleAction(onRejectTrade);
+    const handleAccept = () => handleAction(onAcceptTrade);
+    const handleCancel = () => handleAction(onCancelTrade);
+
+    return (
+        <Modal ref={ref} onClose={handleClose}>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <h3 className="font-bold text-2xl text-center">Trade</h3>
+
+                <div className={classNames("flex items-start justify-center w-full gap-2 sm:gap-4 transition-all", negotiateMode && "flex-row-reverse")}>
+                    {initiator && (
+                        <PlayerTradePanel
+                            getValues={getValues}
+                            isViewing={isViewing}
+                            player={initiator}
+                            control={control}
+                            isInitiator={true}
+                            propertyOffer={tradeToInspect?.propertyOffer}
+                            propertyCounterOffer={tradeToInspect?.propertyCounterOffer}
+                        />
+                    )}
+
+                    <div className="text-2xl font-bold text-primary">↔</div>
+
+                    {recipient && (
+                        <PlayerTradePanel
+                            getValues={getValues}
+                            isViewing={isViewing}
+                            player={recipient}
+                            control={control}
+                            isInitiator={false}
+                            propertyOffer={tradeToInspect?.propertyOffer}
+                            propertyCounterOffer={tradeToInspect?.propertyCounterOffer}
+                        />
+                    )}
+                </div>
+
+                {/* --- Action Buttons --- */}
+                <div className="w-full flex justify-center pt-4">
+                    {(!tradeToInspect || negotiateMode) && (
+                        <Button type="submit" className="btn btn-primary">
+                            Send Offer
+                        </Button>
+                    )}
+
+                    {isMyTurnAsRecipient && (
+                        <div className="flex flex-wrap justify-center gap-2 w-full">
+                            <Button type="button" onClick={handleNegotiate} className="btn btn-primary w-full sm:w-auto sm:flex-1">
+                                Negotiate
+                            </Button>
+                            <Button type="button" onClick={handleReject} className="btn btn-ghost btn-error w-full sm:w-auto sm:flex-1">
+                                Reject
+                            </Button>
+                            <Button type="button" onClick={handleAccept} className="btn btn-success btn-soft w-full sm:w-auto sm:flex-1">
+                                Accept
+                            </Button>
+                        </div>
+                    )}
+
+                    {isMyTurnAsInitiator && (
+                        <Button type="button" onClick={handleCancel} className="btn btn-outline btn-error">
+                            Cancel Trade
+                        </Button>
+                    )}
+                </div>
+            </form>
+        </Modal>
+    );
+});
 
 
-    const handleNegotiateTrade = () => {
-        setNegotiateMode(true)
-    }
-
-    const handleRejectTrade = () => {
-        if (!recipient) throw new Error("No recipient")
-        if (playerId !== recipient.id) throw new Error("You are not permitted to do this action")
-        if (!tradeToInspect) throw new Error("What the hell how did you trigger this")
-        onRejectTrade?.(tradeToInspect.id)
-        closeOfferModal()
-    }
-
-    const handleAcceptTrade = () => {
-        if (!recipient) throw new Error("No recipient")
-        if (playerId !== recipient.id) throw new Error("You are not permitted to do this action")
-        if (!tradeToInspect) throw new Error("What the hell how did you trigger this")
-        onAcceptTrade?.(tradeToInspect.id)
-        closeOfferModal()
-    }
-    const handleCancelTrade = () => {
-        if (!initiator) throw new Error("No initiator")
-        if (playerId !== initiator.id) throw new Error("You are not permitted to do this action")
-        if (!tradeToInspect) throw new Error("What the hell how did you trigger this")
-        onCancelTrade?.(tradeToInspect.id)
-        closeOfferModal()
-    }
+export default TradeModal;
 
 
+const PlayerTradePanel = ({
+    player,
+    control,
+    isInitiator,
+    isViewing,
+    propertyOffer = [],
+    propertyCounterOffer = [],
+    getValues
+}: {
+    player: PlayerWithProperties;
+    control: Control<TradeFormData>;
+    isInitiator: boolean;
+    isViewing: boolean
+    propertyOffer?: string[]
+    propertyCounterOffer?: string[],
+    getValues: UseFormGetValues<TradeFormData>
+}) => {
+    const propertyFieldName = isInitiator ? 'offer' : 'counterOffer';
+    const moneyFieldName = isInitiator ? 'moneyFromInitiator' : 'moneyFromRecipient';
+    const offeredProperties = isViewing ? (isInitiator ? propertyOffer : propertyCounterOffer) : []
 
-    const renderPlayerSection = (player: PlayerWithProperties, isInitiator: boolean) => {
-        const properties = player?.propertiesOwned || []
-        const selectedProperties = isInitiator ? "offer" : "counterOffer"
-        const money = isInitiator ? "moneyFromInitiator" : "moneyFromRecipient"
-        const maxMoney = isInitiator ? initiator?.money : recipient?.money
+    // This is true if player no longer own the offered property
+    const propertyGap = offeredProperties.some(propertyId => player.propertiesOwned.findIndex(p => p.id === propertyId) === -1)
+    // This is true if player current money is less than what is being offered
+    const moneyGap = player.money < getValues(moneyFieldName)
 
-        return (
-            <div className={classNames("flex-1")}>
-                <h4 className="playerName p-2 font-semibold text-lg capitalize">{player?.name}</h4>
+    const propertiesToList = isViewing
+        ? player.propertiesOwned.filter((p) => offeredProperties.includes(p.id))
+        : player.propertiesOwned;
 
-                <div className="w-full mb-2">
-                    {/* Checkbox */}
+
+    return (
+        <div className="flex-1 p-2 border border-base-300 rounded-lg bg-base-200">
+            {propertyGap ? "Prop gap" : ""}
+            {moneyGap ? "Money gap" : ""}
+            <h4 className="p-2 font-semibold text-lg capitalize text-center">{player.name}</h4>
+            <div className="space-y-4">
+                {/* Money Input Section */}
+                <div>
                     <Controller
                         control={control}
-                        name={money}
-                        render={({ field }) =>
+                        name={moneyFieldName}
+                        render={({ field }) => (
                             <input
                                 {...field}
-                                type="range"
+                                type="number"
+                                className="input input-bordered w-full text-center"
+                                required
                                 min={0}
-                                max={maxMoney}
+                                max={player.money}
                                 value={field.value}
-                                onChange={(e) => {
-                                    field.onChange(Number(e.target.value))
+                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onBlur={() => {
+                                    // Clamp value on blur to be within valid range
+                                    const value = Math.min(player.money, Math.max(0, field.value));
+                                    field.onChange(value);
                                 }}
-                                className="range range-sm"
-                            />}
+                            />
+                        )}
                     />
-                    <div className="flex justify-between px-2.5 mt-2 text-xs">
-                        <span>0</span>
-                        <span>{maxMoney}</span>
-                    </div>
+                    <Controller
+                        control={control}
+                        name={moneyFieldName}
+                        render={({ field }) => (
+                            <>
+                                <input
+                                    {...field}
+                                    type="range"
+                                    min={0}
+                                    max={player.money}
+                                    value={field.value}
+                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                    className="range range-primary range-sm mt-2"
+                                />
+                                <div className="flex justify-between px-1 text-xs">
+                                    <span>$0</span>
+                                    <span>${player.money}</span>
+                                </div>
+                            </>
+                        )}
+                    />
                 </div>
-                {/* Input */}
-                <Controller
-                    control={control}
-                    name={money}
-                    render={({ field }) =>
-                        <input
-                            {...field}
-                            type="number"
-                            className="input w-full"
-                            required
-                            min={0}
-                            value={field.value}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                            onBlur={() => {
-                                field.onChange(Math.min(maxMoney!, Math.max(0, field.value)))
-                            }}
-                            max={maxMoney}
 
-                        />}
-                />
-                <ul className="menu px-0 rounded-box w-full space-y-1 mt-4">
-                    {properties.map((p) => {
-                        return (
-                            <li key={p.id}>
-                                <Controller
-                                    control={control}
-                                    name={selectedProperties}
-                                    render={({ field }) => {
-                                        const checked = field.value.includes(p.id)
-                                        return <label className={classNames('btn capitalize flex', checked && 'btn-accent ')}>
+                {/* Properties List Section */}
+                <ul className="menu p-0 rounded-box w-full space-y-1 max-h-48 ">
+                    {propertiesToList.map((p) => (
+                        <li key={p.id}>
+                            <Controller
+                                control={control}
+                                name={propertyFieldName}
+                                render={({ field }) => {
+                                    const isChecked = field.value.includes(p.id);
+                                    return (
+                                        <label
+                                            className={classNames(
+                                                'btn capitalize w-full justify-start',
+                                                isChecked ? 'btn-accent' : 'btn-ghost'
+                                            )}
+                                        >
                                             <input
-                                                {...field}
-                                                value={p.id}
                                                 type="checkbox"
-                                                name="offer"
                                                 className="hidden"
-                                                checked={checked}
+                                                value={p.id}
+                                                checked={isChecked}
                                                 onChange={(e) => {
-                                                    field.onChange(
-                                                        field.value.includes(e.target.value)
-                                                            ? field.value.filter((id) => id !== e.target.value)
-                                                            : field.value.concat(e.target.value)
-                                                    )
+                                                    const updatedValue = isChecked
+                                                        ? field.value.filter((id) => id !== e.target.value)
+                                                        : [...field.value, e.target.value];
+                                                    field.onChange(updatedValue);
                                                 }}
                                             />
                                             {p.name}
                                         </label>
-                                    }
-                                    }
-                                />
-                            </li>
-                        )
-                    })}
+                                    );
+                                }}
+                            />
+                        </li>
+                    ))}
                 </ul>
             </div>
-        )
-    }
-
-    return (
-        <Modal ref={ref} onClose={closeOfferModal}>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <h3 className="font-bold text-lg">Negotiate</h3>
-                <div className="modal-action">
-                    <div className={classNames("flex w-full", negotiateMode && "flex-row-reverse")}>
-                        {initiator && renderPlayerSection(initiator, true)}
-                        <div className="">Swap</div>
-                        {recipient && renderPlayerSection(recipient, false)}
-                    </div>
-                </div>
-                <div className="w-full flex justify-center">
-                    {(!tradeToInspect || negotiateMode) &&
-                        <Button type='submit' className="btn btn-primary">
-                            Send Trade
-                        </Button>
-                    }
-
-                    {(tradeToInspect && tradeToInspect.recipientId === playerId && !negotiateMode) &&
-                        <div className='mt-2 gap-2 flex flex-wrap'>
-                            <Button type='button' onClick={handleNegotiateTrade} className="btn btn-primary w-full">
-                                Negotiate
-                            </Button>
-                            {/* TODO */}
-                            <Button type='button' onClick={handleRejectTrade} className="btn btn-primary btn-ghost flex-1">
-                                Reject
-                            </Button>
-                            {/* TODO */}
-                            <Button type='button' onClick={handleAcceptTrade} className="btn btn-primary btn-outline flex-1">
-                                Accept
-                            </Button>
-                        </div>
-                    }
-
-                    {(tradeToInspect && tradeToInspect.initiatorId === playerId && !negotiateMode) &&
-                        <Button type='button' onClick={handleCancelTrade} className="btn btn-primary btn-outline flex-1">
-                            Cancel Trade
-                        </Button>
-                    }
-                </div>
-            </form>
-        </Modal>
-    )
-}
-
-export default TradeModal
+        </div>
+    );
+};
