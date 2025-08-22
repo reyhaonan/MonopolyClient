@@ -30,6 +30,7 @@ export interface Space {
 }
 
 export interface PropertySpace extends Space {
+  $type: "country" | "railroad" | "utility";
   purchasePrice: number;
   mortgageValue: number;
   unmortgageCost: number;

@@ -3,9 +3,12 @@ import type { Trade, TradeOffer } from '@/types/Trade';
 import { useAuth } from '@/hooks/useAuth';
 import classNames from 'classnames';
 import { useEffect, useState, forwardRef } from 'react';
-import { Controller, useForm, type SubmitHandler, type Control, type UseFormGetValues } from 'react-hook-form';
+import { Controller, useForm, type SubmitHandler, type Control } from 'react-hook-form';
 import Button from '../atoms/Button';
 import Modal from './Modal';
+import type { CountrySpace } from '@/types/BoardSpace';
+import type { ColorGroup } from '@/enums/ColorGroup';
+import { RentStage } from '@/enums/RentStage';
 
 // --- TYPE DEFINITIONS ---
 
@@ -28,6 +31,7 @@ type TradeModalProps = {
     onCancelTrade?: (tradeId: string) => void;
     onAcceptTrade?: (tradeId: string) => void;
     tradeToInspect: Trade | null;
+    countryGroupData: Record<ColorGroup, CountrySpace[]>
 };
 
 
@@ -41,6 +45,7 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
     onRejectTrade,
     onCancelTrade,
     onAcceptTrade,
+    countryGroupData
 }, ref) => {
     const [negotiateMode, setNegotiateMode] = useState(false);
     const playerId = useAuth();
@@ -50,7 +55,7 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
     const isMyTurnAsRecipient = tradeToInspect?.recipientId === playerId && isViewing;
     const isMyTurnAsInitiator = tradeToInspect?.initiatorId === playerId && isViewing;
 
-    const { control, reset, handleSubmit, getValues } = useForm<TradeFormData>({
+    const { control, reset, handleSubmit, watch, setValue } = useForm<TradeFormData>({
         defaultValues: {
             offer: [],
             counterOffer: [],
@@ -62,26 +67,16 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
 
     // Effect to reset the form state when the trade context changes
     useEffect(() => {
-        if (tradeToInspect) {
-            reset({
-                offer: tradeToInspect.propertyOffer || [],
-                counterOffer: tradeToInspect.propertyCounterOffer || [],
-                moneyFromInitiator: tradeToInspect.moneyFromInitiator || 0,
-                moneyFromRecipient: tradeToInspect.moneyFromRecipient || 0,
-            });
-        } else {
-            // Reset to defaults for a new trade
-            reset({
-                offer: [],
-                counterOffer: [],
-                moneyFromInitiator: 0,
-                moneyFromRecipient: 0,
-            });
-        }
+        reset({
+            offer: tradeToInspect?.propertyOffer || [],
+            counterOffer: tradeToInspect?.propertyCounterOffer || [],
+            moneyFromInitiator: tradeToInspect?.moneyFromInitiator || 0,
+            moneyFromRecipient: tradeToInspect?.moneyFromRecipient || 0,
+        })
     }, [tradeToInspect, reset]);
 
     const handleClose = () => {
-        reset();
+        reset()
         setNegotiateMode(false);
         onClose();
     };
@@ -110,10 +105,31 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
         handleClose();
     };
 
-    const handleNegotiate = () => setNegotiateMode(true);
+    const handleNegotiate = () => {
+        if (!initiator || !recipient) return
+        if (moneyFromInitiator > initiator.money) setValue("moneyFromInitiator", initiator.money)
+        if (moneyFromRecipient > recipient.money) setValue("moneyFromRecipient", recipient.money)
+        // Adjust overflow
+        setNegotiateMode(true)
+    };
     const handleReject = () => handleAction(onRejectTrade);
-    const handleAccept = () => handleAction(onAcceptTrade);
     const handleCancel = () => handleAction(onCancelTrade);
+    const handleAccept = () => {
+        if (hasGap) return
+        handleAction(onAcceptTrade);
+    }
+
+
+    const [moneyFromInitiator, moneyFromRecipient, offer, counterOffer] = watch(["moneyFromInitiator", "moneyFromRecipient", "offer", "counterOffer"])
+
+    // This is true if player no longer own the offered property
+    const initiatorPropertyGap = !!initiator && offer.some(propertyId => initiator.propertiesOwned.findIndex(p => p.id === propertyId) === -1)
+    const recipientPropertyGap = !!recipient && counterOffer.some(propertyId => recipient.propertiesOwned.findIndex(p => p.id === propertyId) === -1)
+    // This is true if player current money is less than what is being offered
+    const initiatorMoneyGap = !!initiator && initiator.money < moneyFromInitiator
+    const recipientMoneyGap = !!recipient && recipient.money < moneyFromRecipient
+
+    const hasGap = initiatorPropertyGap || recipientPropertyGap || initiatorMoneyGap || recipientMoneyGap
 
     return (
         <Modal ref={ref} onClose={handleClose}>
@@ -123,13 +139,13 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
                 <div className={classNames("flex items-start justify-center w-full gap-2 sm:gap-4 transition-all", negotiateMode && "flex-row-reverse")}>
                     {initiator && (
                         <PlayerTradePanel
-                            getValues={getValues}
                             isViewing={isViewing}
                             player={initiator}
                             control={control}
                             isInitiator={true}
                             propertyOffer={tradeToInspect?.propertyOffer}
                             propertyCounterOffer={tradeToInspect?.propertyCounterOffer}
+                            countryGroupData={countryGroupData}
                         />
                     )}
 
@@ -137,17 +153,32 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
 
                     {recipient && (
                         <PlayerTradePanel
-                            getValues={getValues}
                             isViewing={isViewing}
                             player={recipient}
                             control={control}
                             isInitiator={false}
                             propertyOffer={tradeToInspect?.propertyOffer}
                             propertyCounterOffer={tradeToInspect?.propertyCounterOffer}
+                            countryGroupData={countryGroupData}
                         />
                     )}
                 </div>
 
+                {isViewing &&
+                    <div className="text-error text-sm text-center">
+                        <div>
+                            {initiatorMoneyGap && `${initiator.name} doesn't have enough money for this trade`}
+                        </div>
+                        <div>
+                            {recipientMoneyGap && `${recipient.name} doesn't have enough money for this trade`}
+                        </div>
+                        <div>
+                            {initiatorPropertyGap && `${initiator.name} no longer own the property for this trade`}
+                        </div>
+                        <div>
+                            {recipientPropertyGap && `${recipient.name} no longer own the property for this trade`}
+                        </div>
+                    </div>}
                 {/* --- Action Buttons --- */}
                 <div className="w-full flex justify-center pt-4">
                     {(!tradeToInspect || negotiateMode) && (
@@ -164,7 +195,7 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
                             <Button type="button" onClick={handleReject} className="btn btn-ghost btn-error w-full sm:w-auto sm:flex-1">
                                 Reject
                             </Button>
-                            <Button type="button" onClick={handleAccept} className="btn btn-success btn-soft w-full sm:w-auto sm:flex-1">
+                            <Button type="button" disabled={hasGap} onClick={handleAccept} className="btn btn-success btn-soft w-full sm:w-auto sm:flex-1">
                                 Accept
                             </Button>
                         </div>
@@ -177,7 +208,7 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
                     )}
                 </div>
             </form>
-        </Modal>
+        </Modal >
     );
 });
 
@@ -192,7 +223,7 @@ const PlayerTradePanel = ({
     isViewing,
     propertyOffer = [],
     propertyCounterOffer = [],
-    getValues
+    countryGroupData
 }: {
     player: PlayerWithProperties;
     control: Control<TradeFormData>;
@@ -200,27 +231,19 @@ const PlayerTradePanel = ({
     isViewing: boolean
     propertyOffer?: string[]
     propertyCounterOffer?: string[],
-    getValues: UseFormGetValues<TradeFormData>
+    countryGroupData: Record<ColorGroup, CountrySpace[]>
 }) => {
     const propertyFieldName = isInitiator ? 'offer' : 'counterOffer';
     const moneyFieldName = isInitiator ? 'moneyFromInitiator' : 'moneyFromRecipient';
     const offeredProperties = isViewing ? (isInitiator ? propertyOffer : propertyCounterOffer) : []
 
-    // This is true if player no longer own the offered property
-    const propertyGap = offeredProperties.some(propertyId => player.propertiesOwned.findIndex(p => p.id === propertyId) === -1)
-    // This is true if player current money is less than what is being offered
-    const moneyGap = player.money < getValues(moneyFieldName)
-
     const propertiesToList = isViewing
         ? player.propertiesOwned.filter((p) => offeredProperties.includes(p.id))
         : player.propertiesOwned;
 
-
     return (
         <div className="flex-1 p-2 border border-base-300 rounded-lg bg-base-200">
-            {propertyGap ? "Prop gap" : ""}
-            {moneyGap ? "Money gap" : ""}
-            <h4 className="p-2 font-semibold text-lg capitalize text-center">{player.name}</h4>
+            <h4 className="p-2 font-semibold text-lg text-center">{player.name}</h4>
             <div className="space-y-4">
                 {/* Money Input Section */}
                 <div>
@@ -270,39 +293,45 @@ const PlayerTradePanel = ({
 
                 {/* Properties List Section */}
                 <ul className="menu p-0 rounded-box w-full space-y-1 max-h-48 ">
-                    {propertiesToList.map((p) => (
-                        <li key={p.id}>
-                            <Controller
-                                control={control}
-                                name={propertyFieldName}
-                                render={({ field }) => {
-                                    const isChecked = field.value.includes(p.id);
-                                    return (
-                                        <label
-                                            className={classNames(
-                                                'btn capitalize w-full justify-start',
-                                                isChecked ? 'btn-accent' : 'btn-ghost'
-                                            )}
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                className="hidden"
-                                                value={p.id}
-                                                checked={isChecked}
-                                                onChange={(e) => {
-                                                    const updatedValue = isChecked
-                                                        ? field.value.filter((id) => id !== e.target.value)
-                                                        : [...field.value, e.target.value];
-                                                    field.onChange(updatedValue);
-                                                }}
-                                            />
-                                            {p.name}
-                                        </label>
-                                    );
-                                }}
-                            />
-                        </li>
-                    ))}
+                    {propertiesToList.map((property) => {
+                        const playerIsGroupOwner = property.$type === "country" && countryGroupData[(property as CountrySpace).group].every(c => c.ownerId === player.id)
+                        const groupHasHouse = property.$type === "country" && countryGroupData[(property as CountrySpace).group].some(c => c.currentRentStage > RentStage.Unimproved)
+
+                        return (
+                            <li key={property.id}>
+                                <Controller
+                                    control={control}
+                                    name={propertyFieldName}
+                                    render={({ field }) => {
+                                        const isChecked = field.value.includes(property.id);
+                                        return (
+                                            <label
+                                                className={classNames(
+                                                    'btn w-full justify-start',
+                                                    isChecked ? 'btn-accent' : 'btn-ghost'
+                                                )}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    className="hidden"
+                                                    value={property.id}
+                                                    checked={isChecked}
+                                                    disabled={playerIsGroupOwner && groupHasHouse}
+                                                    onChange={(e) => {
+                                                        const updatedValue = isChecked
+                                                            ? field.value.filter((id) => id !== e.target.value)
+                                                            : [...field.value, e.target.value];
+                                                        field.onChange(updatedValue);
+                                                    }}
+                                                />
+                                                {property.name}
+                                            </label>
+                                        );
+                                    }}
+                                />
+                            </li>
+                        )
+                    })}
                 </ul>
             </div>
         </div>

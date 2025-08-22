@@ -42,7 +42,7 @@ const Tile = ({
 }: Props) => {
 
     if (space.$type === "special") return <div
-        className={'relative tile w-fit flex flex-col justify-between rounded-field bg-base-200 select-none'}>
+        className={'relative tile w-fit flex flex-col justify-between rounded-field bg-base-100 select-none'}>
         <div className="opacity-0">PHROLOVA</div>
     </div>
 
@@ -170,7 +170,7 @@ const Tile = ({
             <div
                 role="button" tabIndex={0}
                 onClick={() => setIsPopoverOpen(true)}
-                className={'relative tile w-fit flex flex-col justify-between rounded-field bg-base-200 select-none cursor-pointer'}
+                className={'relative tile w-fit flex flex-col justify-between rounded-field bg-base-100 select-none cursor-pointer'}
             >
                 <div className="opacity-0">PHROLOVA</div>
                 <div className={classNames("text-center font-bold py-2 absolute",

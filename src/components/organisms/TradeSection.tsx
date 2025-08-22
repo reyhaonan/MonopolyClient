@@ -7,13 +7,15 @@ import type { BoardSpace, PropertySpace } from '@/types/BoardSpace'
 import TradeModal from '../molecules/TradeModal'
 import Modal from '../molecules/Modal'
 
+
 type Props = {
     players: Player[]
     activeTrades: Trade[]
     spaces: BoardSpace[]
-} & Pick<ComponentProps<typeof TradeModal>, "onInitiateTrade" | "onNegotiateTrade" | "onAcceptTrade" | "onCancelTrade" | "onRejectTrade">
+    disableTrade: boolean
+} & Pick<ComponentProps<typeof TradeModal>, "onInitiateTrade" | "onNegotiateTrade" | "onAcceptTrade" | "onCancelTrade" | "onRejectTrade" | "countryGroupData">
 
-const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, ...tradeModalProps }: Props) => {
+const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, disableTrade, countryGroupData, ...tradeModalProps }: Props) => {
     const playerId = useAuth()
 
     const propertyOnlySpace: PropertySpace[] = spaces.filter(sp => sp.$type != "special")
@@ -49,7 +51,7 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, ...trade
                     <ul className="menu rounded-box w-full">
                         {otherPlayers.map(p =>
                             <li key={p.id}>
-                                <Button className='btn capitalize' onClick={() => {
+                                <Button className='btn' onClick={() => {
                                     setRecipient(p)
                                     selectPlayerDialogRef.current?.close()
                                     offerDialogRef.current?.showModal()
@@ -60,6 +62,7 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, ...trade
             </Modal >
 
             <TradeModal
+                countryGroupData={countryGroupData}
                 ref={offerDialogRef}
                 initiator={player}
                 recipient={recipient}
@@ -71,10 +74,10 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, ...trade
             />
 
 
-            <section className='bg-base-200 rounded-box p-2'>
+            <section className='bg-base-100 rounded-box shadow-md p-2'>
                 <div className="flex justify-between items-center">
-                    <h2 className='text-lg font-semibold'>Trade</h2>
-                    <Button className='btn btn-primary btn-sm' onClick={() => selectPlayerDialogRef.current?.showModal()}>+ Trade</Button>
+                    <h6 className="p-2 pb-2 text-xs opacity-60 tracking-wide">Trades</h6>
+                    {!disableTrade && <Button className='btn btn-primary btn-square btn-sm btn-soft' onClick={() => selectPlayerDialogRef.current?.showModal()}>+</Button>}
                 </div>
                 <div className="trade-lists flex flex-col">
                     {activeTrades.map(trade =>
@@ -84,6 +87,7 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, ...trade
                             initiator={playersWithProperties.find(p => p.id === trade.initiatorId)}
                             recipient={playersWithProperties.find(p => p.id === trade.recipientId)}
                             {...tradeModalProps}
+                            countryGroupData={countryGroupData}
                         />
                     )}
                 </div>
@@ -98,7 +102,7 @@ type TradeItemProps = {
     trade: Trade,
     initiator?: PlayerWithProperties
     recipient?: PlayerWithProperties
-} & Pick<ComponentProps<typeof TradeModal>, "onNegotiateTrade" | "onAcceptTrade" | "onCancelTrade" | "onRejectTrade">
+} & Pick<ComponentProps<typeof TradeModal>, "onNegotiateTrade" | "onAcceptTrade" | "onCancelTrade" | "onRejectTrade" | "countryGroupData">
 
 export const TradeItem = ({ trade, initiator, recipient, ...tradeModalProps }: TradeItemProps) => {
     const offerDialogRef = useRef<HTMLDialogElement>(null)
@@ -107,12 +111,12 @@ export const TradeItem = ({ trade, initiator, recipient, ...tradeModalProps }: T
     return <>
         <Button
             key={trade.id}
-            className='btn btn-ghost'
+            className='btn btn-ghost mt-2'
             onClick={() => {
                 offerDialogRef.current?.showModal()
             }}
         >
-            <span className="capitalize">{initiator?.name}</span> ↔ <span className="capitalize">{recipient?.name}</span>
+            <span className="">{initiator?.name}</span> ↔ <span className="">{recipient?.name}</span>
         </Button>
 
         <TradeModal

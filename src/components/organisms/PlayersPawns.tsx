@@ -1,4 +1,3 @@
-import { useAuth } from '@/hooks/useAuth'
 import type { Player } from '@/types/Player'
 import classNames from 'classnames'
 import { useMemo } from 'react'
@@ -48,8 +47,6 @@ export const createMockPlayers = (names: string[], startingPosition: number): Pl
 
 const PlayersPawns = ({ players, tileHeight, tileWidth, currentPlayerIndex }: Props) => {
 
-    const playerId = useAuth();
-
     // const players = createMockPlayers(["apple", "banana", "cherry", "date", "elderberry", "fig", "boy"], 20)
     const monopolyBoardPositions = useMemo(() => generateMonopolyPositions(tileHeight, tileWidth), [tileHeight, tileWidth])
 
@@ -80,7 +77,7 @@ const PlayersPawns = ({ players, tileHeight, tileWidth, currentPlayerIndex }: Pr
                         <div
                             className={classNames(
                                 "absolute aspect-square rounded-full bg-white border top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-                                player.id === players[currentPlayerIndex]?.id ? "w-10 z-20 shadow" : "w-8"
+                                player.id === players[currentPlayerIndex]?.id ? "w-10 z-20 shadow animate-pulse" : "w-8"
                             )}
                         ></div>
                     </div>

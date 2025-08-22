@@ -1,5 +1,5 @@
 // components/organisms/tsx
-import { useMemo, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { RentStage } from '@/enums/RentStage';
 import Tile from '../molecules/Tile';
@@ -41,23 +41,16 @@ type Props = {
     diceRoll: { roll1: number; roll2: number };
     isPermittedToBuyOrSellProperty: boolean;
     currentPlayerMoney: number
+    countryGroupData: Record<ColorGroup, CountrySpace[]>
 };
 
 const Board = ({
-    currentPlayerMoney,
     spaces,
     actionButtons,
-    tileActions,
     diceRoll,
-    isPermittedToBuyOrSellProperty,
+    ...tileProps
 }: Props) => {
 
-    // Props that need to be passed down to each Tile
-    const tileProps = {
-        isPermittedToBuyOrSellProperty,
-        currentPlayerMoney,
-        tileActions
-    };
 
     return (
         <div className='w-fit h-fit grid board'>
@@ -75,10 +68,10 @@ const Board = ({
                 {actionButtons.endTurnButton}
             </div>
 
-            <div className="top-left corner rounded-field bg-base-200">GO!</div>
-            <div className="top-right corner rounded-field bg-base-200">JAIL</div>
-            <div className="bottom-right corner rounded-field bg-base-200">PARK</div>
-            <div className="bottom-left corner rounded-field bg-base-200">Go to Jail!</div>
+            <div className="top-left corner rounded-field bg-base-100">GO!</div>
+            <div className="top-right corner rounded-field bg-base-100">JAIL</div>
+            <div className="bottom-right corner rounded-field bg-base-100">PARK</div>
+            <div className="bottom-left corner rounded-field bg-base-100">Go to Jail!</div>
 
             <BoardRow
                 orientation='top'
@@ -118,19 +111,11 @@ type BoardRowProps = TileProps & {
     spaces: BoardSpace[];
     orientation: 'top' | 'right' | 'bottom' | 'left';
     className?: string;
+    countryGroupData: Record<ColorGroup, CountrySpace[]>
 };
-const BoardRow = ({ spaces, orientation, className, ...tileProps }: BoardRowProps) => {
+const BoardRow = ({ spaces, orientation, className, countryGroupData, ...tileProps }: BoardRowProps) => {
     const playerId = useAuth();
 
-    const groupData = useMemo(() => {
-        const countrySpaces = spaces.filter(property => property.$type === "country");
-
-        return countrySpaces.reduce((prev, c) => {
-            if (prev[c.group]) prev[c.group].push(c)
-            else prev[c.group] = [c]
-            return prev
-        }, {} as Record<ColorGroup, CountrySpace[]>)
-    }, [spaces]);
 
     return (
         <div className={`row flex ${className}`}>
@@ -144,9 +129,9 @@ const BoardRow = ({ spaces, orientation, className, ...tileProps }: BoardRowProp
                         orientation={orientation}
                         // now when i say player, i mean THE player, not another player
                         isOwnedByPlayer={isOwnedByPlayer}
-                        playerIsGroupOwner={space.$type === "country" && groupData[space.group].every(c => c.ownerId === playerId)}
-                        groupHasMortgagedProperty={space.$type === "country" && groupData[space.group].some(c => c.isMortgaged)}
-                        groupHasHouse={space.$type === "country" && groupData[space.group].some(c => c.currentRentStage > RentStage.Unimproved)}
+                        playerIsGroupOwner={space.$type === "country" && countryGroupData[space.group].every(c => c.ownerId === playerId)}
+                        groupHasHouse={space.$type === "country" && countryGroupData[space.group].some(c => c.currentRentStage > RentStage.Unimproved)}
+                        groupHasMortgagedProperty={space.$type === "country" && countryGroupData[space.group].some(c => c.isMortgaged)}
                         {...tileProps} />
                 );
             })}
