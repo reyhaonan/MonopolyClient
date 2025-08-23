@@ -11,6 +11,9 @@ import type { ColorGroup } from '@/enums/ColorGroup';
 import { RentStage } from '@/enums/RentStage';
 import CheckIcon from '../atoms/icons/CheckIcon';
 import XMarkIcon from '../atoms/icons/XMarkIcon';
+import SwapIcon from '../atoms/icons/SwapIcon';
+import PlayerIndicator from '../atoms/PlayerIndicator';
+import PaperAirplaneIcon from '../atoms/icons/PaperAirplaneIcon';
 
 // --- TYPE DEFINITIONS ---
 
@@ -151,7 +154,7 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
                         />
                     )}
 
-                    <div className="text-2xl font-bold text-primary">↔</div>
+                    <SwapIcon />
 
                     {recipient && (
                         <PlayerTradePanel
@@ -182,10 +185,10 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
                         </div>
                     </div>}
                 {/* --- Action Buttons --- */}
-                <div className="w-full flex justify-center pt-4">
+                <div className="w-full flex justify-center">
                     {(!tradeToInspect || negotiateMode) && (
-                        <Button type="submit" className="btn btn-primary">
-                            Send Offer
+                        <Button type="submit" className="btn btn-primary justify-end">
+                            <PaperAirplaneIcon className='size-4' />Send Offer
                         </Button>
                     )}
 
@@ -245,7 +248,7 @@ const PlayerTradePanel = ({
 
     return (
         <div className="flex-1 p-2 border border-base-300 rounded-lg bg-base-200">
-            <h4 className="p-2 font-semibold text-lg text-center">{player.name}</h4>
+            <h4 className="p-2 text-center"><PlayerIndicator player={player} /></h4>
             <div className="space-y-4">
                 {/* Money Input Section */}
                 <div>
@@ -294,7 +297,7 @@ const PlayerTradePanel = ({
                 </div>
 
                 {/* Properties List Section */}
-                <ul className="menu p-0 rounded-box w-full space-y-1 max-h-48 ">
+                <ul className="menu p-0 rounded-box w-full space-y-1 max-h-48 overflow-auto">
                     {propertiesToList.map((property) => {
                         const playerIsGroupOwner = property.$type === "country" && countryGroupDict[(property as CountrySpace).group].every(c => c.ownerId === player.id)
                         const groupHasHouse = property.$type === "country" && countryGroupDict[(property as CountrySpace).group].some(c => c.currentRentStage > RentStage.Unimproved)

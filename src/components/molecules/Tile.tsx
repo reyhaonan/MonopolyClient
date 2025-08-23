@@ -213,7 +213,7 @@ const Tile = ({
 };
 
 const renderSpaceInfo = (space: PropertySpace) => {
-    if (!space.ownerId) return <>${space.purchasePrice}</>;
+    if (!space.ownerId) return <div className='text-xs '>${space.purchasePrice}</div>;
     if (space.isMortgaged) return <div className='text-neutral-content flex items-center'><MortgagedIcon /></div>;
     if (space.$type === "country") {
         const countrySpace = space as CountrySpace

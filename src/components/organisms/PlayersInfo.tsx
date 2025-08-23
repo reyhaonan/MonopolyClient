@@ -33,13 +33,16 @@ const PlayersInfo = ({ players, currentPlayerIndex, isPermittedToDeclareBankcrup
                 <div className="mt-2">
                     {players.map((player, i) =>
                         <div
-                            className={classNames("list-row flex items-center p-4 flex-wrap border-2 transition-colors")}
+                            className={classNames("list-row flex items-center px-2 py-1 flex-wrap border-2 transition-colors")}
                             key={player.id}
                             style={{
                                 borderColor: currentPlayerIndex === i ? player.hexColor : "transparent"
                             }}
                         >
 
+                            <div className="w-8 h-8 rounded-full" style={{
+                                background: player.hexColor
+                            }}></div>
                             <div>
                                 <div className="flex items-center gap-1">
                                     <span className='font-bold text-lg'>

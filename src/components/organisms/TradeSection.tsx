@@ -6,6 +6,8 @@ import { useRef, useState, type ComponentProps } from 'react'
 import type { BoardSpace, PropertySpace } from '@/types/BoardSpace'
 import TradeModal from '../molecules/TradeModal'
 import Modal from '../molecules/Modal'
+import PlayerIndicator from '../atoms/PlayerIndicator'
+import SwapIcon from '../atoms/icons/SwapIcon'
 
 
 type Props = {
@@ -79,7 +81,7 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, disableT
                                     setRecipient(p)
                                     selectPlayerDialogRef.current?.close()
                                     offerDialogRef.current?.showModal()
-                                }}>{p.name}</Button>
+                                }}><PlayerIndicator player={p} /></Button>
                             </li>)}
                     </ul>
                 </div>
@@ -120,7 +122,9 @@ export const TradeItem = ({ trade, initiator, recipient, ...tradeModalProps }: T
                 offerDialogRef.current?.showModal()
             }}
         >
-            <span className="">{initiator?.name}</span> ↔ <span className="">{recipient?.name}</span>
+            <PlayerIndicator player={initiator} />
+            <SwapIcon className='size-4' />
+            <PlayerIndicator player={recipient} />
         </Button>
 
         <TradeModal
