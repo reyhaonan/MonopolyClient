@@ -12,7 +12,7 @@ type Props = {
 
 const TransactionHistory = ({ transactionsHistory, playersDict }: Props) => {
     return (
-        <div className='w-2/3 h-1/4 flex flex-col mx-auto overflow-auto mt-auto text-center'>
+        <div className='w-full flex flex-col mx-auto overflow-auto mt-auto text-center'>
             {transactionsHistory.map((transaction, i) => <div key={i} className='w-full flex gap-1'>{translateTransaction(transaction, playersDict)}</div>)}
         </div>
     )

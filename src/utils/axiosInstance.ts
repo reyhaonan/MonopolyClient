@@ -1,7 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
-import { getCookie } from "./cookie";
 import qs from "qs";
-import signalR from "@microsoft/signalr";
+import * as signalR from "@microsoft/signalr";
+import { refreshToken } from "@/services/auth";
 
 export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -29,11 +29,7 @@ axiosInstance.interceptors.response.use(
     if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true; // Mark the request as retried to avoid infinite loops.
       try {
-        await axios.post(`${import.meta.env.VITE_API_URL}/auth/refresh`, undefined, {
-          withCredentials: true,
-        });
-
-        sessionStorage.setItem("XSRF-TOKEN", getCookie("XSRF-TOKEN"));
+        await refreshToken();
         return axiosInstance(originalRequest); // Retry the original request with the new access token.
       } catch (refreshError) {
         return Promise.reject(refreshError);
@@ -61,12 +57,7 @@ export class CustomHttpClient extends signalR.DefaultHttpClient {
       if (er instanceof signalR.HttpError) {
         const error = er as signalR.HttpError;
         if (error.statusCode == 401) {
-          //token expired - trying a refresh via refresh token
-          await axios.post(`${import.meta.env.VITE_API_URL}/auth/refresh`, undefined, {
-            withCredentials: true,
-          });
-          const token = getCookie("XSRF-TOKEN");
-          sessionStorage.setItem("XSRF-TOKEN", token);
+          const token = await refreshToken();
           request.headers = { ...request.headers, "XSRF-TOKEN": token };
         }
       } else {
