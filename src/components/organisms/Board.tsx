@@ -4,20 +4,18 @@ import { useAuth } from '@/hooks/useAuth';
 import { RentStage } from '@/enums/RentStage';
 import Tile from '../molecules/Tile';
 import type { BoardSpace, CountrySpace } from '@/types/BoardSpace';
-import phrolova from "@/assets/phrolova-ww.gif";
 
 import type { ComponentProps } from 'react';
 import type { ColorGroup } from '@/enums/ColorGroup';
 
-// Define board layout constants to avoid magic numbers
+
 const BOARD_LAYOUT = {
-    TOP_ROW: { start: 1, end: 10 },
-    RIGHT_ROW: { start: 11, end: 20 },
-    BOTTOM_ROW: { start: 21, end: 30 },
-    LEFT_ROW: { start: 31, end: 40 },
+    TOP_ROW: { start: 1, end: 10 }, // 1-9
+    RIGHT_ROW: { start: 11, end: 20 }, // 11-19
+    BOTTOM_ROW: { start: 21, end: 30 },// 21-29
+    LEFT_ROW: { start: 31, end: 40 },// 31-39
 };
 
-// Group related props into objects for better organization
 type ActionButtons = {
     startGameButton: ReactNode;
     joinGameButton: ReactNode;

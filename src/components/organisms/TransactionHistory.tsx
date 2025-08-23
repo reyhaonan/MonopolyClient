@@ -65,6 +65,10 @@ const translateTransaction = (transaction: TransactionInfo, playersDict: Players
             return <>
                 <PlayerIndicator player={sender!} /> paid <PlayerIndicator player={receiver!} /> ${amount} as part of a trade.
             </>;
+        case TransactionType.Reward:
+            return <>
+                The bank gifted <PlayerIndicator player={receiver!} /> ${amount}.
+            </>;
         case TransactionType.FreeFromJail:
             return <>
                 <PlayerIndicator player={receiver!} /> used a Get Out of Jail Free card and received ${amount}.
