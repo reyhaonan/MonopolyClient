@@ -13,9 +13,9 @@ type Props = {
     activeTrades: Trade[]
     spaces: BoardSpace[]
     disableTrade: boolean
-} & Pick<ComponentProps<typeof TradeModal>, "onInitiateTrade" | "onNegotiateTrade" | "onAcceptTrade" | "onCancelTrade" | "onRejectTrade" | "countryGroupData">
+} & Pick<ComponentProps<typeof TradeModal>, "onInitiateTrade" | "onNegotiateTrade" | "onAcceptTrade" | "onCancelTrade" | "onRejectTrade" | "countryGroupDict">
 
-const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, disableTrade, countryGroupData, ...tradeModalProps }: Props) => {
+const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, disableTrade, countryGroupDict, ...tradeModalProps }: Props) => {
     const playerId = useAuth()
 
     const propertyOnlySpace: PropertySpace[] = spaces.filter(sp => sp.$type != "special")
@@ -62,7 +62,7 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, disableT
             </Modal >
 
             <TradeModal
-                countryGroupData={countryGroupData}
+                countryGroupDict={countryGroupDict}
                 ref={offerDialogRef}
                 initiator={player}
                 recipient={recipient}
@@ -87,7 +87,7 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, disableT
                             initiator={playersWithProperties.find(p => p.id === trade.initiatorId)}
                             recipient={playersWithProperties.find(p => p.id === trade.recipientId)}
                             {...tradeModalProps}
-                            countryGroupData={countryGroupData}
+                            countryGroupDict={countryGroupDict}
                         />
                     )}
                 </div>
@@ -102,7 +102,7 @@ type TradeItemProps = {
     trade: Trade,
     initiator?: PlayerWithProperties
     recipient?: PlayerWithProperties
-} & Pick<ComponentProps<typeof TradeModal>, "onNegotiateTrade" | "onAcceptTrade" | "onCancelTrade" | "onRejectTrade" | "countryGroupData">
+} & Pick<ComponentProps<typeof TradeModal>, "onNegotiateTrade" | "onAcceptTrade" | "onCancelTrade" | "onRejectTrade" | "countryGroupDict">
 
 export const TradeItem = ({ trade, initiator, recipient, ...tradeModalProps }: TradeItemProps) => {
     const offerDialogRef = useRef<HTMLDialogElement>(null)

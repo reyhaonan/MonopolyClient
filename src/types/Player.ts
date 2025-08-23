@@ -17,3 +17,5 @@ export type Player = {
 export type PlayerWithProperties = {
   propertiesOwned: PropertySpace[];
 } & Omit<Player, "propertiesOwned">;
+
+export type PlayersDict = { [key: Player["id"]]: Player };

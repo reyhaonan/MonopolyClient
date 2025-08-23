@@ -93,7 +93,7 @@ export const GameView = ({ gameId }: Props) => {
   }, []);
 
 
-  const countryGroupData = useMemo(() => {
+  const countryGroupDict = useMemo(() => {
     const countrySpaces = board.spaces.filter(property => property.$type === "country");
 
     return countrySpaces.reduce((prev, c) => {
@@ -103,7 +103,7 @@ export const GameView = ({ gameId }: Props) => {
     }, {} as Record<ColorGroup, CountrySpace[]>)
   }, [board.spaces]);
 
-  const playersFromId = activePlayers.reduce((prev, player) => {
+  const playersDict = activePlayers.reduce((prev, player) => {
     prev[player.id] = player
     return prev
   }, {} as { [key: Player['id']]: Player })
@@ -120,8 +120,8 @@ export const GameView = ({ gameId }: Props) => {
     <div className="relative">
       <Board
         tileWidth={tileWidth}
-        transactions={<TransactionHistory transactionsHistory={transactionsHistory} playersFromId={playersFromId} />}
-        countryGroupData={countryGroupData}
+        playersDict={playersDict}
+        countryGroupDict={countryGroupDict}
         isPermittedToBuyOrSellProperty={isMyTurn && (currentPhase === GamePhase.PostLandingActions || currentPhase === GamePhase.PlayerTurnStart)}
         spaces={board.spaces}
         currentPlayerMoney={currentPlayer?.money}
@@ -139,8 +139,9 @@ export const GameView = ({ gameId }: Props) => {
         actionButtons={{
           joinGameButton:
             activePlayers.length < MAX_PLAYER && currentPhase === GamePhase.WaitingForPlayers && !isInGame ?
-              <>
-                <div className="colorSelection grid grid-cols-4 gap-2 items-center mb-2">
+              <div className="flex flex-col items-center">
+                <div className="text-xs opacity-60">Please select a color</div>
+                <div className="colorSelection grid grid-cols-4 gap-2 items-center my-4">
                   {COLOR_OPTIONS.map(color =>
                     <Button
                       key={color}
@@ -163,7 +164,7 @@ export const GameView = ({ gameId }: Props) => {
                 >
                   Join Game
                 </Button>
-              </>
+              </div>
               : null
           ,
           rollDiceButton:
@@ -209,7 +210,7 @@ export const GameView = ({ gameId }: Props) => {
 
     <div className="flex-1 flex flex-col gap-4">
       <TradeSection
-        countryGroupData={countryGroupData}
+        countryGroupDict={countryGroupDict}
         disableTrade={!isInGame || activePlayers.length < MIN_PLAYER || currentPhase === GamePhase.WaitingForPlayers}
         players={activePlayers}
         activeTrades={activeTrades}
@@ -238,6 +239,7 @@ export const GameView = ({ gameId }: Props) => {
         onRejectTrade={rejectTrade}
         onCancelTrade={cancelTrade}
       />
+      <TransactionHistory transactionsHistory={transactionsHistory} playersDict={playersDict} />
     </div>
     {/* As a reference */}
     <div className="aspect-[21/34] fixed bottom-0 left-0 -z-50 w-fit opacity-0" ref={tileRef}>PHROLOVA</div>

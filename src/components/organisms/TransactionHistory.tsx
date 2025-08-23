@@ -1,27 +1,27 @@
 import { TransactionType } from '@/enums/TransactionType'
-import type { Player } from '@/types/Player'
+import type { PlayersDict } from '@/types/Player'
 import type { TransactionInfo } from '@/types/TransactionInfo'
 
-type PlayerDict = { [key: Player['id']]: Player }
+
 
 type Props = {
     transactionsHistory: TransactionInfo[]
-    playersFromId: PlayerDict
+    playersDict: PlayersDict
 }
 
-const TransactionHistory = ({ transactionsHistory, playersFromId }: Props) => {
+const TransactionHistory = ({ transactionsHistory, playersDict }: Props) => {
     return (
-        <div className='w-2/3 h-1/4 flex flex-col-reverse mx-auto overflow-auto mt-auto text-center'>
-            {transactionsHistory.map((transaction, i) => <div key={i} className='w-full'>{translateTransaction(transaction, playersFromId)}</div>)}
+        <div className='w-2/3 h-1/4 flex flex-col mx-auto overflow-auto mt-auto text-center'>
+            {transactionsHistory.map((transaction, i) => <div key={i} className='w-full'>{translateTransaction(transaction, playersDict)}</div>)}
         </div>
     )
 }
 
-const translateTransaction = (transaction: TransactionInfo, playersFromId: PlayerDict) => {
+const translateTransaction = (transaction: TransactionInfo, playersDict: PlayersDict) => {
     const { senderId, receiverId, amount, transactionType } = transaction;
 
-    const sender = senderId ? playersFromId[senderId] : null
-    const receiver = receiverId ? playersFromId[receiverId] : null
+    const sender = senderId ? playersDict[senderId] : null
+    const receiver = receiverId ? playersDict[receiverId] : null
 
     switch (transactionType) {
         case TransactionType.Rent:
@@ -33,22 +33,12 @@ const translateTransaction = (transaction: TransactionInfo, playersFromId: Playe
                 <span className='font-semibold'>{receiver?.name}</span> received a salary of ${amount}.
             </>;
         case TransactionType.Buy:
-            if (transaction.isTransactionWithBank) {
-                return <>
-                    <span className='font-semibold'>{sender?.name}</span> bought a property for ${amount}.
-                </>;
-            }
             return <>
-                <span className='font-semibold'>{sender?.name}</span> bought an item from <span className='font-semibold'>{receiver?.name}</span> for ${amount}.
+                <span className='font-semibold'>{sender?.name}</span> bought a property for ${amount}.
             </>;
         case TransactionType.Sell:
-            if (transaction.isTransactionWithBank) {
-                return <>
-                    <span className='font-semibold'>{sender?.name}</span> sold a property for ${amount}.
-                </>;
-            }
             return <>
-                <span className='font-semibold'>{sender?.name}</span> sold an item to <span className='font-semibold'>{receiver?.name}</span> for ${amount}.
+                <span className='font-semibold'>{receiver?.name}</span> sold a property for ${amount}.
             </>;
         case TransactionType.Upgrade:
             return <>
@@ -56,11 +46,11 @@ const translateTransaction = (transaction: TransactionInfo, playersFromId: Playe
             </>;
         case TransactionType.Downgrade:
             return <>
-                <span className='font-semibold'>{sender?.name}</span> received ${amount} for downgrading a property.
+                <span className='font-semibold'>{receiver?.name}</span> received ${amount} for downgrading a property.
             </>;
         case TransactionType.Mortgage:
             return <>
-                <span className='font-semibold'>{sender?.name}</span> mortgaged a property and received ${amount}.
+                <span className='font-semibold'>{receiver?.name}</span> mortgaged a property and received ${amount}.
             </>;
         case TransactionType.Unmortgage:
             return <>

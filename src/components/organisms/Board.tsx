@@ -26,34 +26,22 @@ type ActionButtons = {
     buyPropertyButton: ReactNode;
 };
 
-type TileActions = {
-    upgradeProperty: (id: string) => void;
-    downgradeProperty: (id: string) => void;
-    mortgageProperty: (id: string) => void;
-    unmortgageProperty: (id: string) => void;
-    sellProperty: (id: string) => void;
-};
-
 type Props = {
     spaces: BoardSpace[]
     actionButtons: ActionButtons;
-    tileActions: TileActions;
     diceRoll: { roll1: number; roll2: number };
-    isPermittedToBuyOrSellProperty: boolean;
-    currentPlayerMoney: number
-    countryGroupData: Record<ColorGroup, CountrySpace[]>
-    transactions: ReactNode
     tileWidth: number
+    countryGroupDict: Record<ColorGroup, CountrySpace[]>
 };
 
 const Board = ({
     spaces,
     actionButtons,
     diceRoll,
-    transactions,
     tileWidth,
+    countryGroupDict,
     ...tileProps
-}: Props) => {
+}: Props & Pick<ComponentProps<typeof Tile>, "tileActions" | "isPermittedToBuyOrSellProperty" | "currentPlayerMoney" | "playersDict">) => {
 
 
     return (
@@ -61,7 +49,7 @@ const Board = ({
             {/* Center */}
             <div className="center gap-2 p-12 items-center justify-center relative aspect-square flex flex-col" style={{ width: tileWidth * 9 }}>
                 <img className="w-40 absolute top-0 left-0" src={phrolova} alt="Monopoly center art" />
-                <div className="roll flex gap-4 font-bold text-4xl mt-auto">
+                <div className="roll flex gap-4 font-bold text-4xl">
                     <div className="dice1">{diceRoll.roll1}</div>
                     <div className="dice2">{diceRoll.roll2}</div>
                 </div>
@@ -70,10 +58,6 @@ const Board = ({
                 {actionButtons.rollDiceButton}
                 {actionButtons.buyPropertyButton}
                 {actionButtons.endTurnButton}
-
-
-                {transactions}
-
             </div>
 
             <div className="top-left corner rounded-field bg-base-100">GO!</div>
@@ -82,24 +66,28 @@ const Board = ({
             <div className="bottom-left corner rounded-field bg-base-100">Go to Jail!</div>
 
             <BoardRow
+                countryGroupDict={countryGroupDict}
                 orientation='top'
                 spaces={spaces.slice(BOARD_LAYOUT.TOP_ROW.start, BOARD_LAYOUT.TOP_ROW.end)}
                 className='w-fit top'
                 {...tileProps}
             />
             <BoardRow
+                countryGroupDict={countryGroupDict}
                 orientation='right'
                 spaces={spaces.slice(BOARD_LAYOUT.RIGHT_ROW.start, BOARD_LAYOUT.RIGHT_ROW.end)}
                 className='flex-row-reverse right'
                 {...tileProps}
             />
             <BoardRow
+                countryGroupDict={countryGroupDict}
                 orientation='bottom'
                 spaces={spaces.slice(BOARD_LAYOUT.BOTTOM_ROW.start, BOARD_LAYOUT.BOTTOM_ROW.end)}
                 className='w-fit flex-row-reverse bottom'
                 {...tileProps}
             />
             <BoardRow
+                countryGroupDict={countryGroupDict}
                 orientation='left'
                 spaces={spaces.slice(BOARD_LAYOUT.LEFT_ROW.start, BOARD_LAYOUT.LEFT_ROW.end)}
                 className='flex-row-reverse left'
@@ -119,9 +107,9 @@ type BoardRowProps = TileProps & {
     spaces: BoardSpace[];
     orientation: 'top' | 'right' | 'bottom' | 'left';
     className?: string;
-    countryGroupData: Record<ColorGroup, CountrySpace[]>
+    countryGroupDict: Record<ColorGroup, CountrySpace[]>
 };
-const BoardRow = ({ spaces, orientation, className, countryGroupData, ...tileProps }: BoardRowProps) => {
+const BoardRow = ({ spaces, orientation, className, countryGroupDict, ...tileProps }: BoardRowProps) => {
     const playerId = useAuth();
 
 
@@ -137,9 +125,9 @@ const BoardRow = ({ spaces, orientation, className, countryGroupData, ...tilePro
                         orientation={orientation}
                         // now when i say player, i mean THE player, not another player
                         isOwnedByPlayer={isOwnedByPlayer}
-                        playerIsGroupOwner={space.$type === "country" && countryGroupData[space.group].every(c => c.ownerId === playerId)}
-                        groupHasHouse={space.$type === "country" && countryGroupData[space.group].some(c => c.currentRentStage > RentStage.Unimproved)}
-                        groupHasMortgagedProperty={space.$type === "country" && countryGroupData[space.group].some(c => c.isMortgaged)}
+                        playerIsGroupOwner={space.$type === "country" && countryGroupDict[space.group].every(c => c.ownerId === playerId)}
+                        groupHasHouse={space.$type === "country" && countryGroupDict[space.group].some(c => c.currentRentStage > RentStage.Unimproved)}
+                        groupHasMortgagedProperty={space.$type === "country" && countryGroupDict[space.group].some(c => c.isMortgaged)}
                         {...tileProps} />
                 );
             })}

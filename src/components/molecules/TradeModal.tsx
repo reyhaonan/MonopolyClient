@@ -31,7 +31,7 @@ type TradeModalProps = {
     onCancelTrade?: (tradeId: string) => void;
     onAcceptTrade?: (tradeId: string) => void;
     tradeToInspect: Trade | null;
-    countryGroupData: Record<ColorGroup, CountrySpace[]>
+    countryGroupDict: Record<ColorGroup, CountrySpace[]>
 };
 
 
@@ -45,7 +45,7 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
     onRejectTrade,
     onCancelTrade,
     onAcceptTrade,
-    countryGroupData
+    countryGroupDict
 }, ref) => {
     const [negotiateMode, setNegotiateMode] = useState(false);
     const playerId = useAuth();
@@ -145,7 +145,7 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
                             isInitiator={true}
                             propertyOffer={tradeToInspect?.propertyOffer}
                             propertyCounterOffer={tradeToInspect?.propertyCounterOffer}
-                            countryGroupData={countryGroupData}
+                            countryGroupDict={countryGroupDict}
                         />
                     )}
 
@@ -159,7 +159,7 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
                             isInitiator={false}
                             propertyOffer={tradeToInspect?.propertyOffer}
                             propertyCounterOffer={tradeToInspect?.propertyCounterOffer}
-                            countryGroupData={countryGroupData}
+                            countryGroupDict={countryGroupDict}
                         />
                     )}
                 </div>
@@ -223,7 +223,7 @@ const PlayerTradePanel = ({
     isViewing,
     propertyOffer = [],
     propertyCounterOffer = [],
-    countryGroupData
+    countryGroupDict
 }: {
     player: PlayerWithProperties;
     control: Control<TradeFormData>;
@@ -231,7 +231,7 @@ const PlayerTradePanel = ({
     isViewing: boolean
     propertyOffer?: string[]
     propertyCounterOffer?: string[],
-    countryGroupData: Record<ColorGroup, CountrySpace[]>
+    countryGroupDict: Record<ColorGroup, CountrySpace[]>
 }) => {
     const propertyFieldName = isInitiator ? 'offer' : 'counterOffer';
     const moneyFieldName = isInitiator ? 'moneyFromInitiator' : 'moneyFromRecipient';
@@ -294,8 +294,8 @@ const PlayerTradePanel = ({
                 {/* Properties List Section */}
                 <ul className="menu p-0 rounded-box w-full space-y-1 max-h-48 ">
                     {propertiesToList.map((property) => {
-                        const playerIsGroupOwner = property.$type === "country" && countryGroupData[(property as CountrySpace).group].every(c => c.ownerId === player.id)
-                        const groupHasHouse = property.$type === "country" && countryGroupData[(property as CountrySpace).group].some(c => c.currentRentStage > RentStage.Unimproved)
+                        const playerIsGroupOwner = property.$type === "country" && countryGroupDict[(property as CountrySpace).group].every(c => c.ownerId === player.id)
+                        const groupHasHouse = property.$type === "country" && countryGroupDict[(property as CountrySpace).group].some(c => c.currentRentStage > RentStage.Unimproved)
                         const propertyIsDisabled = playerIsGroupOwner && groupHasHouse
                         return (
                             <li key={property.id}>

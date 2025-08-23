@@ -13,7 +13,13 @@ const PlayersInfo = ({ players, currentPlayerIndex }: Props) => {
         <ul className="list bg-base-100 rounded-box">
             <li className="p-2 pb-2 text-xs opacity-60 tracking-wide">Players</li>
             {players.map((player, i) =>
-                <li className={classNames("list-row flex items-center p-4 flex-wrap border transition-colors", currentPlayerIndex === i ? "border-primary" : "border-transparent")} key={player.id}>
+                <li
+                    className={classNames("list-row flex items-center p-4 flex-wrap border-2 transition-colors")}
+                    key={player.id}
+                    style={{
+                        borderColor: currentPlayerIndex === i ? player.hexColor : "transparent"
+                    }}
+                >
 
                     <div>
                         <div className="flex items-center gap-1">

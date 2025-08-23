@@ -83,7 +83,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
           });
         });
 
-        setTransactionsHistory((state) => state.concat(rollResult.transaction));
+        setTransactionsHistory((state) => rollResult.transaction.concat(state));
       });
 
       tempHubConnection.on("EndTurnResponse", (_, nextPlayerIndex: number) => {
@@ -108,7 +108,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
             })
           );
 
-          setTransactionsHistory((state) => state.concat(transactions));
+          setTransactionsHistory((state) => transactions.concat(state));
 
           setBoard((state) =>
             produce(state, (draft) => {
@@ -145,7 +145,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
             })
           );
 
-          setTransactionsHistory((state) => state.concat(transactions));
+          setTransactionsHistory((state) => transactions.concat(state));
 
           setBoard((state) =>
             produce(state, (draft) => {
@@ -177,7 +177,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
             })
           );
 
-          setTransactionsHistory((state) => state.concat(transactions));
+          setTransactionsHistory((state) => transactions.concat(state));
 
           setBoard((state) =>
             produce(state, (draft) => {
@@ -208,7 +208,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
             })
           );
 
-          setTransactionsHistory((state) => state.concat(transactions));
+          setTransactionsHistory((state) => transactions.concat(state));
 
           setBoard((state) =>
             produce(state, (draft) => {
@@ -239,7 +239,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
             })
           );
 
-          setTransactionsHistory((state) => state.concat(transactions));
+          setTransactionsHistory((state) => transactions.concat(state));
 
           setBoard((state) =>
             produce(state, (draft) => {
@@ -265,7 +265,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
             })
           );
 
-          setTransactionsHistory((state) => state.concat(transactions));
+          setTransactionsHistory((state) => transactions.concat(state));
 
           setBoard((state) =>
             produce(state, (draft) => {
@@ -332,7 +332,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
             })
           );
 
-          setTransactionsHistory((state) => state.concat(transactions));
+          setTransactionsHistory((state) => transactions.concat(state));
 
           setBoard((state) =>
             produce(state, (draft) => {
