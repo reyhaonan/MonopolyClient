@@ -1,6 +1,4 @@
 import type { GameConfig } from '@/types/GameConfig'
-import React from 'react'
-import { useForm } from 'react-hook-form'
 
 type Props = {
     gameConfig: GameConfig

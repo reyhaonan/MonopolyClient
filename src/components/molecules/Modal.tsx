@@ -1,4 +1,4 @@
-import React, { useEffect, type ReactNode, type Ref } from 'react'
+import { useEffect, type ReactNode, type Ref } from 'react'
 
 type Props = {
     children: ReactNode,
