@@ -190,14 +190,14 @@ const Tile = ({
                 )}>
                     {space.name}
                 </div>
-                {/* <div className="text-xs opacity-40 m-auto absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <div className="text-xs opacity-40 m-auto absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
 
                     {space.boardPosition}
                     <br />
                     {playerIsGroupOwner ? "Yea" : "Na"}
                     <br />
                     {space.$type === "country" && RentStage[space.currentRentStage]}
-                </div> */}
+                </div>
 
                 <div className={cn("rounded-field flex items-center justify-center text-center text-sm font-semibold",
                     orientation === "top" || orientation === "bottom" ? "h-1/4" : "w-1/4"

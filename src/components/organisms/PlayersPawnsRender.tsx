@@ -113,8 +113,8 @@ function generateMonopolyPositions(tileHeight: number, tileWidth: number): { x: 
     const boardDimension = cornerSize * 2 + tileWidth * propertiesPerSide;
     const farEdgeCenter = boardDimension - nearEdgeCenter;
 
-    // Side 1: Top Row (Indices 0-10)
     // Corner 0: GO
+    // Side 1: Top Row (Indices 0-9)
     positions.push({ x: nearEdgeCenter, y: nearEdgeCenter });
     for (let i = 1; i <= propertiesPerSide; i++) {
         const x = cornerSize + tileWidth * i - tileCenterOffset;
@@ -124,7 +124,7 @@ function generateMonopolyPositions(tileHeight: number, tileWidth: number): { x: 
 
     // Corner 10: Jail
     positions.push({ x: farEdgeCenter, y: nearEdgeCenter });
-    // Side 2: Right Column (Indices 11-20)
+    // Side 2: Right Column (Indices 11-19)
     for (let i = 1; i <= propertiesPerSide; i++) {
         const y = cornerSize + tileWidth * i - tileCenterOffset;
         positions.push({ x: farEdgeCenter, y });
@@ -133,7 +133,7 @@ function generateMonopolyPositions(tileHeight: number, tileWidth: number): { x: 
 
     // Corner 20: Free Parking
     positions.push({ x: farEdgeCenter, y: farEdgeCenter });
-    // Side 3: Bottom Row (Indices 21-30)
+    // Side 3: Bottom Row (Indices 21-29)
     for (let i = propertiesPerSide; i >= 1; i--) {
         const x = cornerSize + tileWidth * i - tileCenterOffset;
         positions.push({ x, y: farEdgeCenter });
