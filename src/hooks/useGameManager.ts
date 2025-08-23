@@ -8,6 +8,7 @@ import type { Trade } from "@/types/Trade";
 import { GamePhase } from "@/enums/GamePhase";
 import type { RollResult } from "@/types/RollResult";
 import { produce } from "immer";
+import { CustomHttpClient } from "@/utils/axiosInstance";
 
 const useGameManager = (gameId?: string, playerId?: string) => {
   const [hubConnection, setHubConnection] = useState<signalR.HubConnection | null>(null);
@@ -26,25 +27,20 @@ const useGameManager = (gameId?: string, playerId?: string) => {
   useEffect(() => {
     if (!gameId || !playerId) return;
     const connectToHub = async () => {
-      const csrfToken = sessionStorage.getItem("XSRF-TOKEN");
-      if (!csrfToken) return;
       const tempHubConnection = new signalR.HubConnectionBuilder()
         .withUrl(`${import.meta.env.VITE_API_URL}/gameHubs`, {
+          httpClient: new CustomHttpClient(),
           withCredentials: true,
-          headers: {
-            "XSRF-TOKEN": csrfToken,
-          },
         })
+        .withAutomaticReconnect()
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
       tempHubConnection.on("JoinGameResponse", (_, players: Player[]) => {
-        // Handle join game response
         setActivePlayers(players);
       });
 
       tempHubConnection.on("StartGameResponse", (_, newPlayerOrder: Player[]) => {
-        // Handle start game response
         setActivePlayers(newPlayerOrder);
         setCurrentPlayerIndex(0);
         setCurrentPhase(GamePhase.PlayerTurnStart);

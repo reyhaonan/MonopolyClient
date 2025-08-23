@@ -1,18 +1,14 @@
 import { axiosInstance } from "@/utils/axiosInstance";
-
 export const logout = () => axiosInstance.post("/auth/logout");
 
-export const refreshToken = () => axiosInstance.post<string>("/auth/refresh");
-
 type User = {
-  Id: string;
-  Username: string;
+  id: string;
+  username: string;
 };
 
 type LoginResponse = {
   user: User;
-  AccessToken: string;
-  RefreshToken: string;
+  accessToken: string;
 };
 
 export const loginAsGuest = (username: string) =>

@@ -1,6 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
 import { getCookie } from "./cookie";
 import qs from "qs";
+import signalR from "@microsoft/signalr";
 
 export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -42,3 +43,37 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export class CustomHttpClient extends signalR.DefaultHttpClient {
+  constructor() {
+    super(console); // the base class wants a signalR.ILogger
+  }
+  public async send(request: signalR.HttpRequest): Promise<signalR.HttpResponse> {
+    const csrfToken = sessionStorage.getItem("XSRF-TOKEN");
+    let tokenHeader = {};
+    if (csrfToken) tokenHeader = { "XSRF-TOKEN": csrfToken };
+    request.headers = { ...request.headers, ...tokenHeader };
+
+    try {
+      const response = await super.send(request);
+      return response;
+    } catch (er) {
+      if (er instanceof signalR.HttpError) {
+        const error = er as signalR.HttpError;
+        if (error.statusCode == 401) {
+          //token expired - trying a refresh via refresh token
+          await axios.post(`${import.meta.env.VITE_API_URL}/auth/refresh`, undefined, {
+            withCredentials: true,
+          });
+          const token = getCookie("XSRF-TOKEN");
+          sessionStorage.setItem("XSRF-TOKEN", token);
+          request.headers = { ...request.headers, "XSRF-TOKEN": token };
+        }
+      } else {
+        throw er;
+      }
+    }
+    //re try the request
+    return super.send(request);
+  }
+}
