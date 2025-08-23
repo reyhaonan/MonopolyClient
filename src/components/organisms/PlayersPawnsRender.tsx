@@ -46,7 +46,7 @@ export const createMockPlayers = (names: string[], startingPosition: number): Pl
     }));
 }
 
-const PlayersPawns = ({ players, tileHeight, tileWidth, currentPlayerIndex }: Props) => {
+const PlayersPawnsRender = ({ players, tileHeight, tileWidth, currentPlayerIndex }: Props) => {
 
     // const players = createMockPlayers(["apple", "banana", "cherry", "date", "elderberry", "fig", "boy"], 20)
     const monopolyBoardPositions = useMemo(() => generateMonopolyPositions(tileHeight, tileWidth), [tileHeight, tileWidth])
@@ -77,11 +77,11 @@ const PlayersPawns = ({ players, tileHeight, tileWidth, currentPlayerIndex }: Pr
                     >
                         <div
                             className={classNames(
-                                "absolute aspect-square rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+                                "absolute aspect-square rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md",
                                 isCurrentPlayer ? "w-9 z-20" : "w-8"
                             )}
                             style={{
-                                background: player.hexColor
+                                background: player.hexColor,
                             }}
                         >
                             {isCurrentPlayer && <div className="absolute rounded-full inset-0 animate-ping" style={{
@@ -96,7 +96,7 @@ const PlayersPawns = ({ players, tileHeight, tileWidth, currentPlayerIndex }: Pr
     )
 }
 
-export default PlayersPawns
+export default PlayersPawnsRender
 
 function generateMonopolyPositions(tileHeight: number, tileWidth: number): { x: number; y: number }[] {
     const positions: { x: number; y: number }[] = [];

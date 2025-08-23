@@ -48,11 +48,10 @@ const Board = ({
         <div className='w-fit h-fit grid board'>
             {/* Center */}
             <div className="center gap-2 p-12 items-center justify-center relative aspect-square flex flex-col" style={{ width: tileWidth * 9 }}>
-                <img className="w-40 absolute top-0 left-0" src={phrolova} alt="Monopoly center art" />
-                <div className="roll flex gap-4 font-bold text-4xl">
+                {!!diceRoll.roll2 && !!diceRoll.roll1 && <div className="roll flex gap-4 font-bold text-4xl">
                     <div className="dice1">{diceRoll.roll1}</div>
                     <div className="dice2">{diceRoll.roll2}</div>
-                </div>
+                </div>}
                 {actionButtons.startGameButton}
                 {actionButtons.joinGameButton}
                 {actionButtons.rollDiceButton}

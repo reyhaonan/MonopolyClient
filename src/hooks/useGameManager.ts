@@ -93,8 +93,19 @@ const useGameManager = (gameId?: string, playerId?: string) => {
 
       tempHubConnection.on(
         "DeclareBankcruptcyResponse",
-        (_, removedPlayerId: string, nextPlayerIndex: number) => {}
+        (_, removedPlayerId: string, nextPlayerIndex: number) => {
+          setActivePlayers((state) =>
+            produce(state, (draft) => {
+              const index = draft.findIndex((p) => p.id === removedPlayerId);
+              if (index != -1) draft.splice(index, 1);
+            })
+          );
+          setCurrentPlayerIndex(nextPlayerIndex);
+        }
       );
+      tempHubConnection.on("GameOverResponse", (_) => {
+        setCurrentPhase(GamePhase.GameOver);
+      });
 
       tempHubConnection.on(
         "PropertyBoughtResponse",

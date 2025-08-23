@@ -43,6 +43,30 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, disableT
 
     return (
         <>
+            <section className='bg-base-100 rounded-box p-2'>
+                <div className="flex justify-between items-center">
+                    <h6 className="p-2 pb-2 text-xs opacity-60 tracking-wide">Trades</h6>
+                    {!disableTrade &&
+                        <Button className='btn btn-primary btn-square btn-sm btn-soft' onClick={() => selectPlayerDialogRef.current?.showModal()}>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-4">
+                                <path fillRule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+                            </svg>
+                        </Button>}
+                </div>
+                <div className="trade-lists flex flex-col">
+                    {activeTrades.map(trade =>
+                        <TradeItem
+                            key={trade.id}
+                            trade={trade}
+                            initiator={playersWithProperties.find(p => p.id === trade.initiatorId)}
+                            recipient={playersWithProperties.find(p => p.id === trade.recipientId)}
+                            {...tradeModalProps}
+                            countryGroupDict={countryGroupDict}
+                        />
+                    )}
+                </div>
+            </section>
+
             <Modal ref={selectPlayerDialogRef} onClose={() =>
                 selectPlayerDialogRef.current?.close()}>
 
@@ -72,26 +96,6 @@ const TradeSection = ({ activeTrades, players, spaces, onInitiateTrade, disableT
                 onInitiateTrade={onInitiateTrade}
                 tradeToInspect={null}
             />
-
-
-            <section className='bg-base-100 rounded-box p-2'>
-                <div className="flex justify-between items-center">
-                    <h6 className="p-2 pb-2 text-xs opacity-60 tracking-wide">Trades</h6>
-                    {!disableTrade && <Button className='btn btn-primary btn-square btn-sm btn-soft' onClick={() => selectPlayerDialogRef.current?.showModal()}>+</Button>}
-                </div>
-                <div className="trade-lists flex flex-col">
-                    {activeTrades.map(trade =>
-                        <TradeItem
-                            key={trade.id}
-                            trade={trade}
-                            initiator={playersWithProperties.find(p => p.id === trade.initiatorId)}
-                            recipient={playersWithProperties.find(p => p.id === trade.recipientId)}
-                            {...tradeModalProps}
-                            countryGroupDict={countryGroupDict}
-                        />
-                    )}
-                </div>
-            </section>
         </>
     )
 }

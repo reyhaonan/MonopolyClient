@@ -7,7 +7,7 @@ import Button from "../atoms/Button";
 import { getCookie } from "@/utils/cookie";
 import { GamePhase } from "@/enums/GamePhase";
 import PlayersInfo from "../organisms/PlayersInfo";
-import PlayersPawns from "../organisms/PlayersPawns";
+import PlayersPawnsRender from "../organisms/PlayersPawnsRender";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import TradeSection from "../organisms/TradeSection";
 import type { ColorGroup } from "@/enums/ColorGroup";
@@ -57,6 +57,7 @@ export const GameView = ({ gameId }: Props) => {
     acceptTrade,
     rejectTrade,
     cancelTrade,
+    declareBankcruptcy,
     gameState: {
       board,
       currentPhase,
@@ -111,12 +112,6 @@ export const GameView = ({ gameId }: Props) => {
   const [selectedColor, setSelectedColor] = useState("");
 
   return <main className="container mx-auto flex gap-4 pb-16">
-    <div className="flex-1 flex flex-col gap-4">
-      <div>
-        Game Phase: <span className="badge badge-warning mb-2">{GamePhase[currentPhase]}</span><br />
-      </div>
-      <PlayersInfo players={activePlayers} currentPlayerIndex={currentPlayerIndex} />
-    </div>
     <div className="relative">
       <Board
         tileWidth={tileWidth}
@@ -205,10 +200,19 @@ export const GameView = ({ gameId }: Props) => {
 
         }}
       />
-      <PlayersPawns currentPlayerIndex={currentPlayerIndex} tileHeight={tileHeight} tileWidth={tileWidth} players={activePlayers} />
+      <PlayersPawnsRender currentPlayerIndex={currentPlayerIndex} tileHeight={tileHeight} tileWidth={tileWidth} players={activePlayers} />
     </div>
 
     <div className="flex-1 flex flex-col gap-4">
+      <div>
+        Game Phase: <span className="badge badge-warning mb-2">{GamePhase[currentPhase]}</span><br />
+      </div>
+      <PlayersInfo
+        players={activePlayers}
+        currentPlayerIndex={currentPlayerIndex}
+        isPermittedToDeclareBankcruptcy={isInGame && currentPhase !== GamePhase.WaitingForPlayers && currentPhase !== GamePhase.GameOver}
+        onDeclareBankruptcy={declareBankcruptcy}
+      />
       <TradeSection
         countryGroupDict={countryGroupDict}
         disableTrade={!isInGame || activePlayers.length < MIN_PLAYER || currentPhase === GamePhase.WaitingForPlayers}
@@ -242,6 +246,6 @@ export const GameView = ({ gameId }: Props) => {
       <TransactionHistory transactionsHistory={transactionsHistory} playersDict={playersDict} />
     </div>
     {/* As a reference */}
-    <div className="aspect-[21/34] fixed bottom-0 left-0 -z-50 w-fit opacity-0" ref={tileRef}>PHROLOVA</div>
+    <div className="aspect-[21/34] fixed bottom-0 left-0 -z-50 w-fit opacity-0 text-sm" ref={tileRef}>PHROLOVA</div>
   </main>;
 };

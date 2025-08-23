@@ -9,6 +9,8 @@ import Modal from './Modal';
 import type { CountrySpace } from '@/types/BoardSpace';
 import type { ColorGroup } from '@/enums/ColorGroup';
 import { RentStage } from '@/enums/RentStage';
+import CheckIcon from '../atoms/icons/CheckIcon';
+import XMarkIcon from '../atoms/icons/XMarkIcon';
 
 // --- TYPE DEFINITIONS ---
 
@@ -193,10 +195,10 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
                                 Negotiate
                             </Button>
                             <Button type="button" onClick={handleReject} className="btn btn-ghost btn-error w-full sm:w-auto sm:flex-1">
-                                Reject
+                                <XMarkIcon />Reject
                             </Button>
                             <Button type="button" disabled={hasGap} onClick={handleAccept} className="btn btn-success btn-soft w-full sm:w-auto sm:flex-1">
-                                Accept
+                                <CheckIcon />Accept
                             </Button>
                         </div>
                     )}
