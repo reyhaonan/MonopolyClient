@@ -8,20 +8,21 @@ import { getCookie } from "@/utils/cookie";
 import { GamePhase } from "@/enums/GamePhase";
 import PlayersInfo from "../organisms/PlayersInfo";
 import PlayersPawnsRender from "../organisms/PlayersPawnsRender";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import TradeSection from "../organisms/TradeSection";
 import type { ColorGroup } from "@/enums/ColorGroup";
 import type { CountrySpace } from "@/types/BoardSpace";
 import TransactionHistory from "../organisms/TransactionHistory";
 import type { Player } from "@/types/Player";
 import classNames from "classnames";
+import GameConfigForm from "../organisms/GameConfigForm";
+import axios from "axios";
+import { useNavigate } from "@tanstack/react-router";
 
 type Props = {
   gameId: string;
 };
 
-const MIN_PLAYER = 2
-const MAX_PLAYER = 8
 
 const COLOR_OPTIONS = [
   "#EC3560",
@@ -35,10 +36,21 @@ const COLOR_OPTIONS = [
 ]
 
 export const GameView = ({ gameId }: Props) => {
-  const { data } = useQuery({
+  const { data, error } = useQuery({
     queryKey: ["verifyGame", gameId],
     queryFn: () => GameAPI.verifyGame(gameId),
   });
+
+  const navigate = useNavigate({ from: "/game" })
+
+  useEffect(() => {
+    if (error) {
+      if (axios.isAxiosError(error)) {
+        console.error(error.response?.data)
+        navigate({ to: "/" })
+      }
+    }
+  }, [error])
 
   const playerId = useAuth();
   const {
@@ -58,6 +70,7 @@ export const GameView = ({ gameId }: Props) => {
     rejectTrade,
     cancelTrade,
     declareBankcruptcy,
+    updateGameConfig,
     gameState: {
       board,
       currentPhase,
@@ -68,7 +81,8 @@ export const GameView = ({ gameId }: Props) => {
       diceRoll1,
       diceRoll2,
       activeTrades,
-      transactionsHistory
+      transactionsHistory,
+      gameConfig
     } } = useGameManager(data?.data, playerId || undefined);
 
   const isInGame = activePlayers.findIndex(p => p.id === playerId) !== -1
@@ -133,7 +147,7 @@ export const GameView = ({ gameId }: Props) => {
         }}
         actionButtons={{
           joinGameButton:
-            activePlayers.length < MAX_PLAYER && currentPhase === GamePhase.WaitingForPlayers && !isInGame ?
+            activePlayers.length < gameConfig.maxPlayers && currentPhase === GamePhase.WaitingForPlayers && !isInGame ?
               <div className="flex flex-col items-center">
                 <div className="text-xs opacity-60">Please select a color</div>
                 <div className="colorSelection grid grid-cols-4 gap-2 items-center my-4">
@@ -180,7 +194,7 @@ export const GameView = ({ gameId }: Props) => {
             </Button> : null
           ,
           startGameButton:
-            activePlayers.length >= MIN_PLAYER && isInGame && currentPhase === GamePhase.WaitingForPlayers ?
+            activePlayers.length >= gameConfig.minPlayers && isInGame && currentPhase === GamePhase.WaitingForPlayers ?
               <Button
                 className="btn btn-primary"
                 onClick={() => startGame()}
@@ -215,7 +229,7 @@ export const GameView = ({ gameId }: Props) => {
       />
       <TradeSection
         countryGroupDict={countryGroupDict}
-        disableTrade={!isInGame || activePlayers.length < MIN_PLAYER || currentPhase === GamePhase.WaitingForPlayers}
+        disableTrade={!isInGame || activePlayers.length < gameConfig.minPlayers || currentPhase === GamePhase.WaitingForPlayers}
         players={activePlayers}
         activeTrades={activeTrades}
         spaces={board.spaces}
@@ -243,6 +257,7 @@ export const GameView = ({ gameId }: Props) => {
         onRejectTrade={rejectTrade}
         onCancelTrade={cancelTrade}
       />
+      <GameConfigForm gameConfig={gameConfig} onUpdateGameConfig={updateGameConfig} disabled={!isInGame || currentPhase != GamePhase.WaitingForPlayers} />
       <TransactionHistory transactionsHistory={transactionsHistory} playersDict={playersDict} />
     </div>
     {/* As a reference */}

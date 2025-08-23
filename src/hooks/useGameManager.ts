@@ -9,6 +9,7 @@ import { GamePhase } from "@/enums/GamePhase";
 import type { RollResult } from "@/types/RollResult";
 import { produce } from "immer";
 import { CustomHttpClient } from "@/utils/axiosInstance";
+import type { GameConfig } from "@/types/GameConfig";
 
 const useGameManager = (gameId?: string, playerId?: string) => {
   const [hubConnection, setHubConnection] = useState<signalR.HubConnection | null>(null);
@@ -21,6 +22,20 @@ const useGameManager = (gameId?: string, playerId?: string) => {
   const [currentPhase, setCurrentPhase] = useState<GamePhase>(GamePhase.WaitingForPlayers);
   const [transactionsHistory, setTransactionsHistory] = useState<TransactionInfo[]>([]);
   const [activeTrades, setActiveTrades] = useState<Trade[]>([]);
+  const [gameConfig, setGameConfig] = useState<GameConfig>({
+    maxPlayers: 8,
+    minPlayers: 2,
+    jailFine: 50,
+    luxuryTax: 100,
+    incomeTax: 200,
+    freeParkingPot: false,
+    doubleBaseRentOnFullColorSet: false,
+    allowCollectRentOnJail: true,
+    allowMortgagingProperties: true,
+    balancedHousePurchase: true,
+    startingMoney: 1500,
+    auctionOnNoPurchase: false,
+  });
   const currentPlayer = activePlayers[currentPlayerIndex];
   const currentPlayerSpace = currentPlayer ? board.spaces[currentPlayer.currentPosition] : null;
 
@@ -46,12 +61,17 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         setCurrentPhase(GamePhase.PlayerTurnStart);
       });
 
+      tempHubConnection.on("UpdateGameConfigResponse", (_, newGameConfig: GameConfig) => {
+        setGameConfig(newGameConfig);
+      });
+
       tempHubConnection.on("SyncGameResponse", (gameState: GameState) => {
         setActivePlayers(gameState.activePlayers);
         setBoard(gameState.board);
         setCurrentPlayerIndex(gameState.currentPlayerIndex);
         setDiceRoll1(0);
         setDiceRoll2(0);
+        setGameConfig(gameState.gameConfig);
 
         setCurrentPhase(gameState.currentPhase);
         setTransactionsHistory(gameState.transactionsHistory.history);
@@ -101,6 +121,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       );
       tempHubConnection.on("GameOverResponse", (_) => {
         setCurrentPhase(GamePhase.GameOver);
+        hubConnection?.stop();
       });
 
       tempHubConnection.on(
@@ -433,6 +454,14 @@ const useGameManager = (gameId?: string, playerId?: string) => {
     });
   };
 
+  const updateGameConfig = async (newGameConfig: GameConfig) => {
+    if (!hubConnection) return;
+    await hubConnection.invoke("UpdateGameConfig", gameId, newGameConfig).catch((err) => {
+      console.error(err);
+      syncGame();
+    });
+  };
+
   const rollDice = async () => {
     if (!hubConnection) return;
     await hubConnection.invoke("RollDice", gameId).catch((err) => {
@@ -603,10 +632,12 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       currentPhase,
       transactionsHistory,
       activeTrades,
+      gameConfig,
     },
     hubConnection,
     joinGame,
     startGame,
+    updateGameConfig,
     rollDice,
     endTurn,
     declareBankcruptcy,
