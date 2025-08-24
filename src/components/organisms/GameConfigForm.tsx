@@ -1,13 +1,14 @@
+import { useGameConfig } from '@/hooks/useGameConfig'
 import type { GameConfig } from '@/types/GameConfig'
 
 type Props = {
-    gameConfig: GameConfig
     onUpdateGameConfig: (gameConfig: GameConfig) => void
     disabled: boolean
 }
 
-const GameConfigForm = ({ gameConfig, onUpdateGameConfig, disabled }: Props) => {
+const GameConfigForm = ({ onUpdateGameConfig, disabled }: Props) => {
 
+    const gameConfig = useGameConfig();
     return (
         <div className='space-y-2'>
             <div className="flex items-center justify-between">

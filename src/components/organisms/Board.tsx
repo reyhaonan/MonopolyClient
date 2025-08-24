@@ -1,12 +1,11 @@
 // components/organisms/tsx
 import { type ReactNode } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { RentStage } from '@/enums/RentStage';
-import Tile from '../molecules/Tile';
-import type { BoardSpace, CountrySpace } from '@/types/BoardSpace';
+import PropertyTile from '../molecules/PropertyTile';
+import type { BoardSpace, CountryProperty } from '@/types/BoardSpace';
 
 import type { ComponentProps } from 'react';
 import type { ColorGroup } from '@/enums/ColorGroup';
+import SpecialTile from '../molecules/SpecialTile';
 
 
 const BOARD_LAYOUT = {
@@ -22,6 +21,8 @@ type ActionButtons = {
     rollDiceButton: ReactNode;
     endTurnButton: ReactNode;
     buyPropertyButton: ReactNode;
+    payToGetOutOfJailButton: ReactNode;
+    useGetOutOfJailCardButton: ReactNode;
 };
 
 type Props = {
@@ -29,7 +30,7 @@ type Props = {
     actionButtons: ActionButtons;
     diceRoll: { roll1: number; roll2: number };
     tileWidth: number
-    countryGroupDict: Record<ColorGroup, CountrySpace[]>
+    countryGroupDict: Record<ColorGroup, CountryProperty[]>
 };
 
 const Board = ({
@@ -39,7 +40,7 @@ const Board = ({
     tileWidth,
     countryGroupDict,
     ...tileProps
-}: Props & Pick<ComponentProps<typeof Tile>, "tileActions" | "isPermittedToBuyOrSellProperty" | "currentPlayerMoney" | "playersDict">) => {
+}: Props & Pick<ComponentProps<typeof PropertyTile>, "tileActions" | "isPermittedToBuyOrSellProperty" | "currentPlayerMoney" | "playersDict">) => {
 
 
     return (
@@ -52,8 +53,10 @@ const Board = ({
                 </div>}
                 {actionButtons.startGameButton}
                 {actionButtons.joinGameButton}
-                {actionButtons.rollDiceButton}
                 {actionButtons.buyPropertyButton}
+                {actionButtons.payToGetOutOfJailButton}
+                {actionButtons.useGetOutOfJailCardButton}
+                {actionButtons.rollDiceButton}
                 {actionButtons.endTurnButton}
             </div>
 
@@ -98,33 +101,28 @@ export default Board;
 
 // Get the props required by the Tile component, but omit 'space' and 'orientation'
 // as the BoardRow will manage these itself.
-type TileProps = Omit<ComponentProps<typeof Tile>, 'space' | 'orientation' | 'playerIsGroupOwner' | 'groupHasHouse' | 'groupHasMortgagedProperty' | 'playerId' | 'isOwnedByPlayer'>;
+type TileProps = Omit<ComponentProps<typeof PropertyTile>, 'space' | 'orientation' | 'playerIsGroupOwner' | 'groupHasHouse' | 'groupHasMortgagedProperty' | 'playerId' | 'isOwnedByPlayer'>;
 
 type BoardRowProps = TileProps & {
     spaces: BoardSpace[];
     orientation: 'top' | 'right' | 'bottom' | 'left';
     className?: string;
-    countryGroupDict: Record<ColorGroup, CountrySpace[]>
+    countryGroupDict: Record<ColorGroup, CountryProperty[]>
 };
 const BoardRow = ({ spaces, orientation, className, countryGroupDict, ...tileProps }: BoardRowProps) => {
-    const playerId = useAuth();
+
 
 
     return (
         <div className={`row flex ${className}`}>
             {spaces.map((space) => {
-                const isOwnedByPlayer = space.$type !== "special" && space.ownerId === playerId;
-
+                if (space.$type === "special") return <SpecialTile space={space} orientation={orientation} />
                 return (
-                    <Tile
+                    <PropertyTile
                         key={space.id}
                         space={space}
                         orientation={orientation}
-                        // now when i say player, i mean THE player, not another player
-                        isOwnedByPlayer={isOwnedByPlayer}
-                        playerIsGroupOwner={space.$type === "country" && countryGroupDict[space.group].every(c => c.ownerId === playerId)}
-                        groupHasHouse={space.$type === "country" && countryGroupDict[space.group].some(c => c.currentRentStage > RentStage.Unimproved)}
-                        groupHasMortgagedProperty={space.$type === "country" && countryGroupDict[space.group].some(c => c.isMortgaged)}
+                        group={space.$type === "country" ? countryGroupDict[space.group] : undefined}
                         {...tileProps} />
                 );
             })}

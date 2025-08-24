@@ -6,7 +6,7 @@ import { useEffect, useState, forwardRef } from 'react';
 import { Controller, useForm, type SubmitHandler, type Control } from 'react-hook-form';
 import Button from '../atoms/Button';
 import Modal from './Modal';
-import type { CountrySpace } from '@/types/BoardSpace';
+import type { CountryProperty } from '@/types/BoardSpace';
 import type { ColorGroup } from '@/enums/ColorGroup';
 import { RentStage } from '@/enums/RentStage';
 import CheckIcon from '../atoms/icons/CheckIcon';
@@ -36,7 +36,7 @@ type TradeModalProps = {
     onCancelTrade?: (tradeId: string) => void;
     onAcceptTrade?: (tradeId: string) => void;
     tradeToInspect: Trade | null;
-    countryGroupDict: Record<ColorGroup, CountrySpace[]>
+    countryGroupDict: Record<ColorGroup, CountryProperty[]>
 };
 
 
@@ -236,7 +236,7 @@ const PlayerTradePanel = ({
     isViewing: boolean
     propertyOffer?: string[]
     propertyCounterOffer?: string[],
-    countryGroupDict: Record<ColorGroup, CountrySpace[]>
+    countryGroupDict: Record<ColorGroup, CountryProperty[]>
 }) => {
     const propertyFieldName = isInitiator ? 'offer' : 'counterOffer';
     const moneyFieldName = isInitiator ? 'moneyFromInitiator' : 'moneyFromRecipient';
@@ -299,8 +299,8 @@ const PlayerTradePanel = ({
                 {/* Properties List Section */}
                 <ul className="menu p-0 rounded-box w-full space-y-1 max-h-48 overflow-auto">
                     {propertiesToList.map((property) => {
-                        const playerIsGroupOwner = property.$type === "country" && countryGroupDict[(property as CountrySpace).group].every(c => c.ownerId === player.id)
-                        const groupHasHouse = property.$type === "country" && countryGroupDict[(property as CountrySpace).group].some(c => c.currentRentStage > RentStage.Unimproved)
+                        const playerIsGroupOwner = property.$type === "country" && countryGroupDict[(property as CountryProperty).group].every(c => c.ownerId === player.id)
+                        const groupHasHouse = property.$type === "country" && countryGroupDict[(property as CountryProperty).group].some(c => c.currentRentStage > RentStage.Unimproved)
                         const propertyIsDisabled = playerIsGroupOwner && groupHasHouse
                         return (
                             <li key={property.id}>

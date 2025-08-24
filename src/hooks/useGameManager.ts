@@ -9,7 +9,7 @@ import { GamePhase } from "@/enums/GamePhase";
 import type { RollResult } from "@/types/RollResult";
 import { produce } from "immer";
 import { CustomHttpClient } from "@/utils/axiosInstance";
-import type { GameConfig } from "@/types/GameConfig";
+import { gameConfigInitial, type GameConfig } from "@/types/GameConfig";
 
 const useGameManager = (gameId?: string, playerId?: string) => {
   const [hubConnection, setHubConnection] = useState<signalR.HubConnection | null>(null);
@@ -22,20 +22,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
   const [currentPhase, setCurrentPhase] = useState<GamePhase>(GamePhase.WaitingForPlayers);
   const [transactionsHistory, setTransactionsHistory] = useState<TransactionInfo[]>([]);
   const [activeTrades, setActiveTrades] = useState<Trade[]>([]);
-  const [gameConfig, setGameConfig] = useState<GameConfig>({
-    maxPlayers: 8,
-    minPlayers: 2,
-    jailFine: 50,
-    luxuryTax: 100,
-    incomeTax: 200,
-    freeParkingPot: false,
-    doubleBaseRentOnFullColorSet: false,
-    allowCollectRentOnJail: true,
-    allowMortgagingProperties: true,
-    balancedHousePurchase: true,
-    startingMoney: 1500,
-    auctionOnNoPurchase: false,
-  });
+  const [gameConfig, setGameConfig] = useState<GameConfig>(gameConfigInitial);
   const currentPlayer = activePlayers[currentPlayerIndex];
   const currentPlayerSpace = currentPlayer ? board.spaces[currentPlayer.currentPosition] : null;
 
@@ -59,6 +46,35 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         setActivePlayers(newPlayerOrder);
         setCurrentPlayerIndex(0);
         setCurrentPhase(GamePhase.PlayerTurnStart);
+      });
+
+      tempHubConnection.on(
+        "PayToGetOutOfJailResponse",
+        (_, playerId: string, transactions: TransactionInfo[]) => {
+          setActivePlayers((state) =>
+            produce(state, (draft) => {
+              const playerIndex = draft.findIndex((player) => player.id === playerId);
+              if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
+              draft[playerIndex].isInJail = false;
+              draft[playerIndex].jailTurnsRemaining = 0;
+
+              transactions.forEach((transaction) => processTransaction(draft, transaction));
+            })
+          );
+
+          setTransactionsHistory((state) => transactions.concat(state));
+        }
+      );
+      tempHubConnection.on("UseGetOutOfJailCardResponse", (_, playerId: string) => {
+        setActivePlayers((state) =>
+          produce(state, (draft) => {
+            const playerIndex = draft.findIndex((player) => player.id === playerId);
+            if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
+            draft[playerIndex].isInJail = false;
+            draft[playerIndex].jailTurnsRemaining = 0;
+            draft[playerIndex].getOutOfJailFreeCards--;
+          })
+        );
       });
 
       tempHubConnection.on("UpdateGameConfigResponse", (_, newGameConfig: GameConfig) => {

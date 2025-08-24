@@ -4,15 +4,12 @@ import type { SpecialSpaceType } from "./SpecialSpaceType";
 
 export type BoardSpace =
   | GoSpace
-  | CountrySpace
+  | CountryProperty
   | CommunityChestSpace
   | IncomeTaxSpace
-  | RailroadSpace
+  | RailroadProperty
   | ChanceSpace
-  | JailSpace
-  | UtilitySpace
-  | FreeParkingSpace
-  | GoToJailSpace
+  | UtilityProperty
   | LuxuryTaxSpace;
 
 interface GoSpace {
@@ -29,8 +26,7 @@ export interface Space {
   boardPosition: number;
 }
 
-export interface PropertySpace extends Space {
-  $type: "country" | "railroad" | "utility";
+interface Property extends Space {
   purchasePrice: number;
   mortgageValue: number;
   unmortgageCost: number;
@@ -38,70 +34,43 @@ export interface PropertySpace extends Space {
   isMortgaged: boolean;
 }
 
-export interface CountrySpace extends PropertySpace {
+export interface CountryProperty extends Property {
   $type: "country";
   group: ColorGroup;
   rentScheme: number[];
   houseCost: number;
   currentRentStage: RentStage;
 }
-interface RailroadSpace extends PropertySpace {
+export interface RailroadProperty extends Property {
   $type: "railroad";
 }
-interface UtilitySpace extends PropertySpace {
+export interface UtilityProperty extends Property {
   $type: "utility";
 }
 
-interface SpecialSpace extends Space {
+export type PropertySpace = CountryProperty | RailroadProperty | UtilityProperty;
+
+export interface SpecialSpace extends Space {
   $type: "special";
   type: SpecialSpaceType;
 }
 
 interface CommunityChestSpace extends SpecialSpace {
   type: SpecialSpaceType.CommunityChest;
-  id: string;
   name: "Community Chest";
-  boardPosition: number;
 }
 
 interface IncomeTaxSpace extends SpecialSpace {
   type: SpecialSpaceType.IncomeTax;
-  id: string;
   name: "Income Tax";
-  boardPosition: number;
 }
 
 interface ChanceSpace extends SpecialSpace {
   type: SpecialSpaceType.Chance;
-  id: string;
   name: "Chance";
-  boardPosition: number;
-}
-
-interface JailSpace extends SpecialSpace {
-  type: SpecialSpaceType.Jail;
-  id: string;
-  name: "Jail / Just Visiting";
-  boardPosition: 10;
-}
-
-interface FreeParkingSpace extends SpecialSpace {
-  type: SpecialSpaceType.FreeParking;
-  id: string;
-  name: "Free Parking";
-  boardPosition: 20;
-}
-
-interface GoToJailSpace extends SpecialSpace {
-  type: SpecialSpaceType.GoToJail;
-  id: string;
-  name: "Go To Jail";
-  boardPosition: 30;
 }
 
 interface LuxuryTaxSpace extends SpecialSpace {
   type: SpecialSpaceType.LuxuryTax;
-  id: string;
   name: "Luxury Tax";
-  boardPosition: 38;
 }

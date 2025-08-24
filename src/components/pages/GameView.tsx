@@ -11,13 +11,14 @@ import PlayersPawnsRender from "../organisms/PlayersPawnsRender";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import TradeSection from "../organisms/TradeSection";
 import type { ColorGroup } from "@/enums/ColorGroup";
-import type { CountrySpace } from "@/types/BoardSpace";
+import type { CountryProperty } from "@/types/BoardSpace";
 import TransactionHistory from "../organisms/TransactionHistory";
 import type { Player } from "@/types/Player";
 import classNames from "classnames";
 import GameConfigForm from "../organisms/GameConfigForm";
 import axios from "axios";
 import { useNavigate } from "@tanstack/react-router";
+import { GameConfigContext } from "@/context/GameConfigContext";
 
 type Props = {
   gameId: string;
@@ -71,6 +72,8 @@ export const GameView = ({ gameId }: Props) => {
     cancelTrade,
     declareBankcruptcy,
     updateGameConfig,
+    payToGetOutOfJail,
+    useGetOutOfJailCard,
     gameState: {
       board,
       currentPhase,
@@ -115,7 +118,7 @@ export const GameView = ({ gameId }: Props) => {
       if (prev[c.group]) prev[c.group].push(c)
       else prev[c.group] = [c]
       return prev
-    }, {} as Record<ColorGroup, CountrySpace[]>)
+    }, {} as Record<ColorGroup, CountryProperty[]>)
   }, [board.spaces]);
 
   const playersDict = activePlayers.reduce((prev, player) => {
@@ -125,142 +128,163 @@ export const GameView = ({ gameId }: Props) => {
 
   const [selectedColor, setSelectedColor] = useState("");
 
-  return <main className="container mx-auto flex gap-4 pb-16">
-    <div className="relative">
-      <Board
-        tileWidth={tileWidth}
-        playersDict={playersDict}
-        countryGroupDict={countryGroupDict}
-        isPermittedToBuyOrSellProperty={isMyTurn && (currentPhase === GamePhase.PostLandingActions || currentPhase === GamePhase.PlayerTurnStart)}
-        spaces={board.spaces}
-        currentPlayerMoney={currentPlayer?.money}
-        diceRoll={{
-          roll1: diceRoll1,
-          roll2: diceRoll2,
-        }}
-        tileActions={{
-          sellProperty,
-          upgradeProperty,
-          downgradeProperty,
-          mortgageProperty,
-          unmortgageProperty,
-        }}
-        actionButtons={{
-          joinGameButton:
-            activePlayers.length < gameConfig.maxPlayers && currentPhase === GamePhase.WaitingForPlayers && !isInGame ?
-              <div className="flex flex-col items-center">
-                <div className="text-xs opacity-60">Please select a color</div>
-                <div className="colorSelection grid grid-cols-4 gap-2 items-center my-4">
-                  {COLOR_OPTIONS.map(color =>
-                    <Button
-                      key={color}
-                      className={
-                        classNames("btn btn-circle border-0",
-                          color === selectedColor && "ring-4",
-                          activePlayers.some(p => p.hexColor === color) && "btn-disabled opacity-10"
-                        )
-                      }
-                      style={{ background: color }}
-                      onClick={() => setSelectedColor(color)}
-                      disabled={activePlayers.some(p => p.hexColor === color)}
-                    ></Button>
-                  )}
-                </div>
+  return (
+    <GameConfigContext value={gameConfig}>
+      <main className="container mx-auto flex gap-4 pb-16">
+        <div className="relative">
+          <Board
+            tileWidth={tileWidth}
+            playersDict={playersDict}
+            countryGroupDict={countryGroupDict}
+            isPermittedToBuyOrSellProperty={isMyTurn && (currentPhase === GamePhase.PostLandingActions || currentPhase === GamePhase.PlayerTurnStart)}
+            spaces={board.spaces}
+            currentPlayerMoney={currentPlayer?.money}
+            diceRoll={{
+              roll1: diceRoll1,
+              roll2: diceRoll2,
+            }}
+            tileActions={{
+              sellProperty,
+              upgradeProperty,
+              downgradeProperty,
+              mortgageProperty,
+              unmortgageProperty,
+            }}
+            actionButtons={{
+              payToGetOutOfJailButton: (currentPhase === GamePhase.PlayerTurnStart && isMyTurn && currentPlayer.isInJail && currentPlayer.money >= gameConfig.jailFine) ?
+                <Button
+                  className="btn btn-primary"
+                  onClick={payToGetOutOfJail}
+                >
+                  Pay ${gameConfig.jailFine}
+                </Button>
+                : null,
+              useGetOutOfJailCardButton: (currentPhase === GamePhase.PlayerTurnStart && isMyTurn && currentPlayer.isInJail && currentPlayer.getOutOfJailFreeCards > 0) ?
                 <Button
                   className="btn btn-primary"
                   disabled={!selectedColor}
-                  onClick={() => joinGame(getCookie("Username"), selectedColor)}
+                  onClick={useGetOutOfJailCard}
                 >
-                  Join Game
+                  Use get out of jail card
                 </Button>
-              </div>
-              : null
-          ,
-          rollDiceButton:
-            isMyTurn && currentPhase === GamePhase.PlayerTurnStart ?
-              <Button
-                className="btn btn-primary"
-                onClick={() => rollDice()}
-              >
-                Roll za Dice
-              </Button> : null
-          ,
-          endTurnButton: isMyTurn && currentPhase === GamePhase.PostLandingActions ?
-            <Button
-              className="btn btn-primary"
-              onClick={() => endTurn()}
-            >
-              End Turn
-            </Button> : null
-          ,
-          startGameButton:
-            activePlayers.length >= gameConfig.minPlayers && isInGame && currentPhase === GamePhase.WaitingForPlayers ?
-              <Button
-                className="btn btn-primary"
-                onClick={() => startGame()}
-              >
-                Start Game
-              </Button> : null
-          ,
-          buyPropertyButton:
-            isMyTurn && (currentPhase === GamePhase.PostLandingActions || currentPlayer.consecutiveDoubles > 0) && currentPlayerSpace && currentPlayerSpace.$type !== "special" && !currentPlayerSpace.ownerId ?
-              <Button
-                className="btn btn-primary"
-                onClick={() => buyProperty()}
-                disabled={currentPlayerSpace.purchasePrice > currentPlayer.money}
-              >
-                Buy Property
-              </Button> : null
+                : null,
+              joinGameButton:
+                activePlayers.length < gameConfig.maxPlayers && currentPhase === GamePhase.WaitingForPlayers && !isInGame ?
+                  <div className="flex flex-col items-center">
+                    <div className="text-xs opacity-60">Please select a color</div>
+                    <div className="colorSelection grid grid-cols-4 gap-2 items-center my-4">
+                      {COLOR_OPTIONS.map(color =>
+                        <Button
+                          key={color}
+                          className={
+                            classNames("btn btn-circle border-0",
+                              color === selectedColor && "ring-4",
+                              activePlayers.some(p => p.hexColor === color) && "btn-disabled opacity-10"
+                            )
+                          }
+                          style={{ background: color }}
+                          onClick={() => setSelectedColor(color)}
+                          disabled={activePlayers.some(p => p.hexColor === color)}
+                        ></Button>
+                      )}
+                    </div>
+                    <Button
+                      className="btn btn-primary"
+                      disabled={!selectedColor}
+                      onClick={() => joinGame(getCookie("Username"), selectedColor)}
+                    >
+                      Join Game
+                    </Button>
+                  </div>
+                  : null
+              ,
+              rollDiceButton:
+                isMyTurn && currentPhase === GamePhase.PlayerTurnStart ?
+                  <Button
+                    className="btn btn-primary"
+                    onClick={() => rollDice()}
+                  >
+                    Roll za Dice
+                  </Button> : null
+              ,
+              endTurnButton: isMyTurn && currentPhase === GamePhase.PostLandingActions ?
+                <Button
+                  className="btn btn-primary"
+                  onClick={() => endTurn()}
+                >
+                  End Turn
+                </Button> : null
+              ,
+              startGameButton:
+                activePlayers.length >= gameConfig.minPlayers && isInGame && currentPhase === GamePhase.WaitingForPlayers ?
+                  <Button
+                    className="btn btn-primary"
+                    onClick={() => startGame()}
+                  >
+                    Start Game
+                  </Button> : null
+              ,
+              buyPropertyButton:
+                isMyTurn && (currentPhase === GamePhase.PostLandingActions || currentPlayer.consecutiveDoubles > 0) && currentPlayerSpace && currentPlayerSpace.$type !== "special" && !currentPlayerSpace.ownerId ?
+                  <Button
+                    className="btn btn-primary"
+                    onClick={() => buyProperty()}
+                    disabled={currentPlayerSpace.purchasePrice > currentPlayer.money}
+                  >
+                    Buy Property
+                  </Button> : null
 
-        }}
-      />
-      <PlayersPawnsRender currentPlayerIndex={currentPlayerIndex} tileHeight={tileHeight} tileWidth={tileWidth} players={activePlayers} />
-    </div>
+            }}
+          />
+          <PlayersPawnsRender currentPlayerIndex={currentPlayerIndex} tileHeight={tileHeight} tileWidth={tileWidth} players={activePlayers} />
+        </div>
 
-    <div className="flex-1 flex flex-col gap-4">
-      <div>
-        Game Phase: <span className="badge badge-warning mb-2">{GamePhase[currentPhase]}</span><br />
-      </div>
-      <PlayersInfo
-        players={activePlayers}
-        currentPlayerIndex={currentPlayerIndex}
-        isPermittedToDeclareBankcruptcy={isInGame && currentPhase !== GamePhase.WaitingForPlayers && currentPhase !== GamePhase.GameOver}
-        onDeclareBankruptcy={declareBankcruptcy}
-      />
-      <TradeSection
-        countryGroupDict={countryGroupDict}
-        disableTrade={!isInGame || activePlayers.length < gameConfig.minPlayers || currentPhase === GamePhase.WaitingForPlayers}
-        players={activePlayers}
-        activeTrades={activeTrades}
-        spaces={board.spaces}
-        onInitiateTrade={
-          ({
-            recipientId,
-            offer,
-            counterOffer,
-            moneyFromInitiator,
-            moneyFromRecipient
-          }) =>
-            initiateTrade(recipientId, offer, counterOffer, moneyFromInitiator, moneyFromRecipient)
-        }
-        onNegotiateTrade={
-          ({
-            offer,
-            counterOffer,
-            moneyFromInitiator,
-            moneyFromRecipient,
-            tradeId
-          }) =>
-            negotiateTrade(tradeId, offer, counterOffer, moneyFromInitiator, moneyFromRecipient)
-        }
-        onAcceptTrade={acceptTrade}
-        onRejectTrade={rejectTrade}
-        onCancelTrade={cancelTrade}
-      />
-      <GameConfigForm gameConfig={gameConfig} onUpdateGameConfig={updateGameConfig} disabled={!isInGame || currentPhase != GamePhase.WaitingForPlayers} />
-      <TransactionHistory transactionsHistory={transactionsHistory} playersDict={playersDict} />
-    </div>
-    {/* As a reference */}
-    <div className="aspect-[21/34] fixed bottom-0 left-0 -z-50 w-fit opacity-0 text-sm" ref={tileRef}>PHROLOVA</div>
-  </main>;
+        <div className="flex-1 flex flex-col gap-4">
+          <div>
+            Game Phase: <span className="badge badge-warning mb-2">{GamePhase[currentPhase]}</span><br />
+          </div>
+          <PlayersInfo
+            players={activePlayers}
+            currentPlayerIndex={currentPlayerIndex}
+            isPermittedToDeclareBankcruptcy={isInGame && currentPhase !== GamePhase.WaitingForPlayers && currentPhase !== GamePhase.GameOver}
+            onDeclareBankruptcy={declareBankcruptcy}
+          />
+          <TradeSection
+            countryGroupDict={countryGroupDict}
+            disableTrade={!isInGame || activePlayers.length < gameConfig.minPlayers || currentPhase === GamePhase.WaitingForPlayers}
+            players={activePlayers}
+            activeTrades={activeTrades}
+            spaces={board.spaces}
+            onInitiateTrade={
+              ({
+                recipientId,
+                offer,
+                counterOffer,
+                moneyFromInitiator,
+                moneyFromRecipient
+              }) =>
+                initiateTrade(recipientId, offer, counterOffer, moneyFromInitiator, moneyFromRecipient)
+            }
+            onNegotiateTrade={
+              ({
+                offer,
+                counterOffer,
+                moneyFromInitiator,
+                moneyFromRecipient,
+                tradeId
+              }) =>
+                negotiateTrade(tradeId, offer, counterOffer, moneyFromInitiator, moneyFromRecipient)
+            }
+            onAcceptTrade={acceptTrade}
+            onRejectTrade={rejectTrade}
+            onCancelTrade={cancelTrade}
+          />
+          <GameConfigForm onUpdateGameConfig={updateGameConfig} disabled={!isInGame || currentPhase != GamePhase.WaitingForPlayers} />
+          <TransactionHistory transactionsHistory={transactionsHistory} playersDict={playersDict} />
+        </div>
+        {/* As a reference */}
+        <div className="aspect-[21/34] fixed bottom-0 left-0 -z-50 w-fit opacity-0 text-sm" ref={tileRef}>PHROLOVA</div>
+      </main>
+    </GameConfigContext>
+  );
 };

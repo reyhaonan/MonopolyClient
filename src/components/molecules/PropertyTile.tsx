@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import cn from "classnames"
-import type { BoardSpace, CountrySpace, PropertySpace } from '@/types/BoardSpace'
+import type { CountryProperty, PropertySpace } from '@/types/BoardSpace'
 import classNames from 'classnames'
 import { Popover, type PopoverPosition } from 'react-tiny-popover'
 import Button from '../atoms/Button'
@@ -9,16 +9,15 @@ import type { PlayersDict } from '@/types/Player'
 import HomeIcon from '../atoms/icons/HomeIcon'
 import HotelIcon from '../atoms/icons/HotelIcon'
 import MortgagedIcon from '../atoms/icons/MortgagedIcon'
+import { useGameConfig } from '@/hooks/useGameConfig'
+import { useAuth } from '@/hooks/useAuth'
 
 type Props = {
     orientation: "top" | "bottom" | "left" | "right",
-    space: BoardSpace
+    space: PropertySpace,
     isPermittedToBuyOrSellProperty: boolean
     tileActions: TileActions,
-    playerIsGroupOwner: boolean,
-    groupHasHouse: boolean,
-    groupHasMortgagedProperty: boolean,
-    isOwnedByPlayer: boolean,
+    group?: CountryProperty[],
     currentPlayerMoney: number
     playersDict: PlayersDict
 }
@@ -32,23 +31,16 @@ type TileActions = {
 }
 
 
-const Tile = ({
+const PropertyTile = ({
     orientation,
     space,
     isPermittedToBuyOrSellProperty,
     tileActions,
-    playerIsGroupOwner,
-    groupHasHouse,
-    groupHasMortgagedProperty,
-    isOwnedByPlayer,
+    group,
     currentPlayerMoney,
     playersDict,
 }: Props) => {
 
-    if (space.$type === "special") return <div
-        className={'relative tile w-fit flex flex-col justify-between rounded-field bg-base-100 select-none'}>
-        <div className="opacity-0 text-sm">PHROLOVA</div>
-    </div>
 
     const [isPopoverOpen, setIsPopoverOpen] = useState(false)
 
@@ -65,6 +57,17 @@ const Tile = ({
         }
     }
 
+    const gameConfig = useGameConfig()
+    const playerId = useAuth();
+
+
+
+    const isOwnedByPlayer = space.ownerId === playerId;
+
+    // Space country type shi
+    const playerIsGroupOwner = !!group?.every(c => c.ownerId === playerId) || true
+    const groupHasHouse = !!group?.some(c => c.currentRentStage > RentStage.Unimproved)
+    const groupHasMortgagedProperty = !!group?.some(c => c.isMortgaged)
     return (
         <Popover
             isOpen={isPopoverOpen}
@@ -119,53 +122,60 @@ const Tile = ({
                     <div className="divider my-2"></div>
                     {isOwnedByPlayer && isPermittedToBuyOrSellProperty &&
                         <div className="property-options flex gap-2 mb-4">
-                            {space.$type === "country" && <>
+                            {space.$type === "country" && (<>
                                 <Button
                                     className='btn btn-sm btn-square btn-primary'
-                                    disabled={!playerIsGroupOwner || groupHasMortgagedProperty || space.currentRentStage === RentStage.Hotel || currentPlayerMoney < space.houseCost}
+                                    disabled={!playerIsGroupOwner || groupHasMortgagedProperty || space.currentRentStage === RentStage.Hotel || currentPlayerMoney < space.houseCost || (gameConfig.balancedHousePurchase &&
+                                        group!.reduce((min, current) => {
+                                            return (current.currentRentStage < min.currentRentStage) ? current : min;
+                                        }).currentRentStage != space.currentRentStage)}
                                     onClick={() => tileActions.upgradeProperty(space.id)}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
                                         <path fillRule="evenodd" d="M11.47 10.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 12.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clipRule="evenodd" />
                                         <path fillRule="evenodd" d="M11.47 4.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 6.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clipRule="evenodd" />
                                     </svg>
-
                                 </Button>
                                 <Button
                                     className='btn btn-sm btn-square btn-primary'
                                     onClick={() => tileActions.downgradeProperty(space.id)}
-                                    disabled={!playerIsGroupOwner || space.currentRentStage === RentStage.Unimproved}
+                                    disabled={!playerIsGroupOwner || space.currentRentStage === RentStage.Unimproved || (gameConfig.balancedHousePurchase &&
+                                        group!.reduce((max, current) => {
+                                            return (current.currentRentStage > max.currentRentStage) ? current : max;
+                                        }).currentRentStage != space.currentRentStage)}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
                                         <path fillRule="evenodd" d="M11.47 13.28a.75.75 0 0 0 1.06 0l7.5-7.5a.75.75 0 0 0-1.06-1.06L12 11.69 5.03 4.72a.75.75 0 0 0-1.06 1.06l7.5 7.5Z" clipRule="evenodd" />
                                         <path fillRule="evenodd" d="M11.47 19.28a.75.75 0 0 0 1.06 0l7.5-7.5a.75.75 0 1 0-1.06-1.06L12 17.69l-6.97-6.97a.75.75 0 0 0-1.06 1.06l7.5 7.5Z" clipRule="evenodd" />
                                     </svg>
+                                </Button>
+                            </>)}
+                            <div className="ml-auto">
 
-                                </Button>
-                            </>}
-                            {space.isMortgaged ?
+                                {gameConfig.allowMortgagingProperties ? space.isMortgaged ?
+                                    <Button
+                                        className='btn btn-sm btn-square btn-primary'
+                                        onClick={() => tileActions.unmortgageProperty(space.id)}
+                                        disabled={currentPlayerMoney < space.unmortgageCost}
+                                    >
+                                        UM
+                                    </Button> :
+                                    <Button
+                                        className='btn btn-sm btn-square btn-primary'
+                                        onClick={() => tileActions.mortgageProperty(space.id)}
+                                        disabled={groupHasHouse}
+                                    >
+                                        M
+                                    </Button> : null
+                                }
                                 <Button
-                                    className='btn btn-sm btn-square btn-primary ml-auto'
-                                    onClick={() => tileActions.unmortgageProperty(space.id)}
-                                    disabled={currentPlayerMoney < space.unmortgageCost}
-                                >
-                                    UM
-                                </Button> :
-                                <Button
-                                    className='btn btn-sm btn-square btn-primary ml-auto'
-                                    onClick={() => tileActions.mortgageProperty(space.id)}
+                                    className='btn btn-sm btn-square btn-primary'
                                     disabled={groupHasHouse}
+                                    onClick={() => tileActions.sellProperty(space.id)}
                                 >
-                                    M
+                                    $$
                                 </Button>
-                            }
-                            <Button
-                                className='btn btn-sm btn-square btn-primary'
-                                disabled={groupHasHouse}
-                                onClick={() => tileActions.sellProperty(space.id)}
-                            >
-                                $$
-                            </Button>
+                            </div>
                         </div>}
                     <div className="flex justify-around">
                         <div className="flex flex-col items-center">
@@ -219,7 +229,7 @@ const renderSpaceInfo = (space: PropertySpace) => {
     if (!space.ownerId) return <div className='text-xs '>${space.purchasePrice}</div>;
     if (space.isMortgaged) return <div className='text-primary-content flex items-center'><MortgagedIcon /></div>;
     if (space.$type === "country") {
-        const countrySpace = space as CountrySpace
+        const countrySpace = space as CountryProperty
         switch (countrySpace.currentRentStage) {
             case RentStage.OneHouse:
             case RentStage.TwoHouse:
@@ -239,4 +249,4 @@ const renderSpaceInfo = (space: PropertySpace) => {
 
 
 
-export default Tile;
+export default PropertyTile;
