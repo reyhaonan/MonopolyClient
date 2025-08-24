@@ -11,6 +11,9 @@ import { produce } from "immer";
 import { CustomHttpClient } from "@/utils/axiosInstance";
 import { gameConfigInitial, type GameConfig } from "@/types/GameConfig";
 
+const MOVEMENT_SPEED = 100;
+const MAXIMUM_SPACE = 40;
+
 const useGameManager = (gameId?: string, playerId?: string) => {
   const [hubConnection, setHubConnection] = useState<signalR.HubConnection | null>(null);
 
@@ -97,7 +100,6 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       tempHubConnection.on("DiceRolledResponse", (_, playerId: string, rollResult: RollResult) => {
         setDiceRoll1(rollResult.dice.roll1);
         setDiceRoll2(rollResult.dice.roll2);
-        setCurrentPhase(rollResult.newGamePhase);
 
         // TODO: Animate
         setActivePlayers((state) => {
@@ -105,7 +107,6 @@ const useGameManager = (gameId?: string, playerId?: string) => {
             const playerIndex = draft.findIndex((player) => player.id === playerId);
             if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
 
-            draft[playerIndex].currentPosition = rollResult.playerState.newPlayerPosition;
             draft[playerIndex].jailTurnsRemaining =
               rollResult.playerState.newPlayerJailTurnsRemaining;
             draft[playerIndex].isInJail = rollResult.playerState.isInJail;
@@ -114,6 +115,34 @@ const useGameManager = (gameId?: string, playerId?: string) => {
             rollResult.transaction.forEach((transaction) => processTransaction(draft, transaction));
           });
         });
+
+        setCurrentPhase(GamePhase.MovingToken);
+        let curr = 0;
+        let destination = rollResult.dice.roll1 + rollResult.dice.roll2;
+        const intervalId = setInterval(() => {
+          curr++;
+          setActivePlayers((state) =>
+            produce(state, (draft) => {
+              const playerIndex = draft.findIndex((player) => player.id === playerId);
+              if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
+              draft[playerIndex].currentPosition =
+                (draft[playerIndex].currentPosition + 1) % MAXIMUM_SPACE;
+            })
+          );
+          if (curr == destination) {
+            if (rollResult.playerState.newPlayerJailTurnsRemaining === 3) {
+              setActivePlayers((state) =>
+                produce(state, (draft) => {
+                  const playerIndex = draft.findIndex((player) => player.id === playerId);
+                  if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
+                  draft[playerIndex].currentPosition = rollResult.playerState.newPlayerPosition;
+                })
+              );
+            }
+            setCurrentPhase(rollResult.newGamePhase);
+            clearInterval(intervalId);
+          }
+        }, MOVEMENT_SPEED);
 
         setTransactionsHistory((state) => rollResult.transaction.concat(state));
       });

@@ -51,12 +51,16 @@ const Board = ({
                     <div className="dice1">{diceRoll.roll1}</div>
                     <div className="dice2">{diceRoll.roll2}</div>
                 </div>}
-                {actionButtons.startGameButton}
                 {actionButtons.joinGameButton}
-                {actionButtons.buyPropertyButton}
-                {actionButtons.payToGetOutOfJailButton}
-                {actionButtons.useGetOutOfJailCardButton}
-                {actionButtons.rollDiceButton}
+                {actionButtons.startGameButton}
+                <div className="jailOption flex gap-2">
+                    {actionButtons.payToGetOutOfJailButton}
+                    {actionButtons.useGetOutOfJailCardButton}
+                </div>
+                <div className="propertyOption flex gap-2">
+                    {actionButtons.buyPropertyButton}
+                    {actionButtons.rollDiceButton}
+                </div>
                 {actionButtons.endTurnButton}
             </div>
 

@@ -153,7 +153,7 @@ export const GameView = ({ gameId }: Props) => {
             actionButtons={{
               payToGetOutOfJailButton: (currentPhase === GamePhase.PlayerTurnStart && isMyTurn && currentPlayer.isInJail && currentPlayer.money >= gameConfig.jailFine) ?
                 <Button
-                  className="btn btn-primary"
+                  className="btn btn-primary btn-soft"
                   onClick={payToGetOutOfJail}
                 >
                   Pay ${gameConfig.jailFine}
@@ -161,7 +161,7 @@ export const GameView = ({ gameId }: Props) => {
                 : null,
               useGetOutOfJailCardButton: (currentPhase === GamePhase.PlayerTurnStart && isMyTurn && currentPlayer.isInJail && currentPlayer.getOutOfJailFreeCards > 0) ?
                 <Button
-                  className="btn btn-primary"
+                  className="btn btn-primary btn-outline"
                   disabled={!selectedColor}
                   onClick={useGetOutOfJailCard}
                 >
@@ -204,12 +204,12 @@ export const GameView = ({ gameId }: Props) => {
                     className="btn btn-primary"
                     onClick={() => rollDice()}
                   >
-                    Roll za Dice
+                    Roll dice
                   </Button> : null
               ,
               endTurnButton: isMyTurn && currentPhase === GamePhase.PostLandingActions ?
                 <Button
-                  className="btn btn-primary"
+                  className="btn btn-error btn-soft"
                   onClick={() => endTurn()}
                 >
                   End Turn
@@ -225,9 +225,9 @@ export const GameView = ({ gameId }: Props) => {
                   </Button> : null
               ,
               buyPropertyButton:
-                isMyTurn && (currentPhase === GamePhase.PostLandingActions || currentPlayer.consecutiveDoubles > 0) && currentPlayerSpace && currentPlayerSpace.$type !== "special" && !currentPlayerSpace.ownerId ?
+                currentPhase !== GamePhase.MovingToken && isMyTurn && (currentPhase === GamePhase.PostLandingActions || currentPlayer.consecutiveDoubles > 0) && currentPlayerSpace && currentPlayerSpace.$type !== "special" && !currentPlayerSpace.ownerId ?
                   <Button
-                    className="btn btn-primary"
+                    className="btn btn-primary btn-outline"
                     onClick={() => buyProperty()}
                     disabled={currentPlayerSpace.purchasePrice > currentPlayer.money}
                   >
