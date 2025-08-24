@@ -2,14 +2,15 @@ import type { Player, PlayerWithProperties } from '@/types/Player'
 
 type Props = {
     player: Player | PlayerWithProperties
+    hideColorIndicator?: boolean
 }
 
-const PlayerIndicator = ({ player }: Props) => {
+const PlayerIndicator = ({ player, hideColorIndicator = false }: Props) => {
     return (
         <span className="flex items-center gap-1 capitalize font-bold">
-            <span className="w-4 h-4 rounded-full" style={{
+            {!hideColorIndicator && <span className="w-4 h-4 rounded-full" style={{
                 background: player.hexColor
-            }}></span>
+            }}></span>}
             {player.name}
         </span>
     )

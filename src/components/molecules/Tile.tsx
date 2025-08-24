@@ -74,7 +74,7 @@ const Tile = ({
             containerClassName='z-30'
             content={() => (
                 <div tabIndex={0}
-                    className="select-none w-52 bg-base-100 p-4 rounded-box"
+                    className="select-none w-52 bg-base-100 p-4 rounded-box shadow-xl"
                     style={{
                         writingMode: "horizontal-tb"
                     }}>
@@ -110,7 +110,10 @@ const Tile = ({
                                     <p>$200</p>
                                 </div>
                             </div>
-                            : <></>
+                            : <div className='text-sm opacity-60'>
+                                If ONE Utility is owned, rent is 4x the amount shown on the dice when the opponent rolled,
+                                <br />
+                                but if BOTH Utilities are owned, rent is 10x the amount shown on the dice. </div>
                     }
 
                     <div className="divider my-2"></div>
@@ -214,7 +217,7 @@ const Tile = ({
 
 const renderSpaceInfo = (space: PropertySpace) => {
     if (!space.ownerId) return <div className='text-xs '>${space.purchasePrice}</div>;
-    if (space.isMortgaged) return <div className='text-neutral-content flex items-center'><MortgagedIcon /></div>;
+    if (space.isMortgaged) return <div className='text-primary-content flex items-center'><MortgagedIcon /></div>;
     if (space.$type === "country") {
         const countrySpace = space as CountrySpace
         switch (countrySpace.currentRentStage) {
@@ -222,9 +225,9 @@ const renderSpaceInfo = (space: PropertySpace) => {
             case RentStage.TwoHouse:
             case RentStage.ThreeHouse:
             case RentStage.FourHouse:
-                return <div className='text-neutral-content flex items-center'><HomeIcon />x{countrySpace.currentRentStage}</div>
+                return <div className='text-primary-content flex items-center'><HomeIcon />x{countrySpace.currentRentStage}</div>
             case RentStage.Hotel:
-                return <div className='text-neutral-content flex items-center'><HotelIcon /></div>
+                return <div className='text-primary-content flex items-center'><HotelIcon /></div>
             default:
                 return <>&nbsp;</>
         }
