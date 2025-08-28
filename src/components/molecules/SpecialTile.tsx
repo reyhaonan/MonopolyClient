@@ -14,8 +14,11 @@ const SpecialTile = ({ space, orientation }: Props) => {
     return (
         <div
             className={'relative tile w-fit flex flex-col justify-between rounded-field bg-base-100 select-none'}>
-            <div className={classNames("text-center font-bold py-2 absolute text-sm",
-                orientation === "top" || orientation === "bottom" ? "left-1/2 -translate-x-1/2 bottom-0" : "top-1/2 -translate-y-1/2",
+            <div className={classNames("text-center font-bold py-2 absolute text-xs",
+                orientation === "bottom" && "left-1/2 -translate-x-1/2 bottom-0",
+                orientation === "top" && "left-1/2 -translate-x-1/2 top-0",
+                orientation === "right" && "top-1/2 -translate-y-1/2 right-0",
+                orientation === "left" && "top-1/2 -translate-y-1/2 left-0",
             )}>
                 {space.name}
             </div>

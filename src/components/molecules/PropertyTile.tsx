@@ -65,7 +65,7 @@ const PropertyTile = ({
     const isOwnedByPlayer = space.ownerId === playerId;
 
     // Space country type shi
-    const playerIsGroupOwner = !!group?.every(c => c.ownerId === playerId) || true
+    const playerIsGroupOwner = !!group?.every(c => c.ownerId === playerId)
     const groupHasHouse = !!group?.some(c => c.currentRentStage > RentStage.Unimproved)
     const groupHasMortgagedProperty = !!group?.some(c => c.isMortgaged)
     return (
@@ -120,7 +120,7 @@ const PropertyTile = ({
                     }
 
                     <div className="divider my-2"></div>
-                    {isOwnedByPlayer && isPermittedToBuyOrSellProperty &&
+                    {isOwnedByPlayer && isPermittedToBuyOrSellProperty && playerIsGroupOwner &&
                         <div className="property-options flex gap-2 mb-4">
                             {space.$type === "country" && (<>
                                 <Button
