@@ -203,6 +203,7 @@ export const GameView = ({ gameId }: Props) => {
                   <Button
                     className="btn btn-primary"
                     onClick={() => rollDice()}
+                    disabled={currentPlayer.money < 0}
                   >
                     Roll dice
                   </Button> : null
