@@ -142,8 +142,8 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
     const initiatorPropertyGap = !!initiator && offer.some(propertyId => initiator.propertiesOwned.findIndex(p => p.id === propertyId) === -1)
     const recipientPropertyGap = !!recipient && counterOffer.some(propertyId => recipient.propertiesOwned.findIndex(p => p.id === propertyId) === -1)
     // This is true if player current money is less than what is being offered
-    const initiatorMoneyGap = !!initiator && initiator.money < moneyFromInitiator
-    const recipientMoneyGap = !!recipient && recipient.money < moneyFromRecipient
+    const initiatorMoneyGap = !!initiator && initiator.money > 0 && initiator.money < moneyFromInitiator
+    const recipientMoneyGap = !!recipient && recipient.money > 0 && recipient.money < moneyFromRecipient
 
     const initiatorCardGap = !!initiator && initiator.getOutOfJailFreeCards < getOutOfJailCardFromInitiator.length
     const recipientCardGap = !!recipient && recipient.getOutOfJailFreeCards < getOutOfJailCardFromRecipient.length
@@ -303,12 +303,12 @@ const PlayerTradePanel = ({
                                 className="input input-bordered w-full text-center"
                                 required
                                 min={0}
-                                max={player.money}
+                                max={Math.max(0, player.money)}
                                 value={field.value}
                                 onChange={(e) => field.onChange(Number(e.target.value))}
                                 onBlur={() => {
                                     // Clamp value on blur to be within valid range
-                                    const value = Math.min(player.money, Math.max(0, field.value));
+                                    const value = Math.min(Math.max(0, player.money), Math.max(0, field.value));
                                     field.onChange(value);
                                 }}
                             />
@@ -323,14 +323,14 @@ const PlayerTradePanel = ({
                                     readOnly={isViewing}
                                     type="range"
                                     min={0}
-                                    max={player.money}
+                                    max={Math.max(0, player.money)}
                                     value={field.value}
                                     onChange={(e) => field.onChange(Number(e.target.value))}
                                     className="range range-primary range-sm mt-2"
                                 />
                                 <div className="flex justify-between px-1 text-xs">
                                     <span>$0</span>
-                                    <span>${player.money}</span>
+                                    <span>${Math.max(0, player.money)}</span>
                                 </div>
                             </>
                         )}

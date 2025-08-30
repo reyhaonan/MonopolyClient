@@ -211,6 +211,7 @@ export const GameView = ({ gameId }: Props) => {
                 <Button
                   className="btn btn-error btn-soft"
                   onClick={() => endTurn()}
+                  disabled={currentPlayer.money < 0}
                 >
                   End Turn
                 </Button> : null
