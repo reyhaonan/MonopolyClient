@@ -79,7 +79,6 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
         },
         mode: "onChange",
         resolver: zodResolver(tradeSchema),
-        disabled: isViewing, // Disable form fields when just viewing a trade
     });
 
     // Effect to reset the form state when the trade context changes
@@ -106,7 +105,12 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
             if (!tradeToInspect || !recipient || playerId !== recipient.id) return;
             // When negotiating, the recipient's offer becomes the new initiator's offer
             onNegotiateTrade?.({
-                ...data,
+                offer: data.counterOffer,
+                counterOffer: data.offer,
+                moneyFromInitiator: data.moneyFromRecipient,
+                moneyFromRecipient: data.moneyFromInitiator,
+                getOutOfJailCardFromInitiator: data.getOutOfJailCardFromRecipient,
+                getOutOfJailCardFromRecipient: data.getOutOfJailCardFromInitiator,
                 tradeId: tradeToInspect.id,
             });
         } else {
@@ -149,12 +153,14 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
     const handleNegotiate = () => {
         if (!initiator || !recipient) return
         // Adjust gap on negotiate
-        if (initiatorMoneyGap) setValue("moneyFromInitiator", 0)
-        if (recipientMoneyGap) setValue("moneyFromRecipient", 0)
-        if (initiatorCardGap) setValue("getOutOfJailCardFromInitiator", [])
-        if (recipientCardGap) setValue("getOutOfJailCardFromRecipient", [])
-        if (initiatorPropertyGap) setValue("offer", [])
-        if (recipientPropertyGap) setValue("counterOffer", [])
+        if (initiatorMoneyGap) setValue("moneyFromInitiator", 0, { shouldDirty: false })
+        if (recipientMoneyGap) setValue("moneyFromRecipient", 0, { shouldDirty: false })
+
+        if (initiatorCardGap) setValue("getOutOfJailCardFromInitiator", [], { shouldDirty: false })
+        if (recipientCardGap) setValue("getOutOfJailCardFromRecipient", [], { shouldDirty: false })
+
+        if (initiatorPropertyGap) setValue("offer", [], { shouldDirty: false })
+        if (recipientPropertyGap) setValue("counterOffer", [], { shouldDirty: false })
         setNegotiateMode(true)
     };
 
@@ -292,7 +298,7 @@ const PlayerTradePanel = ({
                         name={moneyFieldName}
                         render={({ field }) => (
                             <input
-                                {...field}
+                                readOnly={isViewing}
                                 type="number"
                                 className="input input-bordered w-full text-center"
                                 required
@@ -314,7 +320,7 @@ const PlayerTradePanel = ({
                         render={({ field }) => (
                             <>
                                 <input
-                                    {...field}
+                                    readOnly={isViewing}
                                     type="range"
                                     min={0}
                                     max={player.money}
@@ -348,7 +354,7 @@ const PlayerTradePanel = ({
                                             )}
                                         >
                                             <input
-                                                {...field}
+                                                readOnly={isViewing}
                                                 type="checkbox"
                                                 className="hidden"
                                                 value={card}
@@ -389,12 +395,11 @@ const PlayerTradePanel = ({
                                                 )}
                                             >
                                                 <input
-                                                    {...field}
+                                                    readOnly={propertyIsDisabled || isViewing}
                                                     type="checkbox"
                                                     className="hidden"
                                                     value={property.id}
                                                     checked={isChecked}
-                                                    disabled={propertyIsDisabled || field.disabled}
                                                     onChange={(e) => {
                                                         const updatedValue = isChecked
                                                             ? field.value.filter((id) => id !== e.target.value)
