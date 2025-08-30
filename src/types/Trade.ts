@@ -8,6 +8,8 @@ export type Trade = {
   propertyCounterOffer: string[];
   moneyFromInitiator: number;
   moneyFromRecipient: number;
+  getOutOfJailCardFromInitiator: number;
+  getOutOfJailCardFromRecipient: number;
   negotiateCount: number;
 };
 
@@ -16,4 +18,6 @@ export type TradeOffer = {
   counterOffer: PropertySpace["id"][];
   moneyFromInitiator: number;
   moneyFromRecipient: number;
+  getOutOfJailCardFromInitiator: number[];
+  getOutOfJailCardFromRecipient: number[];
 };

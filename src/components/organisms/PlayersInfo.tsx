@@ -55,6 +55,8 @@ const PlayersInfo = ({ players, currentPlayerIndex, isPermittedToDeclareBankcrup
                                 {" | "}
                                 Doubles: {player.consecutiveDoubles}
                                 {" | "}
+                                GOOJ Card: {player.getOutOfJailFreeCards}
+                                {" | "}
                                 ID: {player.id.substring(0, 6)}
                             </div>
                         </div>

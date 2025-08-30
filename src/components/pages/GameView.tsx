@@ -261,9 +261,19 @@ export const GameView = ({ gameId }: Props) => {
                 offer,
                 counterOffer,
                 moneyFromInitiator,
-                moneyFromRecipient
+                moneyFromRecipient,
+                getOutOfJailCardFromInitiator,
+                getOutOfJailCardFromRecipient
               }) =>
-                initiateTrade(recipientId, offer, counterOffer, moneyFromInitiator, moneyFromRecipient)
+                initiateTrade(
+                  recipientId,
+                  offer,
+                  counterOffer,
+                  moneyFromInitiator,
+                  moneyFromRecipient,
+                  getOutOfJailCardFromInitiator.length,
+                  getOutOfJailCardFromRecipient.length
+                )
             }
             onNegotiateTrade={
               ({
@@ -271,9 +281,19 @@ export const GameView = ({ gameId }: Props) => {
                 counterOffer,
                 moneyFromInitiator,
                 moneyFromRecipient,
-                tradeId
+                tradeId,
+                getOutOfJailCardFromInitiator,
+                getOutOfJailCardFromRecipient
               }) =>
-                negotiateTrade(tradeId, offer, counterOffer, moneyFromInitiator, moneyFromRecipient)
+                negotiateTrade(
+                  tradeId,
+                  offer,
+                  counterOffer,
+                  moneyFromInitiator,
+                  moneyFromRecipient,
+                  getOutOfJailCardFromInitiator.length,
+                  getOutOfJailCardFromRecipient.length
+                )
             }
             onAcceptTrade={acceptTrade}
             onRejectTrade={rejectTrade}

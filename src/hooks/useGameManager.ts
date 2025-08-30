@@ -381,10 +381,13 @@ const useGameManager = (gameId?: string, playerId?: string) => {
 
           setActivePlayers((state) =>
             produce(state, (draft) => {
+              const initiatorIndex = draft.findIndex((p) => p.id === trade.initiatorId);
+              if (initiatorIndex == -1) throw new Error("Initiator not found");
+
+              const recipientIndex = draft.findIndex((p) => p.id === trade.recipientId);
+              if (recipientIndex == -1) throw new Error("Recipient not found");
               // Update the initiator
               {
-                const initiatorIndex = draft.findIndex((p) => p.id === trade.initiatorId);
-                if (initiatorIndex == -1) throw new Error("Initiator not found");
                 draft[initiatorIndex].propertiesOwned = draft[
                   initiatorIndex
                 ].propertiesOwned.filter((pr) => !trade.propertyOffer.includes(pr));
@@ -393,12 +396,22 @@ const useGameManager = (gameId?: string, playerId?: string) => {
 
               // Update the recipient
               {
-                const recipientIndex = draft.findIndex((p) => p.id === trade.recipientId);
-                if (recipientIndex == -1) throw new Error("Recipient not found");
                 draft[recipientIndex].propertiesOwned = draft[
                   recipientIndex
                 ].propertiesOwned.filter((pr) => !trade.propertyCounterOffer.includes(pr));
                 draft[recipientIndex].propertiesOwned.push(...trade.propertyOffer);
+              }
+
+              // Update get out of jail card
+              if (trade.getOutOfJailCardFromInitiator > 0) {
+                draft[initiatorIndex].getOutOfJailFreeCards +=
+                  trade.getOutOfJailCardFromInitiator * -1;
+                draft[recipientIndex].getOutOfJailFreeCards += trade.getOutOfJailCardFromInitiator;
+              }
+              if (trade.getOutOfJailCardFromRecipient > 0) {
+                draft[recipientIndex].getOutOfJailFreeCards +=
+                  trade.getOutOfJailCardFromRecipient * -1;
+                draft[initiatorIndex].getOutOfJailFreeCards += trade.getOutOfJailCardFromRecipient;
               }
 
               transactions.forEach((transactions) => processTransaction(draft, transactions));
@@ -600,7 +613,9 @@ const useGameManager = (gameId?: string, playerId?: string) => {
     propertyOffer: string[],
     propertyCounterOffer: string[],
     moneyFromInitiator: number,
-    moneyFromRecipient: number
+    moneyFromRecipient: number,
+    getOutOfJailCardFromInitiator: number,
+    getOutOfJailCardFromRecipient: number
   ) => {
     if (!hubConnection) return;
     await hubConnection
@@ -611,7 +626,9 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         propertyOffer,
         propertyCounterOffer,
         moneyFromInitiator,
-        moneyFromRecipient
+        moneyFromRecipient,
+        getOutOfJailCardFromInitiator,
+        getOutOfJailCardFromRecipient
       )
       .catch((err) => {
         console.error(err);
@@ -623,7 +640,9 @@ const useGameManager = (gameId?: string, playerId?: string) => {
     propertyOffer: string[],
     propertyCounterOffer: string[],
     moneyFromInitiator: number,
-    moneyFromRecipient: number
+    moneyFromRecipient: number,
+    getOutOfJailCardFromInitiator: number,
+    getOutOfJailCardFromRecipient: number
   ) => {
     if (!hubConnection) return;
     await hubConnection
@@ -634,7 +653,9 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         propertyOffer,
         propertyCounterOffer,
         moneyFromInitiator,
-        moneyFromRecipient
+        moneyFromRecipient,
+        getOutOfJailCardFromInitiator,
+        getOutOfJailCardFromRecipient
       )
       .catch((err) => {
         console.error(err);

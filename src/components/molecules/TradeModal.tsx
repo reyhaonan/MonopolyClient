@@ -14,18 +14,11 @@ import XMarkIcon from '../atoms/icons/XMarkIcon';
 import SwapIcon from '../atoms/icons/SwapIcon';
 import PlayerIndicator from '../atoms/PlayerIndicator';
 import PaperAirplaneIcon from '../atoms/icons/PaperAirplaneIcon';
+import LockOpenIcon from '../atoms/icons/LockOpenIcon';
 
 // --- TYPE DEFINITIONS ---
 
-/** Defines the shape of the data managed by react-hook-form. */
-type TradeFormData = {
-    offer: string[];
-    counterOffer: string[];
-    moneyFromInitiator: number;
-    moneyFromRecipient: number;
-};
 
-/** Props for the main TradeModal component. */
 type TradeModalProps = {
     initiator: PlayerWithProperties | null;
     recipient: PlayerWithProperties | null;
@@ -60,12 +53,14 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
     const isMyTurnAsRecipient = tradeToInspect?.recipientId === playerId && isViewing;
     const isMyTurnAsInitiator = tradeToInspect?.initiatorId === playerId && isViewing;
 
-    const { control, reset, handleSubmit, watch, setValue } = useForm<TradeFormData>({
+    const { control, reset, handleSubmit, watch, setValue } = useForm<TradeOffer>({
         defaultValues: {
             offer: [],
             counterOffer: [],
             moneyFromInitiator: 0,
             moneyFromRecipient: 0,
+            getOutOfJailCardFromInitiator: [],
+            getOutOfJailCardFromRecipient: []
         },
         disabled: isViewing, // Disable form fields when just viewing a trade
     });
@@ -77,6 +72,8 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
             counterOffer: tradeToInspect?.propertyCounterOffer || [],
             moneyFromInitiator: tradeToInspect?.moneyFromInitiator || 0,
             moneyFromRecipient: tradeToInspect?.moneyFromRecipient || 0,
+            getOutOfJailCardFromInitiator: tradeToInspect ? Array.from(Array(tradeToInspect?.getOutOfJailCardFromInitiator ?? 0).keys()) : [],
+            getOutOfJailCardFromRecipient: tradeToInspect ? Array.from(Array(tradeToInspect?.getOutOfJailCardFromRecipient ?? 0).keys()) : [],
         })
     }, [tradeToInspect, reset]);
 
@@ -86,7 +83,7 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
         onClose();
     };
 
-    const onSubmit: SubmitHandler<TradeFormData> = (data) => {
+    const onSubmit: SubmitHandler<TradeOffer> = (data) => {
         if (negotiateMode) {
             if (!tradeToInspect || !recipient || playerId !== recipient.id) return;
             // When negotiating, the recipient's offer becomes the new initiator's offer
@@ -95,6 +92,8 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
                 counterOffer: data.offer,
                 moneyFromInitiator: data.moneyFromRecipient,
                 moneyFromRecipient: data.moneyFromInitiator,
+                getOutOfJailCardFromInitiator: data.getOutOfJailCardFromInitiator,
+                getOutOfJailCardFromRecipient: data.getOutOfJailCardFromRecipient,
                 tradeId: tradeToInspect.id,
             });
         } else {
@@ -125,7 +124,8 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
     }
 
 
-    const [moneyFromInitiator, moneyFromRecipient, offer, counterOffer] = watch(["moneyFromInitiator", "moneyFromRecipient", "offer", "counterOffer"])
+    const [moneyFromInitiator, moneyFromRecipient, offer, counterOffer, getOutOfJailCardFromInitiator, getOutOfJailCardFromRecipient] = watch(["moneyFromInitiator", "moneyFromRecipient", "offer", "counterOffer", "getOutOfJailCardFromInitiator", "getOutOfJailCardFromRecipient"])
+
 
     // This is true if player no longer own the offered property
     const initiatorPropertyGap = !!initiator && offer.some(propertyId => initiator.propertiesOwned.findIndex(p => p.id === propertyId) === -1)
@@ -134,7 +134,10 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
     const initiatorMoneyGap = !!initiator && initiator.money < moneyFromInitiator
     const recipientMoneyGap = !!recipient && recipient.money < moneyFromRecipient
 
-    const hasGap = initiatorPropertyGap || recipientPropertyGap || initiatorMoneyGap || recipientMoneyGap
+    const initiatorCardGap = !!initiator && initiator.getOutOfJailFreeCards < getOutOfJailCardFromInitiator.length
+    const recipientCardGap = !!recipient && recipient.getOutOfJailFreeCards < getOutOfJailCardFromRecipient.length
+
+    const hasGap = initiatorPropertyGap || recipientPropertyGap || initiatorMoneyGap || recipientMoneyGap || initiatorCardGap || recipientCardGap
 
     return (
         <Modal ref={ref} onClose={handleClose}>
@@ -147,10 +150,12 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
                             isViewing={isViewing}
                             player={initiator}
                             control={control}
-                            isInitiator={true}
-                            propertyOffer={tradeToInspect?.propertyOffer}
-                            propertyCounterOffer={tradeToInspect?.propertyCounterOffer}
+                            propertyFieldName={'offer'}
+                            moneyFieldName={'moneyFromInitiator'}
+                            getOutOfJailCardFieldName={'getOutOfJailCardFromInitiator'}
+                            offeredProperties={offer}
                             countryGroupDict={countryGroupDict}
+                            cardOffer={getOutOfJailCardFromInitiator}
                         />
                     )}
 
@@ -161,10 +166,12 @@ const TradeModal = forwardRef<HTMLDialogElement, TradeModalProps>(({
                             isViewing={isViewing}
                             player={recipient}
                             control={control}
-                            isInitiator={false}
-                            propertyOffer={tradeToInspect?.propertyOffer}
-                            propertyCounterOffer={tradeToInspect?.propertyCounterOffer}
+                            propertyFieldName={'counterOffer'}
+                            moneyFieldName={'moneyFromRecipient'}
+                            getOutOfJailCardFieldName={'getOutOfJailCardFromRecipient'}
+                            offeredProperties={counterOffer}
                             countryGroupDict={countryGroupDict}
+                            cardOffer={getOutOfJailCardFromRecipient}
                         />
                     )}
                 </div>
@@ -224,27 +231,29 @@ export default TradeModal;
 const PlayerTradePanel = ({
     player,
     control,
-    isInitiator,
     isViewing,
-    propertyOffer = [],
-    propertyCounterOffer = [],
-    countryGroupDict
+    offeredProperties = [],
+    countryGroupDict,
+    propertyFieldName,
+    moneyFieldName,
+    getOutOfJailCardFieldName,
+    cardOffer = []
 }: {
     player: PlayerWithProperties;
-    control: Control<TradeFormData>;
-    isInitiator: boolean;
+    control: Control<TradeOffer>;
+    propertyFieldName: "offer" | "counterOffer"
+    moneyFieldName: "moneyFromInitiator" | "moneyFromRecipient"
+    getOutOfJailCardFieldName: "getOutOfJailCardFromInitiator" | "getOutOfJailCardFromRecipient"
     isViewing: boolean
-    propertyOffer?: string[]
-    propertyCounterOffer?: string[],
+    offeredProperties?: string[]
+    cardOffer?: number[]
     countryGroupDict: Record<ColorGroup, CountryProperty[]>
 }) => {
-    const propertyFieldName = isInitiator ? 'offer' : 'counterOffer';
-    const moneyFieldName = isInitiator ? 'moneyFromInitiator' : 'moneyFromRecipient';
-    const offeredProperties = isViewing ? (isInitiator ? propertyOffer : propertyCounterOffer) : []
-
     const propertiesToList = isViewing
         ? player.propertiesOwned.filter((p) => offeredProperties.includes(p.id))
         : player.propertiesOwned;
+
+    const cardToList = isViewing ? cardOffer : Array.from(Array(player.getOutOfJailFreeCards).keys())
 
     return (
         <div className="flex-1 p-2 border border-base-300 rounded-lg bg-base-200">
@@ -297,7 +306,41 @@ const PlayerTradePanel = ({
                 </div>
 
                 {/* Properties List Section */}
-                <ul className="menu p-0 rounded-box w-full space-y-1 max-h-48 overflow-auto">
+                <ul className="menu p-0 w-full space-y-1 overflow-auto">
+                    {cardToList.map((card) =>
+                        <li key={card}>
+                            <Controller
+                                control={control}
+                                name={getOutOfJailCardFieldName}
+                                render={({ field }) => {
+                                    const isChecked = field.value.includes(card);
+                                    return (
+                                        <label
+                                            className={classNames(
+                                                'btn w-full justify-start',
+                                                isChecked ? 'btn-accent' : 'btn-ghost',
+                                            )}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                className="hidden"
+                                                value={card}
+                                                checked={isChecked}
+                                                onChange={(e) => {
+                                                    const updatedValue = isChecked
+                                                        ? field.value.filter((id) => id !== Number(e.target.value))
+                                                        : [...field.value, Number(e.target.value)];
+                                                    field.onChange(updatedValue);
+                                                }}
+                                            />
+                                            <LockOpenIcon className='size-4' /> Get out of jail card
+                                        </label>
+                                    );
+                                }}
+                            />
+                        </li>
+
+                    )}
                     {propertiesToList.map((property) => {
                         const playerIsGroupOwner = property.$type === "country" && countryGroupDict[(property as CountryProperty).group].every(c => c.ownerId === player.id)
                         const groupHasHouse = property.$type === "country" && countryGroupDict[(property as CountryProperty).group].some(c => c.currentRentStage > RentStage.Unimproved)
@@ -330,7 +373,7 @@ const PlayerTradePanel = ({
                                                         field.onChange(updatedValue);
                                                     }}
                                                 />
-                                                {property.name}
+                                                {property.name} {property.isMortgaged ? <span className="badge badge-xs">Mortgaged</span> : ""}
                                             </label>
                                         );
                                     }}
