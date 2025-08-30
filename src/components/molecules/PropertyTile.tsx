@@ -120,9 +120,9 @@ const PropertyTile = ({
                     }
 
                     <div className="divider my-2"></div>
-                    {isOwnedByPlayer && isPermittedToBuyOrSellProperty && playerIsGroupOwner &&
+                    {isOwnedByPlayer && isPermittedToBuyOrSellProperty &&
                         <div className="property-options flex gap-2 mb-4">
-                            {space.$type === "country" && (<>
+                            {space.$type === "country" && playerIsGroupOwner && (<>
                                 <Button
                                     className='btn btn-sm btn-square btn-primary'
                                     disabled={!playerIsGroupOwner || groupHasMortgagedProperty || space.currentRentStage === RentStage.Hotel || currentPlayerMoney < space.houseCost || (gameConfig.balancedHousePurchase &&
@@ -150,7 +150,7 @@ const PropertyTile = ({
                                     </svg>
                                 </Button>
                             </>)}
-                            <div className="ml-auto">
+                            <div className="ml-auto flex gap-2">
 
                                 {gameConfig.allowMortgagingProperties ? space.isMortgaged ?
                                     <Button
