@@ -8,19 +8,39 @@ type Props = {
 }
 
 const SpecialTile = ({ space, orientation }: Props) => {
-    if (space.type == SpecialSpaceType.Chance) {
-        space
-    }
     return (
         <div
             className={'relative tile w-fit flex flex-col justify-between rounded-field bg-base-100 select-none'}>
-            <div className={classNames("text-center font-bold py-2 absolute text-xs",
-                orientation === "bottom" && "left-1/2 -translate-x-1/2 bottom-0",
-                orientation === "top" && "left-1/2 -translate-x-1/2 top-0",
-                orientation === "right" && "top-1/2 -translate-y-1/2 right-0",
-                orientation === "left" && "top-1/2 -translate-y-1/2 left-0",
+            <div className={classNames("text-center font-semibold py-2 absolute text-xs flex gap-2",
+                orientation === "bottom" && "left-1/2 -translate-x-1/2 bottom-0 flex-col",
+                orientation === "top" && "left-1/2 -translate-x-1/2 top-0 flex-col-reverse",
+                orientation === "right" && "top-1/2 -translate-y-1/2 right-0 flex-col",
+                orientation === "left" && "top-1/2 -translate-y-1/2 left-0 flex-col",
             )}>
-                {space.name}
+                {space.type == SpecialSpaceType.Chance &&
+                    <>
+                        <div className='text-6xl font-bold opacity-30'>$</div>
+                        Treasure
+                    </>
+                }
+                {space.type == SpecialSpaceType.CommunityChest &&
+                    <>
+                        <div className='text-6xl font-bold opacity-30'>?</div>
+                        Chance
+                    </>
+                }
+                {space.type == SpecialSpaceType.IncomeTax &&
+                    <>
+                        <div className='text-xl font-bold opacity-40'>$200</div>
+                        Income tax
+                    </>
+                }
+                {space.type == SpecialSpaceType.LuxuryTax &&
+                    <>
+                        <div className='text-xl font-bold opacity-40'>$100</div>
+                        Luxury tax
+                    </>
+                }
             </div>
             <div className="opacity-0 text-sm">PHROLOVA</div>
         </div>

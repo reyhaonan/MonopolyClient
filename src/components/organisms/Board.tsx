@@ -64,10 +64,14 @@ const Board = ({
                 {actionButtons.endTurnButton}
             </div>
 
-            <div className="top-left corner rounded-field bg-base-100">GO!</div>
-            <div className="top-right corner rounded-field bg-base-100">JAIL</div>
-            <div className="bottom-right corner rounded-field bg-base-100">PARK</div>
-            <div className="bottom-left corner rounded-field bg-base-100">Go to Jail!</div>
+            <div className="top-left corner rounded-field bg-base-100 text-3xl font-bold flex items-center justify-center">GO!!</div>
+            <div className="top-right corner rounded-field bg-base-100 text-xl font-bold flex">
+                <div className="jail bg-base-200 p-2 mt-auto aspect-square h-2/3 flex items-center justify-center">
+                    JAIL
+                </div>
+            </div>
+            <div className="bottom-right corner rounded-field bg-base-100 text-xl font-bold flex items-center justify-center">Free park</div>
+            <div className="bottom-left corner rounded-field bg-base-100 text-xl font-bold flex items-center justify-center">Go to Jail!</div>
 
             <BoardRow
                 countryGroupDict={countryGroupDict}

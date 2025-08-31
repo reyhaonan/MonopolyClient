@@ -65,14 +65,14 @@ const PlayersPawnsRender = ({ players, tileHeight, tileWidth, currentPlayerIndex
                 const playerIndex = playersOnSameSpace.findIndex(p => p === player.id);
                 const orientation = Math.floor(player.currentPosition / 10) % 2
                 const isCurrentPlayer = player.id === players[currentPlayerIndex]?.id
-
+                const jailOffset = player.isInJail ? 20 : 0
                 return (
                     <div
                         className="pawn absolute transition-all"
                         key={player.id}
                         style={{
-                            top: monopolyBoardPositions[player.currentPosition].y + pawnOffsets[orientation][playerIndex].x,
-                            left: monopolyBoardPositions[player.currentPosition].x + pawnOffsets[orientation][playerIndex].y,
+                            top: monopolyBoardPositions[player.currentPosition].y + pawnOffsets[orientation][playerIndex].x + jailOffset,
+                            left: monopolyBoardPositions[player.currentPosition].x + pawnOffsets[orientation][playerIndex].y + jailOffset * -1,
                         }}
                     >
                         <div

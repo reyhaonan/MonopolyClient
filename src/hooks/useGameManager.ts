@@ -11,7 +11,7 @@ import { produce } from "immer";
 import { CustomHttpClient } from "@/utils/axiosInstance";
 import { gameConfigInitial, type GameConfig } from "@/types/GameConfig";
 
-const MOVEMENT_SPEED = 100;
+const MOVEMENT_SPEED = 50;
 const MAXIMUM_SPACE = 40;
 
 const useGameManager = (gameId?: string, playerId?: string) => {
@@ -119,30 +119,34 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         setCurrentPhase(GamePhase.MovingToken);
         let curr = 0;
         let destination = rollResult.dice.roll1 + rollResult.dice.roll2;
-        const intervalId = setInterval(() => {
-          curr++;
+        if (!rollResult.playerState.isInJail) {
+          const intervalId = setInterval(() => {
+            curr++;
+            setActivePlayers((state) =>
+              produce(state, (draft) => {
+                const playerIndex = draft.findIndex((player) => player.id === playerId);
+                if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
+                draft[playerIndex].currentPosition =
+                  (draft[playerIndex].currentPosition + 1) % MAXIMUM_SPACE;
+              })
+            );
+            if (curr == destination) {
+              setCurrentPhase(rollResult.newGamePhase);
+              clearInterval(intervalId);
+            }
+          }, MOVEMENT_SPEED);
+        } else {
           setActivePlayers((state) =>
             produce(state, (draft) => {
               const playerIndex = draft.findIndex((player) => player.id === playerId);
               if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
-              draft[playerIndex].currentPosition =
-                (draft[playerIndex].currentPosition + 1) % MAXIMUM_SPACE;
+              // JAIL
+              draft[playerIndex].currentPosition = rollResult.playerState.newPlayerPosition;
             })
           );
-          if (curr == destination) {
-            if (rollResult.playerState.newPlayerJailTurnsRemaining === 3) {
-              setActivePlayers((state) =>
-                produce(state, (draft) => {
-                  const playerIndex = draft.findIndex((player) => player.id === playerId);
-                  if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
-                  draft[playerIndex].currentPosition = rollResult.playerState.newPlayerPosition;
-                })
-              );
-            }
-            setCurrentPhase(rollResult.newGamePhase);
-            clearInterval(intervalId);
-          }
-        }, MOVEMENT_SPEED);
+
+          setCurrentPhase(rollResult.newGamePhase);
+        }
 
         setTransactionsHistory((state) => rollResult.transaction.concat(state));
       });
