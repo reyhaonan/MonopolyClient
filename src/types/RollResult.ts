@@ -1,11 +1,13 @@
 import type { GamePhase } from "@/enums/GamePhase";
 import type { TransactionInfo } from "./TransactionInfo";
+import type { ChanceCard } from "./ChanceCard";
 
 export type RollResult = {
   dice: DiceInfo;
   playerState: PlayerStateInfo;
   transaction: TransactionInfo[];
   newGamePhase: GamePhase;
+  chanceCardsDrawn: { [key: number]: ChanceCard };
 };
 
 interface DiceInfo {

@@ -10,6 +10,7 @@ import type { RollResult } from "@/types/RollResult";
 import { produce } from "immer";
 import { CustomHttpClient } from "@/utils/axiosInstance";
 import { gameConfigInitial, type GameConfig } from "@/types/GameConfig";
+import { ChanceOutcome } from "@/types/ChanceOutcome";
 
 const MOVEMENT_SPEED = 50;
 const MAXIMUM_SPACE = 40;
@@ -101,7 +102,6 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         setDiceRoll1(rollResult.dice.roll1);
         setDiceRoll2(rollResult.dice.roll2);
 
-        // TODO: Animate
         setActivePlayers((state) => {
           return produce(state, (draft) => {
             const playerIndex = draft.findIndex((player) => player.id === playerId);
@@ -111,8 +111,6 @@ const useGameManager = (gameId?: string, playerId?: string) => {
               rollResult.playerState.newPlayerJailTurnsRemaining;
             draft[playerIndex].isInJail = rollResult.playerState.isInJail;
             draft[playerIndex].consecutiveDoubles = rollResult.playerState.consecutiveDoubles;
-
-            rollResult.transaction.forEach((transaction) => processTransaction(draft, transaction));
           });
         });
 
@@ -131,6 +129,33 @@ const useGameManager = (gameId?: string, playerId?: string) => {
               })
             );
             if (curr == destination) {
+              setActivePlayers((state) =>
+                produce(state, (draft) => {
+                  rollResult.transaction.forEach((transaction) =>
+                    processTransaction(draft, transaction)
+                  );
+                  Object.entries(rollResult.chanceCardsDrawn).forEach(([position, card]) => {
+                    const playerIndex = draft.findIndex((player) => player.id === playerId);
+                    if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
+
+                    switch (card.chanceOutcome) {
+                      case ChanceOutcome.AdvanceToGo:
+                        draft[playerIndex].currentPosition = 0;
+                        break;
+
+                      case ChanceOutcome.GetOutOfJailFreeCard:
+                        draft[playerIndex].getOutOfJailFreeCards++;
+                        break;
+                      case ChanceOutcome.AdvanceToNearestRailroad:
+                      case ChanceOutcome.AdvanceToNearestUtility:
+                      case ChanceOutcome.AdvanceToProperty:
+                      case ChanceOutcome.GoBackXSpace:
+                        draft[playerIndex].currentPosition =
+                          rollResult.playerState.newPlayerPosition;
+                    }
+                  });
+                })
+              );
               setCurrentPhase(rollResult.newGamePhase);
               clearInterval(intervalId);
             }
@@ -142,6 +167,9 @@ const useGameManager = (gameId?: string, playerId?: string) => {
               if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
               // JAIL
               draft[playerIndex].currentPosition = rollResult.playerState.newPlayerPosition;
+              rollResult.transaction.forEach((transaction) =>
+                processTransaction(draft, transaction)
+              );
             })
           );
 

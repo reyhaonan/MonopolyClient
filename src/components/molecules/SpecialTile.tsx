@@ -17,13 +17,13 @@ const SpecialTile = ({ space, orientation }: Props) => {
                 orientation === "right" && "top-1/2 -translate-y-1/2 right-0 flex-col",
                 orientation === "left" && "top-1/2 -translate-y-1/2 left-0 flex-col",
             )}>
-                {space.type == SpecialSpaceType.Chance &&
+                {space.type == SpecialSpaceType.CommunityChest &&
                     <>
                         <div className='text-6xl font-bold opacity-30'>$</div>
                         Treasure
                     </>
                 }
-                {space.type == SpecialSpaceType.CommunityChest &&
+                {space.type == SpecialSpaceType.Chance &&
                     <>
                         <div className='text-6xl font-bold opacity-30'>?</div>
                         Chance
