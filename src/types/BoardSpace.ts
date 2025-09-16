@@ -5,7 +5,7 @@ import type { SpecialSpaceType } from "./SpecialSpaceType";
 export type BoardSpace =
   | GoSpace
   | CountryProperty
-  | CommunityChestSpace
+  | TreasureSpace
   | IncomeTaxSpace
   | RailroadProperty
   | ChanceSpace
@@ -55,8 +55,8 @@ export interface SpecialSpace extends Space {
   type: SpecialSpaceType;
 }
 
-interface CommunityChestSpace extends SpecialSpace {
-  type: SpecialSpaceType.CommunityChest;
+interface TreasureSpace extends SpecialSpace {
+  type: SpecialSpaceType.Treasure;
   name: "Community Chest";
 }
 

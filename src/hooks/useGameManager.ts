@@ -11,9 +11,11 @@ import { produce } from "immer";
 import { CustomHttpClient } from "@/utils/axiosInstance";
 import { gameConfigInitial, type GameConfig } from "@/types/GameConfig";
 import { ChanceOutcome } from "@/types/ChanceOutcome";
+import { TreasureOutcome } from "@/types/TreasureOutcome";
 
 const MOVEMENT_SPEED = 50;
 const MAXIMUM_SPACE = 40;
+const POPOVER_TIME_MS = 5000;
 
 const useGameManager = (gameId?: string, playerId?: string) => {
   const [hubConnection, setHubConnection] = useState<signalR.HubConnection | null>(null);
@@ -27,8 +29,34 @@ const useGameManager = (gameId?: string, playerId?: string) => {
   const [transactionsHistory, setTransactionsHistory] = useState<TransactionInfo[]>([]);
   const [activeTrades, setActiveTrades] = useState<Trade[]>([]);
   const [gameConfig, setGameConfig] = useState<GameConfig>(gameConfigInitial);
+
+  const [chancePopovers, setChancePopovers] = useState<Map<number, string>>(new Map());
+  const [treasurePopovers, setTreasurePopovers] = useState<Map<number, string>>(new Map());
+
+  console.log("BBE", chancePopovers, treasurePopovers);
+
   const currentPlayer = activePlayers[currentPlayerIndex];
   const currentPlayerSpace = currentPlayer ? board.spaces[currentPlayer.currentPosition] : null;
+
+  function queueTreasurePopoverRemoval(key: number, delay: number) {
+    setTimeout(() => {
+      setTreasurePopovers((state) =>
+        produce(state, (draft) => {
+          draft.delete(key);
+        })
+      );
+    }, delay);
+  }
+
+  function queueChancePopoverRemoval(key: number, delay: number) {
+    setTimeout(() => {
+      setChancePopovers((state) =>
+        produce(state, (draft) => {
+          draft.delete(key);
+        })
+      );
+    }, delay);
+  }
 
   useEffect(() => {
     if (!gameId || !playerId) return;
@@ -134,9 +162,38 @@ const useGameManager = (gameId?: string, playerId?: string) => {
                   rollResult.transaction.forEach((transaction) =>
                     processTransaction(draft, transaction)
                   );
+                  Object.entries(rollResult.treasureCardsDrawn).forEach(([position, card]) => {
+                    const playerIndex = draft.findIndex((player) => player.id === playerId);
+                    if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
+
+                    setTreasurePopovers((state) =>
+                      produce(state, (draft) => {
+                        draft.set(Number(position), card.flavorText);
+                      })
+                    );
+
+                    queueTreasurePopoverRemoval(Number(position), POPOVER_TIME_MS);
+
+                    switch (card.treasureOutcome) {
+                      case TreasureOutcome.AdvanceToGo:
+                        draft[playerIndex].currentPosition = 0;
+                        break;
+                      case TreasureOutcome.GetOutOfJailFreeCard:
+                        draft[playerIndex].getOutOfJailFreeCards++;
+                        break;
+                    }
+                  });
                   Object.entries(rollResult.chanceCardsDrawn).forEach(([position, card]) => {
                     const playerIndex = draft.findIndex((player) => player.id === playerId);
                     if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
+
+                    setChancePopovers((state) =>
+                      produce(state, (draft) => {
+                        draft.set(Number(position), card.flavorText);
+                      })
+                    );
+
+                    queueChancePopoverRemoval(Number(position), POPOVER_TIME_MS);
 
                     switch (card.chanceOutcome) {
                       case ChanceOutcome.AdvanceToGo:
@@ -731,6 +788,8 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       transactionsHistory,
       activeTrades,
       gameConfig,
+      chancePopovers,
+      treasurePopovers,
     },
     hubConnection,
     joinGame,

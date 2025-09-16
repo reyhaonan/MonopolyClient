@@ -6,6 +6,7 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen.ts";
 
 import "./index.css";
+import { enableMapSet } from "immer";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -24,7 +25,7 @@ const queryClient = new QueryClient({
 });
 
 const router = createRouter({ routeTree });
-
+enableMapSet()
 // Register the router instance for type safety
 declare module "@tanstack/react-router" {
   interface Register {

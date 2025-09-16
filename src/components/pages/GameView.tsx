@@ -85,7 +85,9 @@ export const GameView = ({ gameId }: Props) => {
       diceRoll2,
       activeTrades,
       transactionsHistory,
-      gameConfig
+      gameConfig,
+      chancePopovers,
+      treasurePopovers
     } } = useGameManager(data?.data, playerId || undefined);
 
   const isInGame = activePlayers.findIndex(p => p.id === playerId) !== -1
@@ -133,6 +135,8 @@ export const GameView = ({ gameId }: Props) => {
       <main className="container mx-auto flex gap-4 pb-16">
         <div className="relative">
           <Board
+            chancePopovers={chancePopovers}
+            treasurePopovers={treasurePopovers}
             tileWidth={tileWidth}
             playersDict={playersDict}
             countryGroupDict={countryGroupDict}
