@@ -19,6 +19,8 @@ import GameConfigForm from "../organisms/GameConfigForm";
 import axios from "axios";
 import { useNavigate } from "@tanstack/react-router";
 import { GameConfigContext } from "@/context/GameConfigContext";
+import Modal from "../molecules/Modal";
+import WinningModal from "../molecules/WinningModal";
 
 type Props = {
   gameId: string;
@@ -130,6 +132,11 @@ export const GameView = ({ gameId }: Props) => {
 
   const [selectedColor, setSelectedColor] = useState("");
 
+
+  const winningModalRef = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    if (currentPhase === GamePhase.GameOver) winningModalRef.current?.showModal()
+  }, [currentPhase])
   return (
     <GameConfigContext value={gameConfig}>
       <main className="container mx-auto flex gap-4 pb-16">
@@ -311,6 +318,8 @@ export const GameView = ({ gameId }: Props) => {
         {/* As a reference */}
         <div className="aspect-[21/34] fixed bottom-0 left-0 -z-50 w-fit opacity-0 text-sm" ref={tileRef}>PHROLOVA</div>
       </main>
+
+      <WinningModal onClose={() => winningModalRef.current?.close()} ref={winningModalRef} winningPlayer={activePlayers[0]} />
     </GameConfigContext>
   );
 };

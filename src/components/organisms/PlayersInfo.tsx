@@ -33,7 +33,7 @@ const PlayersInfo = ({ players, currentPlayerIndex, isPermittedToDeclareBankcrup
 
                 {players.map((player, i) =>
                     <div
-                        className={classNames("list-row flex items-center px-2 py-1 flex-wrap border-2 transition-colors")}
+                        className={classNames("list-row flex items-center px-2 py-2 flex-wrap border-2 transition-colors")}
                         key={player.id}
                         style={{
                             borderColor: currentPlayerIndex === i ? player.hexColor : "transparent"
@@ -50,7 +50,7 @@ const PlayersInfo = ({ players, currentPlayerIndex, isPermittedToDeclareBankcrup
                                 </span>
                                 {playerId == player.id && <span className="badge badge-primary badge-xs">YOU</span>}
                             </div>
-                            <div className="text-xs font-semibold opacity-40">
+                            {/* <div className="text-xs font-semibold opacity-40">
                                 Jail: {player.isInJail ? player.jailTurnsRemaining : "N"}
                                 {" | "}
                                 Doubles: {player.consecutiveDoubles}
@@ -58,7 +58,7 @@ const PlayersInfo = ({ players, currentPlayerIndex, isPermittedToDeclareBankcrup
                                 GOOJ Card: {player.getOutOfJailFreeCards}
                                 {" | "}
                                 ID: {player.id.substring(0, 6)}
-                            </div>
+                            </div> */}
                         </div>
 
                         <div className="ml-auto">${player.money}</div>

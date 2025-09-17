@@ -29,11 +29,8 @@ const useGameManager = (gameId?: string, playerId?: string) => {
   const [transactionsHistory, setTransactionsHistory] = useState<TransactionInfo[]>([]);
   const [activeTrades, setActiveTrades] = useState<Trade[]>([]);
   const [gameConfig, setGameConfig] = useState<GameConfig>(gameConfigInitial);
-
   const [chancePopovers, setChancePopovers] = useState<Map<number, string>>(new Map());
   const [treasurePopovers, setTreasurePopovers] = useState<Map<number, string>>(new Map());
-
-  console.log("BBE", chancePopovers, treasurePopovers);
 
   const currentPlayer = activePlayers[currentPlayerIndex];
   const currentPlayerSpace = currentPlayer ? board.spaces[currentPlayer.currentPosition] : null;
@@ -253,7 +250,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
           setCurrentPlayerIndex(nextPlayerIndex);
         }
       );
-      tempHubConnection.on("GameOverResponse", (_) => {
+      tempHubConnection.on("GameOverResponse", (_, winningPlayerId: string) => {
         setCurrentPhase(GamePhase.GameOver);
         hubConnection?.stop();
       });

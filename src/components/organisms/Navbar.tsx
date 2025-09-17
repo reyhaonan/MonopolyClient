@@ -22,7 +22,7 @@ export const Navbar = () => {
   return (
     <div className="navbar flex items-center mx-auto px-4">
       <Link to="/" className="btn btn-ghost text-xl">
-        Boring Monopoly
+        H
       </Link>
 
       <label className="swap swap-rotate ml-auto">
