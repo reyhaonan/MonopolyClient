@@ -5,7 +5,6 @@ import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from "@hookform/resolvers/zod"
 import z from "zod";
 import Button from "../atoms/Button";
-import phrolova from "@/assets/phrolova-ww.gif";
 import { getCookie } from "@/utils/cookie";
 
 const schema = z.object({
@@ -42,7 +41,6 @@ const LoginView = () => {
   return (
     <div className="mx-auto fixed w-full max-w-md px-6 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
       <form onSubmit={handleSubmit(handleLoginAsGuest)} className="mx-auto grid grid-cols-2 gap-4">
-        <img className="w-40 mx-auto col-span-2" src={phrolova} />
         <Controller
           control={control}
           name="username"

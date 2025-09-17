@@ -12,6 +12,7 @@ function RootComponent() {
       <Navbar />
       <Outlet />
       <div className="bg-base-200 -z-50 fixed inset-0"></div>
+      <p className="bottom-1 left-1/2 -translate-x-1/2 fixed opacity-60 text-xs">Made with ❤ for Phrolova</p>
     </React.Fragment>
   );
 }
