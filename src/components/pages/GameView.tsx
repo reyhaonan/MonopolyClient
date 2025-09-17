@@ -19,7 +19,6 @@ import GameConfigForm from "../organisms/GameConfigForm";
 import axios from "axios";
 import { useNavigate } from "@tanstack/react-router";
 import { GameConfigContext } from "@/context/GameConfigContext";
-import Modal from "../molecules/Modal";
 import WinningModal from "../molecules/WinningModal";
 
 type Props = {

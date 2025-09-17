@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react'
+import { forwardRef } from 'react'
 import Modal from './Modal'
 import type { Player } from '@/types/Player'
 import PlayerIndicator from '../atoms/PlayerIndicator'
