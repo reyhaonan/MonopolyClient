@@ -7,7 +7,6 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
-  console.log('cookie?', document.cookie)
   return (
     <React.Fragment>
       <Navbar />
