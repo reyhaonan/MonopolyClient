@@ -250,7 +250,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
           setCurrentPlayerIndex(nextPlayerIndex);
         }
       );
-      tempHubConnection.on("GameOverResponse", (_, winningPlayerId: string) => {
+      tempHubConnection.on("GameOverResponse", (_) => {
         setCurrentPhase(GamePhase.GameOver);
         hubConnection?.stop();
       });
