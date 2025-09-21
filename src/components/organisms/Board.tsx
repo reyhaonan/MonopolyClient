@@ -24,6 +24,7 @@ type ActionButtons = {
     buyPropertyButton: ReactNode;
     payToGetOutOfJailButton: ReactNode;
     useGetOutOfJailCardButton: ReactNode;
+    inviteButton: ReactNode
 };
 
 type Props = {
@@ -52,6 +53,7 @@ const Board = ({
                     <div className="dice1">{diceRoll.roll1}</div>
                     <div className="dice2">{diceRoll.roll2}</div>
                 </div>}
+                {actionButtons.inviteButton}
                 {actionButtons.joinGameButton}
                 {actionButtons.startGameButton}
                 <div className="jailOption flex gap-2">

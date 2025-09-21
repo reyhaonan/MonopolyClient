@@ -161,6 +161,10 @@ export const GameView = ({ gameId }: Props) => {
               unmortgageProperty,
             }}
             actionButtons={{
+              inviteButton: currentPhase === GamePhase.WaitingForPlayers && activePlayers.length < gameConfig.maxPlayers ?
+                <Button className="btn btn-ghost" onClick={() => setClipboard(window.location.href)}>
+                  Copy invite url
+                </Button> : null,
               payToGetOutOfJailButton: (currentPhase === GamePhase.PlayerTurnStart && isMyTurn && currentPlayer.isInJail && currentPlayer.money >= gameConfig.jailFine) ?
                 <Button
                   className="btn btn-primary btn-soft"
@@ -252,8 +256,8 @@ export const GameView = ({ gameId }: Props) => {
         </div>
 
         <div className="flex-1 flex flex-col gap-4">
-          <div>
-            Game Phase: <span className="badge badge-warning mb-2">{GamePhase[currentPhase]}</span><br />
+          <div className="text-xs">
+            Game Phase: <span className="badge badge-warning badge-xs mb-2 text-xs ">{GamePhase[currentPhase]}</span><br />
           </div>
           <PlayersInfo
             players={activePlayers}
@@ -322,3 +326,12 @@ export const GameView = ({ gameId }: Props) => {
     </GameConfigContext>
   );
 };
+
+async function setClipboard(text: string) {
+  const type = "text/plain";
+  const clipboardItemData = {
+    [type]: text,
+  };
+  const clipboardItem = new ClipboardItem(clipboardItemData);
+  await navigator.clipboard.write([clipboardItem]);
+}
