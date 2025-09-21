@@ -9,9 +9,9 @@ const PlayerIndicator = ({ player, hideColorIndicator = false }: Props) => {
     return (
         <span className="flex items-center gap-1 capitalize font-bold">
             {!hideColorIndicator && <span className="w-4 h-4 rounded-full" style={{
-                background: player.hexColor
+                background: player?.hexColor
             }}></span>}
-            {player.name}
+            {player?.name || "Anonymous"}
         </span>
     )
 }
