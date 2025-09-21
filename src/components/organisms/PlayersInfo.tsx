@@ -33,7 +33,7 @@ const PlayersInfo = ({ players, currentPlayerIndex, isPermittedToDeclareBankcrup
 
                 {players.map((player, i) =>
                     <div
-                        className={classNames("list-row flex items-center px-2 py-1 flex-wrap border-2 transition-colors")}
+                        className={classNames("list-row flex items-center px-2 py-2 flex-wrap border-2 transition-colors")}
                         key={player.id}
                         style={{
                             borderColor: currentPlayerIndex === i ? player.hexColor : "transparent"
@@ -55,7 +55,7 @@ const PlayersInfo = ({ players, currentPlayerIndex, isPermittedToDeclareBankcrup
                                 {" | "}
                                 Doubles: {player.consecutiveDoubles}
                                 {" | "}
-                                ID: {player.id.substring(0, 6)}
+                                Free of jail Card: {player.getOutOfJailFreeCards}
                             </div>
                         </div>
 

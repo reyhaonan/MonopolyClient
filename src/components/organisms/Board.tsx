@@ -6,6 +6,7 @@ import type { BoardSpace, CountryProperty } from '@/types/BoardSpace';
 import type { ComponentProps } from 'react';
 import type { ColorGroup } from '@/enums/ColorGroup';
 import SpecialTile from '../molecules/SpecialTile';
+import { SpecialSpaceType } from '@/types/SpecialSpaceType';
 
 
 const BOARD_LAYOUT = {
@@ -23,6 +24,7 @@ type ActionButtons = {
     buyPropertyButton: ReactNode;
     payToGetOutOfJailButton: ReactNode;
     useGetOutOfJailCardButton: ReactNode;
+    inviteButton: ReactNode
 };
 
 type Props = {
@@ -40,7 +42,7 @@ const Board = ({
     tileWidth,
     countryGroupDict,
     ...tileProps
-}: Props & Pick<ComponentProps<typeof PropertyTile>, "tileActions" | "isPermittedToBuyOrSellProperty" | "currentPlayerMoney" | "playersDict">) => {
+}: Props & Pick<ComponentProps<typeof BoardRow>, "chancePopovers" | "treasurePopovers"> & Pick<ComponentProps<typeof PropertyTile>, "tileActions" | "isPermittedToBuyOrSellProperty" | "currentPlayerMoney" | "playersDict">) => {
 
 
     return (
@@ -52,6 +54,7 @@ const Board = ({
                     <div className="dice2">{diceRoll.roll2}</div>
                 </div>}
                 {actionButtons.joinGameButton}
+                {actionButtons.inviteButton}
                 {actionButtons.startGameButton}
                 <div className="jailOption flex gap-2">
                     {actionButtons.payToGetOutOfJailButton}
@@ -64,10 +67,14 @@ const Board = ({
                 {actionButtons.endTurnButton}
             </div>
 
-            <div className="top-left corner rounded-field bg-base-100">GO!</div>
-            <div className="top-right corner rounded-field bg-base-100">JAIL</div>
-            <div className="bottom-right corner rounded-field bg-base-100">PARK</div>
-            <div className="bottom-left corner rounded-field bg-base-100">Go to Jail!</div>
+            <div className="top-left corner rounded-field bg-base-100 text-3xl font-bold flex items-center justify-center">GO!!</div>
+            <div className="top-right corner rounded-field bg-base-100 text-xl font-bold flex">
+                <div className="jail bg-base-200 p-2 mt-auto aspect-square h-2/3 flex items-center justify-center">
+                    JAIL
+                </div>
+            </div>
+            <div className="bottom-right corner rounded-field bg-base-100 text-xl font-bold flex items-center justify-center">Free park</div>
+            <div className="bottom-left corner rounded-field bg-base-100 text-xl font-bold flex items-center justify-center">Go to Jail!</div>
 
             <BoardRow
                 countryGroupDict={countryGroupDict}
@@ -112,15 +119,18 @@ type BoardRowProps = TileProps & {
     orientation: 'top' | 'right' | 'bottom' | 'left';
     className?: string;
     countryGroupDict: Record<ColorGroup, CountryProperty[]>
+
+    chancePopovers: Map<number, string>,
+    treasurePopovers: Map<number, string>
 };
-const BoardRow = ({ spaces, orientation, className, countryGroupDict, ...tileProps }: BoardRowProps) => {
-
-
-
+const BoardRow = ({ spaces, orientation, className, countryGroupDict, chancePopovers, treasurePopovers, ...tileProps }: BoardRowProps) => {
     return (
         <div className={`row flex ${className}`}>
             {spaces.map((space) => {
-                if (space.$type === "special") return <SpecialTile space={space} orientation={orientation} />
+                if (space.$type === "special") return <SpecialTile
+                    popoverMessage={space.type == SpecialSpaceType.Chance ? chancePopovers.get(space.boardPosition) : space.type == SpecialSpaceType.Treasure ? treasurePopovers.get(space.boardPosition) : undefined}
+                    space={space}
+                    orientation={orientation} />
                 return (
                     <PropertyTile
                         key={space.id}

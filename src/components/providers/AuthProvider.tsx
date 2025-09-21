@@ -3,6 +3,7 @@ import { AuthContext } from "../../context/AuthContext";
 import LoginView from "../pages/LoginView";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/services/auth";
+import { Navbar } from "../organisms/Navbar";
 
 type Props = {
   children: ReactNode;
@@ -23,7 +24,10 @@ export const AuthProvider = ({ children }: Props) => {
   if (isLoading) return <>Loading...</>;
 
   return data ? (
-    <AuthContext value={data.data}>{children}</AuthContext>
+    <>
+      <Navbar />
+      <AuthContext value={data.data}>{children}</AuthContext>
+    </>
   ) : (
     <LoginView />
   );

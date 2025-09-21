@@ -65,7 +65,7 @@ const PropertyTile = ({
     const isOwnedByPlayer = space.ownerId === playerId;
 
     // Space country type shi
-    const playerIsGroupOwner = !!group?.every(c => c.ownerId === playerId) || true
+    const playerIsGroupOwner = !!group?.every(c => c.ownerId === playerId)
     const groupHasHouse = !!group?.some(c => c.currentRentStage > RentStage.Unimproved)
     const groupHasMortgagedProperty = !!group?.some(c => c.isMortgaged)
     return (
@@ -122,7 +122,7 @@ const PropertyTile = ({
                     <div className="divider my-2"></div>
                     {isOwnedByPlayer && isPermittedToBuyOrSellProperty &&
                         <div className="property-options flex gap-2 mb-4">
-                            {space.$type === "country" && (<>
+                            {space.$type === "country" && playerIsGroupOwner && (<>
                                 <Button
                                     className='btn btn-sm btn-square btn-primary'
                                     disabled={!playerIsGroupOwner || groupHasMortgagedProperty || space.currentRentStage === RentStage.Hotel || currentPlayerMoney < space.houseCost || (gameConfig.balancedHousePurchase &&
@@ -150,7 +150,7 @@ const PropertyTile = ({
                                     </svg>
                                 </Button>
                             </>)}
-                            <div className="ml-auto">
+                            <div className="ml-auto flex gap-2">
 
                                 {gameConfig.allowMortgagingProperties ? space.isMortgaged ?
                                     <Button
@@ -198,19 +198,12 @@ const PropertyTile = ({
                 className={'relative tile w-fit flex flex-col justify-between rounded-field bg-base-100 select-none cursor-pointer'}
             >
                 <div className="opacity-0 text-sm">PHROLOVA</div>
-                <div className={classNames("text-center font-bold py-2 absolute text-sm",
+                <div className={classNames("text-center font-semibold py-2 absolute text-sm",
                     orientation === "top" || orientation === "bottom" ? "left-1/2 -translate-x-1/2" : "top-1/2 -translate-y-1/2",
                 )}>
                     {space.name}
                 </div>
-                <div className="text-xs opacity-40 m-auto absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
 
-                    {space.boardPosition}
-                    <br />
-                    {playerIsGroupOwner ? "Yea" : "Na"}
-                    <br />
-                    {space.$type === "country" && RentStage[space.currentRentStage]}
-                </div>
 
                 <div className={cn("rounded-field flex items-center justify-center text-center text-sm font-semibold",
                     orientation === "top" || orientation === "bottom" ? "h-1/4" : "w-1/4"

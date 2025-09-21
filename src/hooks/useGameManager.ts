@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import * as signalR from "@microsoft/signalr";
 import type { GameState } from "@/types/GameState";
 import type { Player } from "@/types/Player";
-import type { BoardSpace } from "@/types/BoardSpace";
+import type { BoardSpace, PropertySpace } from "@/types/BoardSpace";
 import type { TransactionInfo } from "@/types/TransactionInfo";
 import type { Trade } from "@/types/Trade";
 import { GamePhase } from "@/enums/GamePhase";
@@ -10,14 +10,18 @@ import type { RollResult } from "@/types/RollResult";
 import { produce } from "immer";
 import { CustomHttpClient } from "@/utils/axiosInstance";
 import { gameConfigInitial, type GameConfig } from "@/types/GameConfig";
+import { ChanceOutcome } from "@/types/ChanceOutcome";
+import { TreasureOutcome } from "@/types/TreasureOutcome";
+import { RentStage } from "@/enums/RentStage";
 
-const MOVEMENT_SPEED = 100;
+const MOVEMENT_SPEED = 50;
 const MAXIMUM_SPACE = 40;
+const POPOVER_TIME_MS = 5000;
 
 const useGameManager = (gameId?: string, playerId?: string) => {
   const [hubConnection, setHubConnection] = useState<signalR.HubConnection | null>(null);
 
-  const [activePlayers, setActivePlayers] = useState<Player[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [board, setBoard] = useState<{ spaces: BoardSpace[] }>({ spaces: [] });
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState<number>(0);
   const [diceRoll1, setDiceRoll1] = useState<number>(0);
@@ -26,8 +30,31 @@ const useGameManager = (gameId?: string, playerId?: string) => {
   const [transactionsHistory, setTransactionsHistory] = useState<TransactionInfo[]>([]);
   const [activeTrades, setActiveTrades] = useState<Trade[]>([]);
   const [gameConfig, setGameConfig] = useState<GameConfig>(gameConfigInitial);
-  const currentPlayer = activePlayers[currentPlayerIndex];
+  const [chancePopovers, setChancePopovers] = useState<Map<number, string>>(new Map());
+  const [treasurePopovers, setTreasurePopovers] = useState<Map<number, string>>(new Map());
+
+  const currentPlayer = players[currentPlayerIndex];
   const currentPlayerSpace = currentPlayer ? board.spaces[currentPlayer.currentPosition] : null;
+
+  function queueTreasurePopoverRemoval(key: number, delay: number) {
+    setTimeout(() => {
+      setTreasurePopovers((state) =>
+        produce(state, (draft) => {
+          draft.delete(key);
+        })
+      );
+    }, delay);
+  }
+
+  function queueChancePopoverRemoval(key: number, delay: number) {
+    setTimeout(() => {
+      setChancePopovers((state) =>
+        produce(state, (draft) => {
+          draft.delete(key);
+        })
+      );
+    }, delay);
+  }
 
   useEffect(() => {
     if (!gameId || !playerId) return;
@@ -42,11 +69,11 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         .build();
 
       tempHubConnection.on("JoinGameResponse", (_, players: Player[]) => {
-        setActivePlayers(players);
+        setPlayers(players);
       });
 
       tempHubConnection.on("StartGameResponse", (_, newPlayerOrder: Player[]) => {
-        setActivePlayers(newPlayerOrder);
+        setPlayers(newPlayerOrder);
         setCurrentPlayerIndex(0);
         setCurrentPhase(GamePhase.PlayerTurnStart);
       });
@@ -54,7 +81,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       tempHubConnection.on(
         "PayToGetOutOfJailResponse",
         (_, playerId: string, transactions: TransactionInfo[]) => {
-          setActivePlayers((state) =>
+          setPlayers((state) =>
             produce(state, (draft) => {
               const playerIndex = draft.findIndex((player) => player.id === playerId);
               if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
@@ -69,7 +96,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         }
       );
       tempHubConnection.on("UseGetOutOfJailCardResponse", (_, playerId: string) => {
-        setActivePlayers((state) =>
+        setPlayers((state) =>
           produce(state, (draft) => {
             const playerIndex = draft.findIndex((player) => player.id === playerId);
             if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
@@ -85,7 +112,8 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       });
 
       tempHubConnection.on("SyncGameResponse", (gameState: GameState) => {
-        setActivePlayers(gameState.activePlayers);
+    
+        setPlayers(gameState.players);
         setBoard(gameState.board);
         setCurrentPlayerIndex(gameState.currentPlayerIndex);
         setDiceRoll1(0);
@@ -101,8 +129,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         setDiceRoll1(rollResult.dice.roll1);
         setDiceRoll2(rollResult.dice.roll2);
 
-        // TODO: Animate
-        setActivePlayers((state) => {
+        setPlayers((state) => {
           return produce(state, (draft) => {
             const playerIndex = draft.findIndex((player) => player.id === playerId);
             if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
@@ -111,38 +138,99 @@ const useGameManager = (gameId?: string, playerId?: string) => {
               rollResult.playerState.newPlayerJailTurnsRemaining;
             draft[playerIndex].isInJail = rollResult.playerState.isInJail;
             draft[playerIndex].consecutiveDoubles = rollResult.playerState.consecutiveDoubles;
-
-            rollResult.transaction.forEach((transaction) => processTransaction(draft, transaction));
           });
         });
 
         setCurrentPhase(GamePhase.MovingToken);
         let curr = 0;
         let destination = rollResult.dice.roll1 + rollResult.dice.roll2;
-        const intervalId = setInterval(() => {
-          curr++;
-          setActivePlayers((state) =>
+        if (!rollResult.playerState.isInJail) {
+          const intervalId = setInterval(() => {
+            curr++;
+            setPlayers((state) =>
+              produce(state, (draft) => {
+                const playerIndex = draft.findIndex((player) => player.id === playerId);
+                if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
+                draft[playerIndex].currentPosition =
+                  (draft[playerIndex].currentPosition + 1) % MAXIMUM_SPACE;
+              })
+            );
+            if (curr == destination) {
+              setPlayers((state) =>
+                produce(state, (draft) => {
+                  rollResult.transaction.forEach((transaction) =>
+                    processTransaction(draft, transaction)
+                  );
+                  Object.entries(rollResult.treasureCardsDrawn).forEach(([position, card]) => {
+                    const playerIndex = draft.findIndex((player) => player.id === playerId);
+                    if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
+
+                    setTreasurePopovers((state) =>
+                      produce(state, (draft) => {
+                        draft.set(Number(position), card.flavorText);
+                      })
+                    );
+
+                    queueTreasurePopoverRemoval(Number(position), POPOVER_TIME_MS);
+
+                    switch (card.treasureOutcome) {
+                      case TreasureOutcome.AdvanceToGo:
+                        draft[playerIndex].currentPosition = 0;
+                        break;
+                      case TreasureOutcome.GetOutOfJailFreeCard:
+                        draft[playerIndex].getOutOfJailFreeCards++;
+                        break;
+                    }
+                  });
+                  Object.entries(rollResult.chanceCardsDrawn).forEach(([position, card]) => {
+                    const playerIndex = draft.findIndex((player) => player.id === playerId);
+                    if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
+
+                    setChancePopovers((state) =>
+                      produce(state, (draft) => {
+                        draft.set(Number(position), card.flavorText);
+                      })
+                    );
+
+                    queueChancePopoverRemoval(Number(position), POPOVER_TIME_MS);
+
+                    switch (card.chanceOutcome) {
+                      case ChanceOutcome.AdvanceToGo:
+                        draft[playerIndex].currentPosition = 0;
+                        break;
+
+                      case ChanceOutcome.GetOutOfJailFreeCard:
+                        draft[playerIndex].getOutOfJailFreeCards++;
+                        break;
+                      case ChanceOutcome.AdvanceToNearestRailroad:
+                      case ChanceOutcome.AdvanceToNearestUtility:
+                      case ChanceOutcome.AdvanceToProperty:
+                      case ChanceOutcome.GoBackXSpace:
+                        draft[playerIndex].currentPosition =
+                          rollResult.playerState.newPlayerPosition;
+                    }
+                  });
+                })
+              );
+              setCurrentPhase(rollResult.newGamePhase);
+              clearInterval(intervalId);
+            }
+          }, MOVEMENT_SPEED);
+        } else {
+          setPlayers((state) =>
             produce(state, (draft) => {
               const playerIndex = draft.findIndex((player) => player.id === playerId);
               if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
-              draft[playerIndex].currentPosition =
-                (draft[playerIndex].currentPosition + 1) % MAXIMUM_SPACE;
+              // JAIL
+              draft[playerIndex].currentPosition = rollResult.playerState.newPlayerPosition;
+              rollResult.transaction.forEach((transaction) =>
+                processTransaction(draft, transaction)
+              );
             })
           );
-          if (curr == destination) {
-            if (rollResult.playerState.newPlayerJailTurnsRemaining === 3) {
-              setActivePlayers((state) =>
-                produce(state, (draft) => {
-                  const playerIndex = draft.findIndex((player) => player.id === playerId);
-                  if (playerIndex === -1) throw new Error(`No player found for id: ${playerId}`);
-                  draft[playerIndex].currentPosition = rollResult.playerState.newPlayerPosition;
-                })
-              );
-            }
-            setCurrentPhase(rollResult.newGamePhase);
-            clearInterval(intervalId);
-          }
-        }, MOVEMENT_SPEED);
+
+          setCurrentPhase(rollResult.newGamePhase);
+        }
 
         setTransactionsHistory((state) => rollResult.transaction.concat(state));
       });
@@ -154,11 +242,27 @@ const useGameManager = (gameId?: string, playerId?: string) => {
 
       tempHubConnection.on(
         "DeclareBankcruptcyResponse",
-        (_, removedPlayerId: string, nextPlayerIndex: number) => {
-          setActivePlayers((state) =>
+        (_, bankcruptPlayerId: string, nextPlayerIndex: number) => {
+          setPlayers((state) =>
             produce(state, (draft) => {
-              const index = draft.findIndex((p) => p.id === removedPlayerId);
-              if (index != -1) draft.splice(index, 1);
+              const index = draft.findIndex((p) => p.id === bankcruptPlayerId);
+              if (index != -1) {
+                draft[index].isBankrupt = true
+                draft[index].propertiesOwned.forEach(propertyId => {
+                setBoard(state => produce(state, boardDraft => {
+                    const propertyIndex = boardDraft.spaces.findIndex(p => p.id === propertyId && p.$type !== "special");
+                    if(propertyIndex){
+                      const property = boardDraft.spaces[propertyIndex] as PropertySpace
+                      property.ownerId = null
+                      property.isMortgaged = false
+                      if(property.$type == "country")property.currentRentStage = RentStage.Unimproved
+                    }
+                  }))
+                })
+                setActiveTrades(state => state.filter(t => t.initiatorId != bankcruptPlayerId && t.recipientId != bankcruptPlayerId))
+
+                draft[index].propertiesOwned = []
+              }
             })
           );
           setCurrentPlayerIndex(nextPlayerIndex);
@@ -172,7 +276,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       tempHubConnection.on(
         "PropertyBoughtResponse",
         (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
-          setActivePlayers((state) =>
+          setPlayers((state) =>
             produce(state, (draft) => {
               const activePlayerIndex = draft.findIndex((p) => p.id === buyerId);
               if (activePlayerIndex == -1) throw new Error("Buyer is not found");
@@ -204,7 +308,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       tempHubConnection.on(
         "PropertySoldResponse",
         (_, buyerId: string, propertyId: string, transactions: TransactionInfo[]) => {
-          setActivePlayers((state) =>
+          setPlayers((state) =>
             produce(state, (draft) => {
               const activePlayerIndex = draft.findIndex((p) => p.id === buyerId);
               if (activePlayerIndex == -1) throw new Error("Buyer is not found");
@@ -244,7 +348,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       tempHubConnection.on(
         "PropertyMortgagedResponse",
         (_, propertyId: string, transactions: TransactionInfo[]) => {
-          setActivePlayers((state) =>
+          setPlayers((state) =>
             produce(state, (draft) => {
               transactions.forEach((transactions) => processTransaction(draft, transactions));
             })
@@ -275,7 +379,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       tempHubConnection.on(
         "PropertyUnmortgagedResponse",
         (_, propertyId: string, transactions: TransactionInfo[]) => {
-          setActivePlayers((state) =>
+          setPlayers((state) =>
             produce(state, (draft) => {
               transactions.forEach((transactions) => processTransaction(draft, transactions));
             })
@@ -306,7 +410,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       tempHubConnection.on(
         "PropertyUpgradeResponse",
         (_, propertyId: string, transactions: TransactionInfo[]) => {
-          setActivePlayers((state) =>
+          setPlayers((state) =>
             produce(state, (draft) => {
               transactions.forEach((transactions) => processTransaction(draft, transactions));
             })
@@ -332,7 +436,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       tempHubConnection.on(
         "PropertyDowngradeResponse",
         (_, propertyId: string, transactions: TransactionInfo[]) => {
-          setActivePlayers((state) =>
+          setPlayers((state) =>
             produce(state, (draft) => {
               transactions.forEach((transactions) => processTransaction(draft, transactions));
             })
@@ -379,12 +483,15 @@ const useGameManager = (gameId?: string, playerId?: string) => {
             })
           );
 
-          setActivePlayers((state) =>
+          setPlayers((state) =>
             produce(state, (draft) => {
+              const initiatorIndex = draft.findIndex((p) => p.id === trade.initiatorId);
+              if (initiatorIndex == -1) throw new Error("Initiator not found");
+
+              const recipientIndex = draft.findIndex((p) => p.id === trade.recipientId);
+              if (recipientIndex == -1) throw new Error("Recipient not found");
               // Update the initiator
               {
-                const initiatorIndex = draft.findIndex((p) => p.id === trade.initiatorId);
-                if (initiatorIndex == -1) throw new Error("Initiator not found");
                 draft[initiatorIndex].propertiesOwned = draft[
                   initiatorIndex
                 ].propertiesOwned.filter((pr) => !trade.propertyOffer.includes(pr));
@@ -393,12 +500,22 @@ const useGameManager = (gameId?: string, playerId?: string) => {
 
               // Update the recipient
               {
-                const recipientIndex = draft.findIndex((p) => p.id === trade.recipientId);
-                if (recipientIndex == -1) throw new Error("Recipient not found");
                 draft[recipientIndex].propertiesOwned = draft[
                   recipientIndex
                 ].propertiesOwned.filter((pr) => !trade.propertyCounterOffer.includes(pr));
                 draft[recipientIndex].propertiesOwned.push(...trade.propertyOffer);
+              }
+
+              // Update get out of jail card
+              if (trade.getOutOfJailCardFromInitiator > 0) {
+                draft[initiatorIndex].getOutOfJailFreeCards +=
+                  trade.getOutOfJailCardFromInitiator * -1;
+                draft[recipientIndex].getOutOfJailFreeCards += trade.getOutOfJailCardFromInitiator;
+              }
+              if (trade.getOutOfJailCardFromRecipient > 0) {
+                draft[recipientIndex].getOutOfJailFreeCards +=
+                  trade.getOutOfJailCardFromRecipient * -1;
+                draft[initiatorIndex].getOutOfJailFreeCards += trade.getOutOfJailCardFromRecipient;
               }
 
               transactions.forEach((transactions) => processTransaction(draft, transactions));
@@ -600,7 +717,9 @@ const useGameManager = (gameId?: string, playerId?: string) => {
     propertyOffer: string[],
     propertyCounterOffer: string[],
     moneyFromInitiator: number,
-    moneyFromRecipient: number
+    moneyFromRecipient: number,
+    getOutOfJailCardFromInitiator: number,
+    getOutOfJailCardFromRecipient: number
   ) => {
     if (!hubConnection) return;
     await hubConnection
@@ -611,7 +730,9 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         propertyOffer,
         propertyCounterOffer,
         moneyFromInitiator,
-        moneyFromRecipient
+        moneyFromRecipient,
+        getOutOfJailCardFromInitiator,
+        getOutOfJailCardFromRecipient
       )
       .catch((err) => {
         console.error(err);
@@ -623,7 +744,9 @@ const useGameManager = (gameId?: string, playerId?: string) => {
     propertyOffer: string[],
     propertyCounterOffer: string[],
     moneyFromInitiator: number,
-    moneyFromRecipient: number
+    moneyFromRecipient: number,
+    getOutOfJailCardFromInitiator: number,
+    getOutOfJailCardFromRecipient: number
   ) => {
     if (!hubConnection) return;
     await hubConnection
@@ -634,7 +757,9 @@ const useGameManager = (gameId?: string, playerId?: string) => {
         propertyOffer,
         propertyCounterOffer,
         moneyFromInitiator,
-        moneyFromRecipient
+        moneyFromRecipient,
+        getOutOfJailCardFromInitiator,
+        getOutOfJailCardFromRecipient
       )
       .catch((err) => {
         console.error(err);
@@ -667,7 +792,7 @@ const useGameManager = (gameId?: string, playerId?: string) => {
 
   return {
     gameState: {
-      activePlayers,
+      players,
       board,
       currentPlayerIndex,
       currentPlayer,
@@ -678,6 +803,8 @@ const useGameManager = (gameId?: string, playerId?: string) => {
       transactionsHistory,
       activeTrades,
       gameConfig,
+      chancePopovers,
+      treasurePopovers,
     },
     hubConnection,
     joinGame,

@@ -1,6 +1,6 @@
 export enum SpecialSpaceType {
   Go,
-  CommunityChest,
+  Treasure,
   Chance,
   IncomeTax,
   LuxuryTax,

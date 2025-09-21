@@ -1,69 +1,63 @@
-# React + TypeScript + Vite
+# Monopoly Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is a React-based Monopoly game client. It uses TanStack Router for routing and React Query for data fetching.
 
-Currently, two official plugins are available:
+## Project Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The project is structured as follows:
 
-## Expanding the ESLint configuration
+-   `.gitignore`: Specifies intentionally untracked files that Git should ignore.
+-   `.prettierrc`: Configuration file for Prettier, a code formatter.
+-   `eslint.config.js`: Configuration file for ESLint, a JavaScript linter.
+-   `index.html`: The main HTML file for the application.
+-   `package.json`: Contains metadata about the project, including dependencies and scripts.
+-   `pnpm-lock.yaml`: Records the versions of dependencies used in the project.
+-   `README.md`: This file, providing an overview of the project.
+-   `tsconfig.app.json`, `tsconfig.json`, `tsconfig.node.json`: Configuration files for TypeScript.
+-   `vite.config.ts`: Configuration file for Vite, a build tool.
+-   `wrangler.toml`: Configuration file for Cloudflare Wrangler, used for deploying the application to Cloudflare Workers.
+-   `public/`: Contains static assets such as `favicon.svg`.
+-   `src/`: Contains the source code for the application.
+    -   `index.css`: Global CSS file.
+    -   `main.tsx`: The entry point for the React application.
+    -   `routeTree.gen.ts`: Automatically generated file defining the routes for the application.
+    -   `vite-env.d.ts`: TypeScript declaration file for Vite environment variables.
+    -   `assets/`: Contains assets such as images and icons.
+    -   `components/`: Contains React components.
+        -   `atoms/`: Contains atomic components such as `Button`, `PlayerIndicator`, and icons.
+        -   `molecules/`: Contains molecule components such as `Modal`, `PropertyTile`, `SpecialTile`, `TradeModal`, and `WinningModal`.
+        -   `organisms/`: Contains organism components such as `Board`, `GameConfigForm`, `Navbar`, `PlayersInfo`, `PlayersPawnsRender`, `TradeSection`, and `TransactionHistory`.
+        -   `pages/`: Contains page components such as `GameView`, `HomeView`, `LoginView`, and `OldGameView`.
+        -   `providers/`: Contains provider components such as `AuthProvider`.
+        -   `templates/`: Contains template components.
+    -   `context/`: Contains React context files such as `AuthContext` and `GameConfigContext`.
+    -   `enums/`: Contains enums such as `ColorGroup`, `GamePhase`, `RentStage`, and `TransactionType`.
+    -   `hooks/`: Contains custom React hooks such as `useAuth`, `useGameConfig`, and `useGameManager`.
+    -   `routes/`: Contains route definitions.
+    -   `services/`: Contains API service files such as `auth.ts` and `game.ts`.
+    -   `types/`: Contains TypeScript type definitions.
+    -   `utils/`: Contains utility files such as `axiosInstance.ts` and `cookie.ts`.
+    -   `views/`: Contains view components.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Dependencies
 
-```js
-export default tseslint.config([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
+-   `@tanstack/react-query`: For data fetching.
+-   `@tanstack/react-router`: For routing.
+-   `react`: For building the user interface.
+-   `react-dom`: For rendering React components in the browser.
+-   `immer`: For working with immutable data.
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## Running the Application
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+To run the application, you need to have Node.js and pnpm installed. Then, run the following commands:
+
+```bash
+pnpm install
+pnpm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+This will start the development server. Open your browser and navigate to `http://localhost:5173` to view the application.
 
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
+## Contributing
 
-export default tseslint.config([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-```
+Contributions are welcome! Please open an issue or submit a pull request.

@@ -19,6 +19,7 @@ import GameConfigForm from "../organisms/GameConfigForm";
 import axios from "axios";
 import { useNavigate } from "@tanstack/react-router";
 import { GameConfigContext } from "@/context/GameConfigContext";
+import WinningModal from "../molecules/WinningModal";
 
 type Props = {
   gameId: string;
@@ -80,18 +81,21 @@ export const GameView = ({ gameId }: Props) => {
       currentPlayer,
       currentPlayerSpace,
       currentPlayerIndex,
-      activePlayers,
+      players,
       diceRoll1,
       diceRoll2,
       activeTrades,
       transactionsHistory,
-      gameConfig
+      gameConfig,
+      chancePopovers,
+      treasurePopovers
     } } = useGameManager(data?.data, playerId || undefined);
 
-  const isInGame = activePlayers.findIndex(p => p.id === playerId) !== -1
+  const isInGame = players.findIndex(p => p.id === playerId) !== -1
 
   const isMyTurn = currentPlayer?.id === playerId
 
+  const activePlayers = players.filter(p => !p.isBankrupt);
 
   const [tileHeight, setTileHeight] = useState(0)
   const [tileWidth, setTileWidth] = useState(0)
@@ -121,18 +125,25 @@ export const GameView = ({ gameId }: Props) => {
     }, {} as Record<ColorGroup, CountryProperty[]>)
   }, [board.spaces]);
 
-  const playersDict = activePlayers.reduce((prev, player) => {
+  const playersDict = players.reduce((prev, player) => {
     prev[player.id] = player
     return prev
   }, {} as { [key: Player['id']]: Player })
 
   const [selectedColor, setSelectedColor] = useState("");
 
+
+  const winningModalRef = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    if (currentPhase === GamePhase.GameOver) winningModalRef.current?.showModal()
+  }, [currentPhase])
   return (
     <GameConfigContext value={gameConfig}>
       <main className="container mx-auto flex gap-4 pb-16">
         <div className="relative">
           <Board
+            chancePopovers={chancePopovers}
+            treasurePopovers={treasurePopovers}
             tileWidth={tileWidth}
             playersDict={playersDict}
             countryGroupDict={countryGroupDict}
@@ -151,6 +162,10 @@ export const GameView = ({ gameId }: Props) => {
               unmortgageProperty,
             }}
             actionButtons={{
+              inviteButton: currentPhase === GamePhase.WaitingForPlayers && players.length < gameConfig.maxPlayers ?
+                <Button className="btn btn-info btn-soft" onClick={() => setClipboard(window.location.href)}>
+                  Copy invite url
+                </Button> : null,
               payToGetOutOfJailButton: (currentPhase === GamePhase.PlayerTurnStart && isMyTurn && currentPlayer.isInJail && currentPlayer.money >= gameConfig.jailFine) ?
                 <Button
                   className="btn btn-primary btn-soft"
@@ -169,7 +184,7 @@ export const GameView = ({ gameId }: Props) => {
                 </Button>
                 : null,
               joinGameButton:
-                activePlayers.length < gameConfig.maxPlayers && currentPhase === GamePhase.WaitingForPlayers && !isInGame ?
+                players.length < gameConfig.maxPlayers && currentPhase === GamePhase.WaitingForPlayers && !isInGame ?
                   <div className="flex flex-col items-center">
                     <div className="text-xs opacity-60">Please select a color</div>
                     <div className="colorSelection grid grid-cols-4 gap-2 items-center my-4">
@@ -179,12 +194,12 @@ export const GameView = ({ gameId }: Props) => {
                           className={
                             classNames("btn btn-circle border-0",
                               color === selectedColor && "ring-4",
-                              activePlayers.some(p => p.hexColor === color) && "btn-disabled opacity-10"
+                              players.some(p => p.hexColor === color) && "btn-disabled opacity-10"
                             )
                           }
                           style={{ background: color }}
                           onClick={() => setSelectedColor(color)}
-                          disabled={activePlayers.some(p => p.hexColor === color)}
+                          disabled={players.some(p => p.hexColor === color)}
                         ></Button>
                       )}
                     </div>
@@ -203,6 +218,7 @@ export const GameView = ({ gameId }: Props) => {
                   <Button
                     className="btn btn-primary"
                     onClick={() => rollDice()}
+                    disabled={currentPlayer.money < 0}
                   >
                     Roll dice
                   </Button> : null
@@ -211,12 +227,13 @@ export const GameView = ({ gameId }: Props) => {
                 <Button
                   className="btn btn-error btn-soft"
                   onClick={() => endTurn()}
+                  disabled={currentPlayer.money < 0}
                 >
                   End Turn
                 </Button> : null
               ,
               startGameButton:
-                activePlayers.length >= gameConfig.minPlayers && isInGame && currentPhase === GamePhase.WaitingForPlayers ?
+                players.length >= gameConfig.minPlayers && isInGame && currentPhase === GamePhase.WaitingForPlayers ?
                   <Button
                     className="btn btn-primary"
                     onClick={() => startGame()}
@@ -240,8 +257,8 @@ export const GameView = ({ gameId }: Props) => {
         </div>
 
         <div className="flex-1 flex flex-col gap-4">
-          <div>
-            Game Phase: <span className="badge badge-warning mb-2">{GamePhase[currentPhase]}</span><br />
+          <div className="text-xs">
+            Game Phase: <span className="badge badge-warning badge-xs mb-2 text-xs ">{GamePhase[currentPhase]}</span><br />
           </div>
           <PlayersInfo
             players={activePlayers}
@@ -251,7 +268,7 @@ export const GameView = ({ gameId }: Props) => {
           />
           <TradeSection
             countryGroupDict={countryGroupDict}
-            disableTrade={!isInGame || activePlayers.length < gameConfig.minPlayers || currentPhase === GamePhase.WaitingForPlayers}
+            disableTrade={!isInGame || players.length < gameConfig.minPlayers || currentPhase === GamePhase.WaitingForPlayers || currentPhase === GamePhase.GameOver}
             players={activePlayers}
             activeTrades={activeTrades}
             spaces={board.spaces}
@@ -261,9 +278,19 @@ export const GameView = ({ gameId }: Props) => {
                 offer,
                 counterOffer,
                 moneyFromInitiator,
-                moneyFromRecipient
+                moneyFromRecipient,
+                getOutOfJailCardFromInitiator,
+                getOutOfJailCardFromRecipient
               }) =>
-                initiateTrade(recipientId, offer, counterOffer, moneyFromInitiator, moneyFromRecipient)
+                initiateTrade(
+                  recipientId,
+                  offer,
+                  counterOffer,
+                  moneyFromInitiator,
+                  moneyFromRecipient,
+                  getOutOfJailCardFromInitiator.length,
+                  getOutOfJailCardFromRecipient.length
+                )
             }
             onNegotiateTrade={
               ({
@@ -271,9 +298,19 @@ export const GameView = ({ gameId }: Props) => {
                 counterOffer,
                 moneyFromInitiator,
                 moneyFromRecipient,
-                tradeId
+                tradeId,
+                getOutOfJailCardFromInitiator,
+                getOutOfJailCardFromRecipient
               }) =>
-                negotiateTrade(tradeId, offer, counterOffer, moneyFromInitiator, moneyFromRecipient)
+                negotiateTrade(
+                  tradeId,
+                  offer,
+                  counterOffer,
+                  moneyFromInitiator,
+                  moneyFromRecipient,
+                  getOutOfJailCardFromInitiator.length,
+                  getOutOfJailCardFromRecipient.length
+                )
             }
             onAcceptTrade={acceptTrade}
             onRejectTrade={rejectTrade}
@@ -285,6 +322,17 @@ export const GameView = ({ gameId }: Props) => {
         {/* As a reference */}
         <div className="aspect-[21/34] fixed bottom-0 left-0 -z-50 w-fit opacity-0 text-sm" ref={tileRef}>PHROLOVA</div>
       </main>
+
+      <WinningModal onClose={() => winningModalRef.current?.close()} ref={winningModalRef} winningPlayer={activePlayers[0]} />
     </GameConfigContext>
   );
 };
+
+async function setClipboard(text: string) {
+  const type = "text/plain";
+  const clipboardItemData = {
+    [type]: text,
+  };
+  const clipboardItem = new ClipboardItem(clipboardItemData);
+  await navigator.clipboard.write([clipboardItem]);
+}
