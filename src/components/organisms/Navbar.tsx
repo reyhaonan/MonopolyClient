@@ -21,8 +21,8 @@ export const Navbar = () => {
 
   return (
     <div className="navbar flex items-center mx-auto px-4">
-      <Link to="/" className="btn btn-ghost text-xl">
-        Monopoly_
+      <Link to="/" className="btn btn-ghost text-xl flex items-end">
+        Monopoly_ <span className="text-xs opacity-40">ver 0.1.0-alpha</span>
       </Link>
 
       <label className="swap swap-rotate ml-auto">

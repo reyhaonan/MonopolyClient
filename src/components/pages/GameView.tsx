@@ -162,7 +162,7 @@ export const GameView = ({ gameId }: Props) => {
             }}
             actionButtons={{
               inviteButton: currentPhase === GamePhase.WaitingForPlayers && activePlayers.length < gameConfig.maxPlayers ?
-                <Button className="btn btn-ghost" onClick={() => setClipboard(window.location.href)}>
+                <Button className="btn btn-info btn-soft" onClick={() => setClipboard(window.location.href)}>
                   Copy invite url
                 </Button> : null,
               payToGetOutOfJailButton: (currentPhase === GamePhase.PlayerTurnStart && isMyTurn && currentPlayer.isInJail && currentPlayer.money >= gameConfig.jailFine) ?

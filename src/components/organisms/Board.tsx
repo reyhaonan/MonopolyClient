@@ -53,8 +53,8 @@ const Board = ({
                     <div className="dice1">{diceRoll.roll1}</div>
                     <div className="dice2">{diceRoll.roll2}</div>
                 </div>}
-                {actionButtons.inviteButton}
                 {actionButtons.joinGameButton}
+                {actionButtons.inviteButton}
                 {actionButtons.startGameButton}
                 <div className="jailOption flex gap-2">
                     {actionButtons.payToGetOutOfJailButton}
