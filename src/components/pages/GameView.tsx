@@ -81,7 +81,7 @@ export const GameView = ({ gameId }: Props) => {
       currentPlayer,
       currentPlayerSpace,
       currentPlayerIndex,
-      activePlayers,
+      players,
       diceRoll1,
       diceRoll2,
       activeTrades,
@@ -91,10 +91,11 @@ export const GameView = ({ gameId }: Props) => {
       treasurePopovers
     } } = useGameManager(data?.data, playerId || undefined);
 
-  const isInGame = activePlayers.findIndex(p => p.id === playerId) !== -1
+  const isInGame = players.findIndex(p => p.id === playerId) !== -1
 
   const isMyTurn = currentPlayer?.id === playerId
 
+  const activePlayers = players.filter(p => !p.isBankrupt);
 
   const [tileHeight, setTileHeight] = useState(0)
   const [tileWidth, setTileWidth] = useState(0)
@@ -124,7 +125,7 @@ export const GameView = ({ gameId }: Props) => {
     }, {} as Record<ColorGroup, CountryProperty[]>)
   }, [board.spaces]);
 
-  const playersDict = activePlayers.reduce((prev, player) => {
+  const playersDict = players.reduce((prev, player) => {
     prev[player.id] = player
     return prev
   }, {} as { [key: Player['id']]: Player })
@@ -161,7 +162,7 @@ export const GameView = ({ gameId }: Props) => {
               unmortgageProperty,
             }}
             actionButtons={{
-              inviteButton: currentPhase === GamePhase.WaitingForPlayers && activePlayers.length < gameConfig.maxPlayers ?
+              inviteButton: currentPhase === GamePhase.WaitingForPlayers && players.length < gameConfig.maxPlayers ?
                 <Button className="btn btn-info btn-soft" onClick={() => setClipboard(window.location.href)}>
                   Copy invite url
                 </Button> : null,
@@ -183,7 +184,7 @@ export const GameView = ({ gameId }: Props) => {
                 </Button>
                 : null,
               joinGameButton:
-                activePlayers.length < gameConfig.maxPlayers && currentPhase === GamePhase.WaitingForPlayers && !isInGame ?
+                players.length < gameConfig.maxPlayers && currentPhase === GamePhase.WaitingForPlayers && !isInGame ?
                   <div className="flex flex-col items-center">
                     <div className="text-xs opacity-60">Please select a color</div>
                     <div className="colorSelection grid grid-cols-4 gap-2 items-center my-4">
@@ -193,12 +194,12 @@ export const GameView = ({ gameId }: Props) => {
                           className={
                             classNames("btn btn-circle border-0",
                               color === selectedColor && "ring-4",
-                              activePlayers.some(p => p.hexColor === color) && "btn-disabled opacity-10"
+                              players.some(p => p.hexColor === color) && "btn-disabled opacity-10"
                             )
                           }
                           style={{ background: color }}
                           onClick={() => setSelectedColor(color)}
-                          disabled={activePlayers.some(p => p.hexColor === color)}
+                          disabled={players.some(p => p.hexColor === color)}
                         ></Button>
                       )}
                     </div>
@@ -232,7 +233,7 @@ export const GameView = ({ gameId }: Props) => {
                 </Button> : null
               ,
               startGameButton:
-                activePlayers.length >= gameConfig.minPlayers && isInGame && currentPhase === GamePhase.WaitingForPlayers ?
+                players.length >= gameConfig.minPlayers && isInGame && currentPhase === GamePhase.WaitingForPlayers ?
                   <Button
                     className="btn btn-primary"
                     onClick={() => startGame()}
@@ -267,7 +268,7 @@ export const GameView = ({ gameId }: Props) => {
           />
           <TradeSection
             countryGroupDict={countryGroupDict}
-            disableTrade={!isInGame || activePlayers.length < gameConfig.minPlayers || currentPhase === GamePhase.WaitingForPlayers}
+            disableTrade={!isInGame || players.length < gameConfig.minPlayers || currentPhase === GamePhase.WaitingForPlayers || currentPhase === GamePhase.GameOver}
             players={activePlayers}
             activeTrades={activeTrades}
             spaces={board.spaces}

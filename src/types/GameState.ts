@@ -6,7 +6,7 @@ import type { TransactionInfo } from "./TransactionInfo";
 
 export type GameState = {
   gameId: string;
-  activePlayers: Player[];
+  players: Player[];
   board: {
     spaces: BoardSpace[];
   };

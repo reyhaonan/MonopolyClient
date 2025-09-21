@@ -289,7 +289,6 @@ const PlayerTradePanel = ({
     return (
         <div className="flex-1 p-2 border border-base-300 rounded-lg bg-base-200">
             <h4 className="p-2 text-center"><PlayerIndicator player={player} /></h4>
-            offer: {cardOffer.length} owned:{player.getOutOfJailFreeCards}
             <div className="space-y-4">
                 {/* Money Input Section */}
                 <div>
