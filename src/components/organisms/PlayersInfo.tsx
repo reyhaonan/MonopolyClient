@@ -50,15 +50,13 @@ const PlayersInfo = ({ players, currentPlayerIndex, isPermittedToDeclareBankcrup
                                 </span>
                                 {playerId == player.id && <span className="badge badge-primary badge-xs">YOU</span>}
                             </div>
-                            {/* <div className="text-xs font-semibold opacity-40">
+                            <div className="text-xs font-semibold opacity-40">
                                 Jail: {player.isInJail ? player.jailTurnsRemaining : "N"}
                                 {" | "}
                                 Doubles: {player.consecutiveDoubles}
                                 {" | "}
-                                GOOJ Card: {player.getOutOfJailFreeCards}
-                                {" | "}
-                                ID: {player.id.substring(0, 6)}
-                            </div> */}
+                                Free of jail Card: {player.getOutOfJailFreeCards}
+                            </div>
                         </div>
 
                         <div className="ml-auto">${player.money}</div>

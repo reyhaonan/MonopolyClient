@@ -59,7 +59,7 @@ const LoginView = () => {
         </div>
         <a
           className="ml-auto w-full"
-          href="https://discord.com/oauth2/authorize?client_id=1402626488079224862&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A5173%2Foauth2&scope=identifyhttps://discord.com/oauth2/authorize?client_id=1402626488079224862&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A5173%2Foauth2&scope=identify"
+          href={import.meta.env.VITE_DISCORD_OAUTH_URL}
         >
           <Button type="button" className="btn bg-[#5865f2] w-full">
             <img src={DiscordLogo} className="w-24" alt="discord logo" />
